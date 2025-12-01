@@ -1,88 +1,15 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Painel do Tutor - Corações em Patas</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            fontFamily: { sans: ['Inter', 'sans-serif'] },
-            colors: {
-              brand: {
-                purple: '#6D28D9',
-                lightPurple: '#8B5CF6',
-                teal: '#14B8A6',
-              }
-            }
-          }
-        }
-      }
-    </script>
-</head>
-<body class="bg-gray-50 flex h-screen overflow-hidden">
+{% extends "base.html" %}
+{% load static %}
 
-    <!-- Sidebar -->
-    <aside class="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col z-10">
-        <div class="p-6 flex items-center gap-3">
-            <div class="bg-brand-purple p-2 rounded-lg text-white">
-                <i data-lucide="paw-print" width="20" height="20"></i>
-            </div>
-            <span class="font-bold text-lg text-gray-800">Corações</span>
-        </div>
-
-        <nav class="flex-1 px-4 space-y-2 mt-4">
-            <a href="#" class="flex items-center gap-3 px-4 py-3 bg-brand-purple/10 text-brand-purple rounded-xl font-medium">
-                <i data-lucide="layout-dashboard" width="20" height="20"></i>
-                Visão Geral
-            </a>
-            <a href="#" class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-xl font-medium transition-colors">
-                <i data-lucide="cat" width="20" height="20"></i>
-                Meus Pets
-            </a>
-            <a href="#" class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-xl font-medium transition-colors">
-                <i data-lucide="calendar" width="20" height="20"></i>
-                Agendamentos
-            </a>
-            <a href="#" class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-xl font-medium transition-colors">
-                <i data-lucide="heart-pulse" width="20" height="20"></i>
-                Diário Emocional
-            </a>
-            <a href="#" class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-xl font-medium transition-colors">
-                <i data-lucide="pill" width="20" height="20"></i>
-                Medicamentos
-            </a>
-        </nav>
-
-        <div class="p-4 border-t border-gray-100">
-            <a href="index.html" class="flex items-center gap-3 px-4 py-2 text-red-500 hover:bg-red-50 rounded-xl font-medium transition-colors">
-                <i data-lucide="log-out" width="20" height="20"></i>
-                Sair
-            </a>
-        </div>
-    </aside>
-
-    <!-- Main Content -->
+{% block content %}
+<div class="bg-gray-50 flex h-screen overflow-hidden">
+    {% block aside %}
+    {% include "partials/aside/aside_tutor.html" %}
+    {% endblock %}
     <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
-        <!-- Header -->
-        <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 md:px-10">
-            <h2 class="text-xl font-bold text-gray-800">Bom dia, Mariana! 👋</h2>
-            
-            <div class="flex items-center gap-4">
-                <button class="p-2 text-gray-400 hover:bg-gray-100 rounded-full relative">
-                    <i data-lucide="bell" width="20" height="20"></i>
-                    <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
-                </button>
-                <div class="h-8 w-8 bg-brand-lightPurple rounded-full flex items-center justify-center text-white font-bold">
-                    M
-                </div>
-            </div>
-        </header>
-
+        {% block header %}
+        {% include "partials/header/header_tutor.html" %}
+        {% endblock %}
         <!-- Scrollable Content -->
         <div class="flex-1 overflow-y-auto p-6 md:p-10 pb-24">
             
@@ -200,5 +127,8 @@
     <script>
         lucide.createIcons();
     </script>
-</body>
-</html>
+    </main>
+</div>
+
+{% endblock %}
+

@@ -1,0 +1,42 @@
+{% load static %}
+
+<!-- Sidebar -->
+<aside class="w-64 bg-brand-darkTeal border-r border-teal-800 hidden md:flex flex-col z-10 text-white">
+    <div class="p-6 flex items-center gap-3">
+        <div class="bg-white/10 p-2 rounded-lg text-white">
+            <i data-lucide="stethoscope" width="20" height="20"></i>
+        </div>
+        <span class="font-bold text-lg">Vet Portal</span>
+    </div>
+
+    <nav class="flex-1 px-4 space-y-2 mt-4">
+        <a href="#" class="flex items-center gap-3 px-4 py-3 bg-white/10 text-white rounded-xl font-medium border border-white/10">
+            <i data-lucide="layout-grid" width="20" height="20"></i>
+            Dashboard
+        </a>
+        <a href="#" class="flex items-center gap-3 px-4 py-3 text-teal-100 hover:bg-white/5 hover:text-white rounded-xl font-medium transition-colors">
+            <i data-lucide="users" width="20" height="20"></i>
+            Pacientes
+        </a>
+        <a href="#" class="flex items-center gap-3 px-4 py-3 text-teal-100 hover:bg-white/5 hover:text-white rounded-xl font-medium transition-colors">
+            <i data-lucide="calendar-check" width="20" height="20"></i>
+            Agenda
+            <span class="ml-auto bg-brand-purple text-xs px-2 py-0.5 rounded-full">4</span>
+        </a>
+        <a href="#" class="flex items-center gap-3 px-4 py-3 text-teal-100 hover:bg-white/5 hover:text-white rounded-xl font-medium transition-colors">
+            <i data-lucide="file-text" width="20" height="20"></i>
+            Prontuários
+        </a>
+        <a href="#" class="flex items-center gap-3 px-4 py-3 text-teal-100 hover:bg-white/5 hover:text-white rounded-xl font-medium transition-colors">
+            <i data-lucide="dollar-sign" width="20" height="20"></i>
+            Financeiro
+        </a>
+    </nav>
+
+    <div class="p-4 border-t border-teal-800">
+        <a href="index.html" class="flex items-center gap-3 px-4 py-2 text-red-300 hover:text-red-100 hover:bg-white/5 rounded-xl font-medium transition-colors">
+            <i data-lucide="log-out" width="20" height="20"></i>
+            Sair
+        </a>
+    </div>
+</aside>

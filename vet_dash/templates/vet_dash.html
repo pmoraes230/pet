@@ -1,88 +1,15 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Painel Veterinário - Corações em Patas</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            fontFamily: { sans: ['Inter', 'sans-serif'] },
-            colors: {
-              brand: {
-                purple: '#6D28D9',
-                teal: '#14B8A6',
-                darkTeal: '#0F766E',
-              }
-            }
-          }
-        }
-      }
-    </script>
-</head>
-<body class="bg-gray-50 flex h-screen overflow-hidden">
+{% extends "base.html" %}
+{% load static %}
 
-    <!-- Sidebar -->
-    <aside class="w-64 bg-brand-darkTeal border-r border-teal-800 hidden md:flex flex-col z-10 text-white">
-        <div class="p-6 flex items-center gap-3">
-            <div class="bg-white/10 p-2 rounded-lg text-white">
-                <i data-lucide="stethoscope" width="20" height="20"></i>
-            </div>
-            <span class="font-bold text-lg">Vet Portal</span>
-        </div>
-
-        <nav class="flex-1 px-4 space-y-2 mt-4">
-            <a href="#" class="flex items-center gap-3 px-4 py-3 bg-white/10 text-white rounded-xl font-medium border border-white/10">
-                <i data-lucide="layout-grid" width="20" height="20"></i>
-                Dashboard
-            </a>
-            <a href="#" class="flex items-center gap-3 px-4 py-3 text-teal-100 hover:bg-white/5 hover:text-white rounded-xl font-medium transition-colors">
-                <i data-lucide="users" width="20" height="20"></i>
-                Pacientes
-            </a>
-            <a href="#" class="flex items-center gap-3 px-4 py-3 text-teal-100 hover:bg-white/5 hover:text-white rounded-xl font-medium transition-colors">
-                <i data-lucide="calendar-check" width="20" height="20"></i>
-                Agenda
-                <span class="ml-auto bg-brand-purple text-xs px-2 py-0.5 rounded-full">4</span>
-            </a>
-            <a href="#" class="flex items-center gap-3 px-4 py-3 text-teal-100 hover:bg-white/5 hover:text-white rounded-xl font-medium transition-colors">
-                <i data-lucide="file-text" width="20" height="20"></i>
-                Prontuários
-            </a>
-            <a href="#" class="flex items-center gap-3 px-4 py-3 text-teal-100 hover:bg-white/5 hover:text-white rounded-xl font-medium transition-colors">
-                <i data-lucide="dollar-sign" width="20" height="20"></i>
-                Financeiro
-            </a>
-        </nav>
-
-        <div class="p-4 border-t border-teal-800">
-            <a href="index.html" class="flex items-center gap-3 px-4 py-2 text-red-300 hover:text-red-100 hover:bg-white/5 rounded-xl font-medium transition-colors">
-                <i data-lucide="log-out" width="20" height="20"></i>
-                Sair
-            </a>
-        </div>
-    </aside>
-
-    <!-- Main Content -->
+{% block content %}
+<div class="bg-gray-50 flex h-screen overflow-hidden">
+    {% block aside %}
+    {% include "partials/aside/aside_vet.html" %}
+    {% endblock %}
     <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
-        <!-- Header -->
-        <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 md:px-10">
-            <div>
-                <h2 class="text-xl font-bold text-gray-800">Clínica Vet Care</h2>
-                <p class="text-xs text-gray-400">Dr. Roberto Silva - CRMV 12345</p>
-            </div>
-            
-            <div class="flex items-center gap-4">
-                <button class="bg-brand-darkTeal text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-teal-800 transition-colors">
-                    <i data-lucide="plus" width="16" height="16"></i> Novo Atendimento
-                </button>
-            </div>
-        </header>
-
+        {% block header %}
+        {% include "partials/header/header_vet.html" %}
+        {% endblock %}
         <!-- Scrollable Content -->
         <div class="flex-1 overflow-y-auto p-6 md:p-10 pb-24">
             
@@ -227,5 +154,7 @@
     <script>
         lucide.createIcons();
     </script>
-</body>
-</html>
+    </main>
+</div>
+
+{% endblock %}
