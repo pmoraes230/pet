@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Painel do Tutor - Corações em Patas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: { sans: ['Inter', 'sans-serif'] },
+            colors: {
+              brand: {
+                purple: '#6D28D9',
+                lightPurple: '#8B5CF6',
+                teal: '#14B8A6',
+              }
+            }
+          }
+        }
+      }
+    </script>
+</head>
+<body class="bg-gray-50 flex h-screen overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col z-10">
+        <div class="p-6 flex items-center gap-3">
+            <div class="bg-brand-purple p-2 rounded-lg text-white">
+                <i data-lucide="paw-print" width="20" height="20"></i>
+            </div>
+            <span class="font-bold text-lg text-gray-800">Corações</span>
+        </div>
+
+        <nav class="flex-1 px-4 space-y-2 mt-4">
+            <a href="#" class="flex items-center gap-3 px-4 py-3 bg-brand-purple/10 text-brand-purple rounded-xl font-medium">
+                <i data-lucide="layout-dashboard" width="20" height="20"></i>
+                Visão Geral
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-xl font-medium transition-colors">
+                <i data-lucide="cat" width="20" height="20"></i>
+                Meus Pets
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-xl font-medium transition-colors">
+                <i data-lucide="calendar" width="20" height="20"></i>
+                Agendamentos
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-xl font-medium transition-colors">
+                <i data-lucide="heart-pulse" width="20" height="20"></i>
+                Diário Emocional
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-xl font-medium transition-colors">
+                <i data-lucide="pill" width="20" height="20"></i>
+                Medicamentos
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-gray-100">
+            <a href="index.html" class="flex items-center gap-3 px-4 py-2 text-red-500 hover:bg-red-50 rounded-xl font-medium transition-colors">
+                <i data-lucide="log-out" width="20" height="20"></i>
+                Sair
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+        <!-- Header -->
+        <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 md:px-10">
+            <h2 class="text-xl font-bold text-gray-800">Bom dia, Mariana! 👋</h2>
+            
+            <div class="flex items-center gap-4">
+                <button class="p-2 text-gray-400 hover:bg-gray-100 rounded-full relative">
+                    <i data-lucide="bell" width="20" height="20"></i>
+                    <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+                </button>
+                <div class="h-8 w-8 bg-brand-lightPurple rounded-full flex items-center justify-center text-white font-bold">
+                    M
+                </div>
+            </div>
+        </header>
+
+        <!-- Scrollable Content -->
+        <div class="flex-1 overflow-y-auto p-6 md:p-10 pb-24">
+            
+            <!-- Quick Stats/Alerts -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                <div class="bg-brand-purple text-white p-6 rounded-3xl shadow-lg relative overflow-hidden">
+                    <div class="relative z-10">
+                        <div class="text-purple-200 text-sm font-medium mb-1">Próxima Vacina</div>
+                        <div class="text-2xl font-bold">12 Outubro</div>
+                        <div class="text-sm mt-2 flex items-center gap-2">
+                            <i data-lucide="clock" width="14" height="14"></i> 14:00 - Clínica Vet Care
+                        </div>
+                    </div>
+                    <i data-lucide="syringe" class="absolute -bottom-4 -right-4 text-white/20 w-32 h-32"></i>
+                </div>
+
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                    <div>
+                        <div class="text-gray-500 text-sm font-medium mb-1">Humor do Paçoca</div>
+                        <div class="text-2xl font-bold text-green-600 flex items-center gap-2">
+                            <i data-lucide="smile" width="24" height="24"></i> Feliz
+                        </div>
+                    </div>
+                    <div class="w-full bg-gray-100 h-2 rounded-full mt-4">
+                        <div class="bg-green-500 h-2 rounded-full" style="width: 80%"></div>
+                    </div>
+                    <div class="text-xs text-gray-400 mt-2">Baseado no registro de ontem</div>
+                </div>
+
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-between group cursor-pointer hover:border-brand-teal transition-colors">
+                    <div>
+                        <div class="text-gray-500 text-sm font-medium mb-1">Novo Registro</div>
+                        <div class="text-lg font-bold text-gray-800">Adicionar Diário</div>
+                    </div>
+                    <div class="bg-brand-teal/10 text-brand-teal p-3 rounded-full group-hover:bg-brand-teal group-hover:text-white transition-colors">
+                        <i data-lucide="plus" width="24" height="24"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- My Pets Section -->
+            <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
+                Meus Pets <span class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">2</span>
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Pet Card 1 -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex gap-6 hover:shadow-md transition-shadow">
+                    <div class="w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0">
+                        <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=1000&auto=format&fit=crop" class="w-full h-full object-cover" alt="Paçoca">
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="text-xl font-bold text-gray-900">Paçoca</h4>
+                                <p class="text-sm text-gray-500">Vira-lata • 4 anos</p>
+                            </div>
+                            <button class="text-gray-400 hover:text-brand-purple"><i data-lucide="more-vertical" width="20" height="20"></i></button>
+                        </div>
+                        
+                        <div class="mt-4 flex gap-2">
+                            <span class="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-bold">Saudável</span>
+                            <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-bold">3.5 kg</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pet Card 2 -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex gap-6 hover:shadow-md transition-shadow">
+                    <div class="w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0">
+                        <img src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?q=80&w=1000&auto=format&fit=crop" class="w-full h-full object-cover" alt="Luna">
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="text-xl font-bold text-gray-900">Luna</h4>
+                                <p class="text-sm text-gray-500">Siamês • 2 anos</p>
+                            </div>
+                            <button class="text-gray-400 hover:text-brand-purple"><i data-lucide="more-vertical" width="20" height="20"></i></button>
+                        </div>
+                        
+                        <div class="mt-4 flex gap-2">
+                            <span class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-lg text-xs font-bold">Em observação</span>
+                            <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-bold">4.2 kg</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity Timeline -->
+            <h3 class="text-lg font-bold text-gray-800 mt-10 mb-6">Histórico Recente</h3>
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <div class="relative border-l-2 border-gray-100 ml-3 space-y-8">
+                    
+                    <div class="relative pl-8">
+                        <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-brand-purple ring-4 ring-white"></div>
+                        <p class="text-xs text-gray-400 mb-1">Hoje, 09:00</p>
+                        <h5 class="text-sm font-bold text-gray-800">Registro de Humor (Paçoca)</h5>
+                        <p class="text-sm text-gray-600 mt-1">Paçoca acordou muito animado e brincou por 20 minutos.</p>
+                    </div>
+
+                    <div class="relative pl-8">
+                        <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-brand-teal ring-4 ring-white"></div>
+                        <p class="text-xs text-gray-400 mb-1">Ontem, 16:30</p>
+                        <h5 class="text-sm font-bold text-gray-800">Consulta Veterinária (Luna)</h5>
+                        <p class="text-sm text-gray-600 mt-1">Check-up de rotina. Tudo certo com a respiração.</p>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

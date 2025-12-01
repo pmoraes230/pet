@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - Corações em Patas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: { sans: ['Inter', 'sans-serif'] },
+            colors: {
+              brand: {
+                purple: '#6D28D9',
+                teal: '#14B8A6',
+                darkTeal: '#0F766E',
+              }
+            }
+          }
+        }
+      }
+    </script>
+</head>
+<body class="bg-gray-50 h-screen flex items-center justify-center p-4">
+
+    <div class="bg-white w-full max-w-5xl h-[85vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row relative">
+        <!-- Back Link -->
+        <a href="index.html" class="absolute top-4 right-4 z-20 text-gray-400 hover:text-gray-800 transition-colors bg-white/80 p-2 rounded-full backdrop-blur-sm">
+            <i data-lucide="x" width="24" height="24"></i>
+        </a>
+
+        <!-- Left Side: Image & Branding -->
+        <div id="side-panel" class="w-full md:w-5/12 bg-brand-purple p-8 md:p-12 text-white flex flex-col justify-between relative overflow-hidden transition-colors duration-500">
+             
+             <!-- Logo Area -->
+             <div class="relative z-10 flex items-center gap-3">
+                 <div class="bg-white/20 p-2 rounded-xl">
+                    <i data-lucide="paw-print" width="24" height="24"></i>
+                 </div>
+                 <span class="font-bold text-lg">Corações em Patas</span>
+             </div>
+
+             <!-- Hero Text -->
+             <div class="relative z-10 mt-10 md:mt-0">
+                 <div class="inline-block px-3 py-1 bg-white/20 rounded-full text-xs font-bold uppercase tracking-wide mb-4" id="role-badge">
+                     Área do Tutor
+                 </div>
+                 <h1 class="text-3xl md:text-4xl font-extrabold mb-4 leading-tight" id="hero-title">
+                     Bem-vindo de volta!
+                 </h1>
+                 <p class="text-purple-100 text-lg leading-relaxed" id="hero-desc">
+                     Acompanhe a saúde emocional e física do seu pet em um só lugar.
+                 </p>
+             </div>
+
+             <!-- Footer Image Overlay -->
+             <div class="relative z-10 text-xs text-white/50 mt-8">
+                 &copy; 2024 PetMental
+             </div>
+
+             <!-- Background Blobs -->
+             <div class="absolute -bottom-24 -right-24 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+             <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-black/10 rounded-full blur-3xl opacity-50"></div>
+        </div>
+
+        <!-- Right Side: Form -->
+        <div class="w-full md:w-7/12 p-8 md:p-16 bg-white relative flex flex-col justify-center overflow-y-auto">
+            
+            <!-- Type Toggle (Tabs) -->
+            <div class="flex mb-8 bg-gray-100 p-1 rounded-xl w-full max-w-sm mx-auto md:mx-0">
+                <button onclick="switchRole('tutor')" id="tab-tutor" class="flex-1 py-2 text-sm font-bold rounded-lg transition-all shadow-sm bg-white text-gray-800">
+                    Sou Tutor
+                </button>
+                <button onclick="switchRole('vet')" id="tab-vet" class="flex-1 py-2 text-sm font-bold rounded-lg transition-all text-gray-500 hover:text-gray-700">
+                    Sou Veterinário
+                </button>
+            </div>
+
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-gray-800" id="form-title">Acesse sua conta</h2>
+                <p class="text-gray-500 text-sm mt-1" id="form-subtitle">Preencha seus dados para continuar.</p>
+            </div>
+
+            <!-- Form -->
+            <form id="auth-form" onsubmit="handleLogin(event)" class="space-y-5 max-w-sm mx-auto md:mx-0 w-full">
+                
+                <!-- Register Fields (Hidden by default) -->
+                <div id="register-name-field" class="hidden">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nome Completo</label>
+                    <input type="text" placeholder="Seu nome" class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Email</label>
+                    <div class="relative">
+                        <i data-lucide="mail" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" width="18" height="18"></i>
+                        <input type="email" placeholder="seu@email.com" class="w-full pl-11 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all outline-none" required>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Senha</label>
+                    <div class="relative">
+                        <i data-lucide="lock" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" width="18" height="18"></i>
+                        <input type="password" placeholder="••••••••" class="w-full pl-11 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all outline-none" required>
+                    </div>
+                </div>
+
+                <!-- Vet Specific (CRMV) -->
+                <div id="crm-field" class="hidden">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">CRMV / UF</label>
+                    <input type="text" placeholder="12345/SP" class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all outline-none">
+                </div>
+
+                <div class="flex justify-between items-center text-sm">
+                    <label class="flex items-center gap-2 cursor-pointer text-gray-600">
+                        <input type="checkbox" class="rounded border-gray-300 text-brand-purple focus:ring-brand-purple">
+                        Lembrar de mim
+                    </label>
+                    <a href="#" class="text-brand-purple font-semibold hover:underline">Esqueceu a senha?</a>
+                </div>
+
+                <button id="submit-btn" type="submit" class="w-full bg-brand-purple text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all">
+                    Entrar
+                </button>
+            </form>
+
+            <!-- Toggle Login/Register -->
+            <div class="mt-8 text-center md:text-left text-sm text-gray-600">
+                <span id="toggle-text">Não tem conta?</span>
+                <button onclick="toggleMode()" class="text-brand-purple font-bold hover:underline ml-1" id="toggle-btn">
+                    Criar cadastro
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // State
+        let currentRole = 'tutor'; // 'tutor' or 'vet'
+        let currentMode = 'login'; // 'login' or 'register'
+
+        // Elements1
+        const sidePanel = document.getElementById('side-panel');
+        const roleBadge = document.getElementById('role-badge');
+        const heroTitle = document.getElementById('hero-title');
+        const heroDesc = document.getElementById('hero-desc');
+        const tabTutor = document.getElementById('tab-tutor');
+        const tabVet = document.getElementById('tab-vet');
+        const crmField = document.getElementById('crm-field');
+        const registerNameField = document.getElementById('register-name-field');
+        const submitBtn = document.getElementById('submit-btn');
+        const formTitle = document.getElementById('form-title');
+        const formSubtitle = document.getElementById('form-subtitle');
+        const toggleText = document.getElementById('toggle-text');
+        const toggleBtn = document.getElementById('toggle-btn');
+
+        // Check URL params for initial role
+        const urlParams = new URLSearchParams(window.location.search);
+        if(urlParams.get('type') === 'vet') {
+            switchRole('vet');
+        }
+
+        function switchRole(role) {
+            currentRole = role;
+            
+            if (role === 'tutor') {
+                // Style Tabs
+                tabTutor.className = "flex-1 py-2 text-sm font-bold rounded-lg transition-all shadow-sm bg-white text-gray-800";
+                tabVet.className = "flex-1 py-2 text-sm font-bold rounded-lg transition-all text-gray-500 hover:text-gray-700";
+                
+                // Panel Style
+                sidePanel.classList.remove('bg-brand-darkTeal');
+                sidePanel.classList.add('bg-brand-purple');
+                
+                // Content
+                roleBadge.textContent = "Área do Tutor";
+                heroTitle.textContent = currentMode === 'login' ? "Bem-vindo de volta!" : "Junte-se a nós!";
+                heroDesc.textContent = "Acompanhe a saúde emocional e física do seu pet em um só lugar.";
+                
+                crmField.classList.add('hidden');
+                updateButtonColor('purple');
+
+            } else {
+                // Style Tabs
+                tabVet.className = "flex-1 py-2 text-sm font-bold rounded-lg transition-all shadow-sm bg-white text-gray-800";
+                tabTutor.className = "flex-1 py-2 text-sm font-bold rounded-lg transition-all text-gray-500 hover:text-gray-700";
+
+                // Panel Style
+                sidePanel.classList.remove('bg-brand-purple');
+                sidePanel.classList.add('bg-brand-darkTeal');
+
+                // Content
+                roleBadge.textContent = "Área do Veterinário";
+                heroTitle.textContent = currentMode === 'login' ? "Olá, Doutor(a)" : "Expanda sua clínica";
+                heroDesc.textContent = "Gerencie seus pacientes, prontuários e conecte-se com novos tutores.";
+                
+                if (currentMode === 'register') crmField.classList.remove('hidden');
+                updateButtonColor('teal');
+            }
+        }
+
+        function toggleMode() {
+            currentMode = currentMode === 'login' ? 'register' : 'login';
+            
+            if (currentMode === 'register') {
+                formTitle.textContent = "Crie sua conta";
+                formSubtitle.textContent = "É rápido, fácil e gratuito.";
+                submitBtn.textContent = "Cadastrar";
+                toggleText.textContent = "Já tem uma conta?";
+                toggleBtn.textContent = "Fazer Login";
+                registerNameField.classList.remove('hidden');
+                
+                if (currentRole === 'vet') crmField.classList.remove('hidden');
+
+                // Update Hero text for context
+                heroTitle.textContent = currentRole === 'tutor' ? "Comece agora!" : "Parceria de sucesso";
+
+            } else {
+                formTitle.textContent = "Acesse sua conta";
+                formSubtitle.textContent = "Preencha seus dados para continuar.";
+                submitBtn.textContent = "Entrar";
+                toggleText.textContent = "Não tem conta?";
+                toggleBtn.textContent = "Criar cadastro";
+                registerNameField.classList.add('hidden');
+                crmField.classList.add('hidden');
+
+                heroTitle.textContent = currentRole === 'tutor' ? "Bem-vindo de volta!" : "Olá, Doutor(a)";
+            }
+        }
+
+        function updateButtonColor(color) {
+            if (color === 'purple') {
+                submitBtn.classList.remove('bg-brand-darkTeal');
+                submitBtn.classList.add('bg-brand-purple');
+            } else {
+                submitBtn.classList.remove('bg-brand-purple');
+                submitBtn.classList.add('bg-brand-darkTeal');
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            // Mock authentication redirect
+            if (currentRole === 'tutor') {
+                window.location.href = 'tutor-dashboard.html';
+            } else {
+                window.location.href = 'vet-dashboard.html';
+            }
+        }
+    </script>
+</body>
+</html>
