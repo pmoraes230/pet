@@ -1,7 +1,7 @@
 lucide.createIcons();
 
 // State
-let currentRole = "tutor"; // 'tutor' or 'vet'
+let currentRole = window.currentRole || "tutor"; // 'tutor' or 'vet'
 let currentMode = "login"; // 'login' or 'register'
 
 // Elements1
@@ -112,11 +112,19 @@ function updateButtonColor(color) {
 }
 
 function handleLogin(e) {
-  e.preventDefault();
-  // Mock authentication redirect
-  if (currentRole === "tutor") {
-    window.location.href = "tutor-dashboard.html";
-  } else {
-    window.location.href = "vet-dashboard.html";
-  }
+    e.preventDefault();
+
+    const tutorUrl = window.URL_DASH_TUTOR || URL_DASH_TUTOR;
+    const vetUrl   = window.URL_DASH_VET   || URL_DASH_VET;
+
+    if (!tutorUrl || !vetUrl) {
+        console.error("URLs do Django não foram carregadas!");
+        return;
+    }
+
+    if (currentRole === "tutor") {
+        window.location.href = tutorUrl;
+    } else {
+        window.location.href = vetUrl;
+    }
 }
