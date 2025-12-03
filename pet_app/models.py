@@ -19,7 +19,7 @@ class Consulta(models.Model):
 
 class Feedback(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)  # Field name made lowercase.
-    feedback_app = models.CharField(db_column='FEEDBACK_APP', max_length=45, blank=True, null=True)  # Field name made lowercase.
+    feedback_app = models.TextField(blank=True, null=True)
 
     class Meta:
         managed = False
@@ -28,7 +28,7 @@ class Feedback(models.Model):
 
 class FeedbackPet(models.Model):
     id = models.IntegerField(db_column='ID', primary_key=True)  # Field name made lowercase.
-    feedback_pet = models.CharField(db_column='FEEDBACK_PET', max_length=45, blank=True, null=True)  # Field name made lowercase.
+    feedback_pet = models.TextField(blank=True, null=True)
 
     class Meta:
         managed = False
@@ -91,13 +91,13 @@ class ProntuarioPet(models.Model):
 
 class Tutor(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)  # Field name made lowercase.
-    nome_tutor = models.CharField(db_column='NOME_TUTOR', max_length=45)  # Field name made lowercase.
-    cpf = models.IntegerField(db_column='CPF', unique=True)  # Field name made lowercase.
-    email = models.CharField(db_column='EMAIL', max_length=45)  # Field name made lowercase.
-    endereþo = models.CharField(db_column='ENDEREÃO', max_length=100)  # Field name made lowercase.
-    data_de_nascimento = models.DateField(db_column='DATA DE NASCIMENTO', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
-    id_feedback_sistema = models.ForeignKey(Feedback, models.DO_NOTHING, db_column='ID_FEEDBACK_SISTEMA')  # Field name made lowercase.
-    id_feedback_pet = models.ForeignKey(FeedbackPet, models.DO_NOTHING, db_column='ID_FEEDBACK_PET')  # Field name made lowercase.
+    nome_tutor = models.CharField(max_length=80, blank=True, null=True)
+    cpf = models.CharField(db_column='CPF', unique=True, max_length=11, blank=True, null=True)  # Field name made lowercase.
+    email = models.CharField(max_length=80, blank=True, null=True)
+    endereco = models.CharField(db_column='ENDERECO', max_length=100)  # Field name made lowercase.
+    data_nascimento = models.DateField(db_column='DATA_NASCIMENTO')  # Field name made lowercase.
+    id_feedback_sistema = models.ForeignKey(Feedback, models.DO_NOTHING, db_column='ID_FEEDBACK_SISTEMA', blank=True, null=True)  # Field name made lowercase.
+    id_feedback_pet = models.ForeignKey(FeedbackPet, models.DO_NOTHING, db_column='ID_FEEDBACK_PET', blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
         managed = False
