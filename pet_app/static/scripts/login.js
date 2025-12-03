@@ -12,6 +12,8 @@ const heroDesc = document.getElementById("hero-desc");
 const tabTutor = document.getElementById("tab-tutor");
 const tabVet = document.getElementById("tab-vet");
 const crmField = document.getElementById("crm-field");
+const dateField = document.getElementById("date-field")
+const cpfField = document.getElementById("cpf-field")
 const registerNameField = document.getElementById("register-name-field");
 const submitBtn = document.getElementById("submit-btn");
 const formTitle = document.getElementById("form-title");
@@ -81,6 +83,8 @@ function toggleMode() {
     toggleText.textContent = "Já tem uma conta?";
     toggleBtn.textContent = "Fazer Login";
     registerNameField.classList.remove("hidden");
+    dateField.classList.remove('hidden')
+    cpfField.classList.remove("hidden")
 
     if (currentRole === "vet") crmField.classList.remove("hidden");
 
@@ -94,6 +98,8 @@ function toggleMode() {
     toggleText.textContent = "Não tem conta?";
     toggleBtn.textContent = "Criar cadastro";
     registerNameField.classList.add("hidden");
+    dateField.classList.add("hidden");
+    cpfField.classList.add("hidden")
     crmField.classList.add("hidden");
 
     heroTitle.textContent =
@@ -111,20 +117,61 @@ function updateButtonColor(color) {
   }
 }
 
-function handleLogin(e) {
-    e.preventDefault();
+async function handleSubmit(e) {
+  e.preventDefault();
 
-    const tutorUrl = window.URL_DASH_TUTOR || URL_DASH_TUTOR;
-    const vetUrl   = window.URL_DASH_VET   || URL_DASH_VET;
+  const email = document.querySelector('input[type="email"]').value.trim();
+  const senha = document.querySelector('input[type="password"]').value;
+  const nome = document.querySelector('#register-name-field input')?.value.trim() || "";
+  const crmv = document.querySelector('#crm-field input')?.value.trim() || "";
+  const cpf = document.querySelector('#cpf-field input')?.value.trim() || "";
+  const nascimento = document.querySelector('date-field input')?.value.trim() | "";
 
-    if (!tutorUrl || !vetUrl) {
-        console.error("URLs do Django não foram carregadas!");
-        return;
-    }
+  if (!email || !senha) {
+      alert("Preencha email e senha");
+      return;
+  }
 
-    if (currentRole === "tutor") {
-        window.location.href = tutorUrl;
-    } else {
-        window.location.href = vetUrl;
-    }
+  const payload = {
+      email,
+      senha,
+      role: currentRole,
+      cpf,
+      nascimento
+  };
+
+  // Só adiciona nome/crmv se estiver em modo cadastro
+  if (currentMode === "register") {
+      payload.nome = nome;
+      payload.cpf,
+      payload.nascimento
+      if (currentRole === "vet") payload.crmv = crmv;
+  }
+
+  const url = currentMode === "login" ? "/login/" : "/register/";
+
+  try {
+      const response = await fetch(url, {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]')?.value || ""
+          },
+          body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+          window.location.href = result.redirect;
+      } else {
+          alert(result.error || "Ocorreu um erro");
+      }
+  } catch (err) {
+      console.error(err);
+      alert("Erro de conexão");
+  }
 }
+
+// Só isso! O resto (trocar abas, modo login/cadastro) continua igual
+document.getElementById("auth-form").onsubmit = handleSubmit;
