@@ -1,8 +1,10 @@
 import json
+from MySQLdb import OperationalError, ProgrammingError
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.hashers import make_password, check_password
+from .utils import call_procedure
 from django.contrib import messages
 from . import models
 
@@ -37,7 +39,7 @@ def login_view(request):
                 request.session['user_id'] = user.id
                 request.session['user_role'] = 'tutor'
                 request.session['user_nome'] = user.nome_tutor or "Tutor"
-                return JsonResponse({"success": True, "redirect": "/dashboard/tutor/"})
+                return JsonResponse({"success": True, "redirect": "/tutor_dash/dash_tutor/"})
             else:
                 return JsonResponse({"success": False, "error": "Senha incorreta"})
         except models.Tutor.DoesNotExist:
@@ -80,22 +82,53 @@ def register_view(request):
         return JsonResponse({"success": False, "error": "Email e senha são obrigatórios"})
 
     if role == "tutor":
-        if models.Tutor.objects.filter(email__iexact=email).exists():
-            return JsonResponse({"success": False, "error": "Este email já está cadastrado"})
+        # Validações básicas no Python (sempre bom ter dupla camada)
+        if not nome:
+            return JsonResponse({"success": False, "error": "Nome é obrigatório"})
+        if not cpf or len(cpf) != 11 or not cpf.isdigit():
+            return JsonResponse({"success": False, "error": "CPF deve ter 11 dígitos numéricos"})
+        if not data_nascimento:
+            return JsonResponse({"success": False, "error": "Data de nascimento é obrigatória"})
 
-        tutor = models.Tutor(
-            nome_tutor=nome or email.split("@")[0],
-            email=email,
-            data_nascimento=data_nascimento,
-            cpf=cpf,
-            senha_tutor=make_password(senha)
-        )
-        tutor.save()
+        try:
+            # CHAMADA DA PROCEDURE USANDO SUA FUNÇÃO
+            call_procedure('insert_tutor', [
+                nome,                  
+                cpf,
+                email,
+                "Sem endereço",
+                data_nascimento
+            ])
 
-        # Login automático após cadastro
+        except (OperationalError, ProgrammingError) as e:
+            # Captura erros do MySQL (ex: SIGNAL SQLSTATE)
+            error_msg = str(e)
+
+            # Extrai a mensagem personalizada do SIGNAL
+            if "45000" in error_msg:
+                # Exemplo de erro: "1048: O nome do tutor é obrigatório"
+                msg = error_msg.split("45000")[-1].strip()
+                if "O nome do tutor é obrigatório" in msg:
+                    return JsonResponse({"success": False, "error": "Nome é obrigatório"})
+                if "CPF deve conter exatamente 11 dígitos" in msg:
+                    return JsonResponse({"success": False, "error": "CPF inválido"})
+                if "Email já cadastrado" in msg:
+                    return JsonResponse({"success": False, "error": "Este email já está cadastrado"})
+                if "CPF já cadastrado" in msg:
+                    return JsonResponse({"success": False, "error": "Este CPF já está cadastrado"})
+                # Qualquer outro erro da procedure
+                return JsonResponse({"success": False, "error": msg})
+
+            return JsonResponse({"success": False, "error": "Erro no banco de dados"})
+
+        except Exception as e:
+            return JsonResponse({"success": False, "error": f"Erro inesperado: {str(e)}"})
+
+        # Login automático após sucesso
+        tutor = models.Tutor.objects.get(email=email)
         request.session['user_id'] = tutor.id
         request.session['user_role'] = 'tutor'
-        request.session['user_nome'] = tutor.nome_tutor
+        request.session['user_nome'] = tutor.nome_tutor or nome
 
         return JsonResponse({"success": True, "redirect": "/tutor_dash/dash_tutor/"})
 
