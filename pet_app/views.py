@@ -90,6 +90,7 @@ def register_view(request):
         if not data_nascimento:
             return JsonResponse({"success": False, "error": "Data de nascimento é obrigatória"})
 
+        senha_hash = make_password(senha)
         try:
             # CHAMADA DA PROCEDURE USANDO SUA FUNÇÃO
             call_procedure('insert_tutor', [
@@ -97,7 +98,8 @@ def register_view(request):
                 cpf,
                 email,
                 "Sem endereço",
-                data_nascimento
+                data_nascimento,
+                senha_hash
             ])
 
         except (OperationalError, ProgrammingError) as e:
