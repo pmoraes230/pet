@@ -1,3 +1,10 @@
+# This is an auto-generated Django model module.
+# You'll have to do the following manually to clean this up:
+#   * Rearrange models' order
+#   * Make sure each model has one field with primary_key=True
+#   * Make sure each ForeignKey and OneToOneField has `on_delete` set to the desired behavior
+#   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
+# Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
 
 
@@ -98,6 +105,7 @@ class Tutor(models.Model):
     data_nascimento = models.DateField(db_column='DATA_NASCIMENTO')  # Field name made lowercase.
     id_feedback_sistema = models.ForeignKey(Feedback, models.DO_NOTHING, db_column='ID_FEEDBACK_SISTEMA', blank=True, null=True)  # Field name made lowercase.
     id_feedback_pet = models.ForeignKey(FeedbackPet, models.DO_NOTHING, db_column='ID_FEEDBACK_PET', blank=True, null=True)  # Field name made lowercase.
+    senha_tutor = models.CharField(max_length=150)
 
     class Meta:
         managed = False
@@ -113,6 +121,7 @@ class Veterinario(models.Model):
     telefone = models.IntegerField(db_column='TELEFONE')  # Field name made lowercase.
     pessoa_juridica_idpessoa_juridica = models.ForeignKey(PessoaJuridica, models.DO_NOTHING, db_column='PESSOA JURIDICA_idPESSOA JURIDICA')  # Field name made lowercase. Field renamed to remove unsuitable characters.
     pessoa_fisica_idpessoa_fisica = models.ForeignKey(PessoaFisica, models.DO_NOTHING, db_column='PESSOA FISICA_idPESSOA FISICA')  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    senha_veterinario = models.CharField(max_length=150)
 
     class Meta:
         managed = False
