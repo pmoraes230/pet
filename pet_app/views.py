@@ -41,6 +41,7 @@ def login_view(request):
             if check_password(senha, user.senha_tutor):
                 request.session['user_id'] = user.id
                 request.session['user_role'] = 'tutor'
+                request.session['user_email'] = user.email
                 request.session['user_nome'] = user.nome_tutor or "Tutor"
                 return JsonResponse({"success": True, "redirect": "/tutor_dash/dash_tutor/"})
             else:
