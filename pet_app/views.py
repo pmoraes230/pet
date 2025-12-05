@@ -1,12 +1,15 @@
 import json
 from MySQLdb import OperationalError, ProgrammingError
 from django.shortcuts import render, redirect
+from django.contrib.auth import logout
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.hashers import make_password, check_password
 from .utils import call_procedure
 from django.contrib import messages
 from . import models
+from django.views.decorators.csrf import csrf_protect
+from django.middleware.csrf import rotate_token
 
 # Create your views here.
 def home(request):
@@ -59,6 +62,10 @@ def login_view(request):
             return JsonResponse({"success": False, "error": "Email não encontrado"})
 
     return JsonResponse({"success": False, "error": "Tipo de usuário inválido"})
+
+def logout_view(request):
+    logout(request)
+    return redirect('login')
 
 @csrf_exempt
 def register_view(request):

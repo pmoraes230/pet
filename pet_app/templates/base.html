@@ -16,6 +16,8 @@
     
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="{% static "style/base.css" %}">
 </head>
 <body class="bg-gray-50 text-gray-800 overflow-x-hidden">
@@ -26,5 +28,11 @@
     {% block footer %}{% endblock %}
     {% block scripts %}{% endblock %}
     <script src="{% static "scripts/tailwind.config.js" %}"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+        });
+    </script>
 </body>
 </html>

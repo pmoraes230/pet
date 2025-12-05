@@ -1,10 +1,3 @@
-# This is an auto-generated Django model module.
-# You'll have to do the following manually to clean this up:
-#   * Rearrange models' order
-#   * Make sure each model has one field with primary_key=True
-#   * Make sure each ForeignKey and OneToOneField has `on_delete` set to the desired behavior
-#   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
-# Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
 
 
@@ -23,6 +16,19 @@ class Consulta(models.Model):
         managed = False
         db_table = 'consulta'
 
+
+class ContatoTutor(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)  # Field name made lowercase.
+    id_tutor = models.ForeignKey('tutor', models.DO_NOTHING, db_column='ID_TUTOR', blank=True, null=True)  # Field name made lowercase.
+    tipo_contato = models.CharField(db_column='TIPO_CONTATO', max_length=16)  # Field name made lowercase.
+    ddd = models.CharField(db_column='DDD', max_length=2)  # Field name made lowercase.
+    numero = models.CharField(db_column='NUMERO', max_length=9)  # Field name made lowercase.
+    data_cadastro = models.DateTimeField(db_column='DATA_CADASTRO', blank=True, null=True)  # Field name made lowercase.
+
+    class Meta:
+        managed = False
+        db_table = 'contato_tutor'
+        unique_together = (('id_tutor', 'ddd', 'numero'),)
 
 class Feedback(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)  # Field name made lowercase.
@@ -70,7 +76,7 @@ class Pet(models.Model):
     nome = models.CharField(db_column='NOME', max_length=45)  # Field name made lowercase.
     data_nascimento = models.DateField(db_column='DATA_NASCIMENTO')  # Field name made lowercase.
     especie = models.CharField(db_column='ESPECIE', max_length=45)  # Field name made lowercase.
-    raþa = models.CharField(db_column='RAÃA', max_length=45)  # Field name made lowercase.
+    raca = models.CharField(max_length=45)
     sexo = models.CharField(db_column='SEXO', max_length=5)  # Field name made lowercase.
     pelagem = models.CharField(db_column='PELAGEM', max_length=45)  # Field name made lowercase.
     castrado = models.CharField(db_column='CASTRADO', max_length=3)  # Field name made lowercase.
@@ -99,13 +105,14 @@ class ProntuarioPet(models.Model):
 class Tutor(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)  # Field name made lowercase.
     nome_tutor = models.CharField(max_length=80, blank=True, null=True)
-    cpf = models.CharField(db_column='CPF', unique=True, max_length=11, blank=True, null=True)  # Field name made lowercase.
+    cpf = models.CharField(db_column='CPF', unique=True, max_length=14, blank=True, null=True)  # Field name made lowercase.
     email = models.CharField(max_length=80, blank=True, null=True)
     endereco = models.CharField(db_column='ENDERECO', max_length=100)  # Field name made lowercase.
     data_nascimento = models.DateField(db_column='DATA_NASCIMENTO')  # Field name made lowercase.
     id_feedback_sistema = models.ForeignKey(Feedback, models.DO_NOTHING, db_column='ID_FEEDBACK_SISTEMA', blank=True, null=True)  # Field name made lowercase.
     id_feedback_pet = models.ForeignKey(FeedbackPet, models.DO_NOTHING, db_column='ID_FEEDBACK_PET', blank=True, null=True)  # Field name made lowercase.
     senha_tutor = models.CharField(max_length=150)
+    imagem_perfil_tutor = models.ImageField(upload_to='tutor')
 
     class Meta:
         managed = False

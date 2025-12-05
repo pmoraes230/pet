@@ -1,16 +1,75 @@
 {% load static %}
 
-<!-- Header -->
 <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 md:px-10">
-    <h2 class="text-xl font-bold text-gray-800">Bom dia, Mariana! 👋</h2>
-    
-    <div class="flex items-center gap-4">
-        <button class="p-2 text-gray-400 hover:bg-gray-100 rounded-full relative">
-            <i data-lucide="bell" width="20" height="20"></i>
-            <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
-        </button>
-        <div class="h-8 w-8 bg-brand-lightPurple rounded-full flex items-center justify-center text-white font-bold">
-            M
+  <h2 class="text-xl font-bold text-gray-800">
+    {{ saudacao_horario }}, {{ request.session.user_nome|default:"Tutor" }}!
+  </h2>
+
+  <div class="flex items-center gap-4">
+    <!-- Notificações -->
+    <button class="p-2 text-gray-400 hover:bg-gray-100 rounded-full relative transition-colors">
+      <i data-lucide="bell" width="20" height="20"></i>
+      <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+    </button>
+
+    <!-- Dropdown do Perfil -->
+    <div class="relative" x-data="{ open: false }"
+      x-init="document.addEventListener('click', (e) => { if (!e.target.closest('[data-dropdown]')) open = false })">
+      <button data-dropdown @click.stop="open = !open"
+        class="flex items-center gap-3 hover:bg-gray-50 rounded-xl px-3 py-2 transition-colors select-none"
+        :class="{ 'bg-gray-50': open }">
+        <!-- Avatar -->
+        <div
+          class="h-9 w-9 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-sm">
+          {% if tutor.imagem_perfil_tutor %}
+          <img src="{{ tutor.imagem_perfil_tutor.url }}" alt="{{ tutor.nome }}">
+          {% else %}
+          <img src="{% static "icons/image_user_default.svg" %}" alt="Foto do tutor"
+            class="w-full h-full object-cover">
+          {% endif %}
         </div>
+
+        <div class="hidden md:block text-left">
+          <p class="text-sm font-semibold text-gray-800">
+            {{ request.session.user_nome|default:"Tutor" }}
+          </p>
+          <p class="text-xs text-gray-500">Meu Perfil</p>
+        </div>
+
+        <i data-lucide="chevron-down" class="w-4 h-4 text-gray-500 transition-transform"
+          :class="{ 'rotate-180': open }"></i>
+      </button>
+
+      <!-- Menu Dropdown -->
+      <div data-dropdown x-show="open" @click.stop x-transition
+        class="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-lg border border-gray-100 py-2 z-50"
+        style="display: none">
+        <div class="px-4 py-3 border-b border-gray-100">
+          <p class="font-semibold text-gray-800 truncate">
+            {{ request.session.user_nome }}
+          </p>
+          <p class="text-xs text-gray-500 truncate">
+            {{ request.session.user_email|default:"tutor@exemplo.com" }}
+          </p>
+        </div>
+
+        <a href="{% url "perfil_tutor" %}"
+          class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-gray-700">
+          <i data-lucide="user" width="18" height="18"></i>
+          <span class="text-sm font-medium">Meu Perfil</span>
+        </a>
+
+        <a href="#" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-gray-700">
+          <i data-lucide="settings" width="18" height="18"></i>
+          <span class="text-sm font-medium">Configurações</span>
+        </a>
+
+        <a href="{% url 'logout' %}"
+          class="flex w-full items-center gap-3 px-4 py-3 hover:bg-red-50 text-red-600 transition-colors text-left text-sm font-medium">
+          <i data-lucide="log-out" width="18" height="18"></i>
+          Sair da conta
+        </a>
+      </div>
     </div>
+  </div>
 </header>
