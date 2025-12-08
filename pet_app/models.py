@@ -133,3 +133,19 @@ class Veterinario(models.Model):
     class Meta:
         managed = False
         db_table = 'veterinario'
+
+class ContatoVeterinario(models.Model):
+    id = models.AutoField(primary_key=True)
+    id_veterinario = models.ForeignKey(
+        Veterinario,
+        models.DO_NOTHING,
+        db_column='ID_VETERINARIO'
+    )
+    tipo_contato = models.CharField(max_length=16)
+    ddd = models.CharField(max_length=2)
+    numero = models.CharField(max_length=9)
+    data_cadastro = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        managed = False
+        db_table = 'contato_veterinario'

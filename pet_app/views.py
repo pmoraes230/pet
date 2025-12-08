@@ -101,12 +101,11 @@ def register_view(request):
         try:
             # CHAMADA DA PROCEDURE USANDO SUA FUNÇÃO
             call_procedure('insert_tutor', [
-                nome,                  
-                cpf,
-                email,
-                "Sem endereço",
-                data_nascimento,
-                senha_hash
+            nome,           # nome_completo
+            email,          # email
+            senha_hash,     # senha
+            cpf,            # cpf
+            data_nascimento # data_nascimento
             ])
 
         except (OperationalError, ProgrammingError) as e:
@@ -171,3 +170,19 @@ def register_view(request):
         return JsonResponse({"success": True, "redirect": "/dashboard/vet/"})
 
     return JsonResponse({"success": False, "error": "Tipo de usuário inválido"})
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt  # se for chamado via JS/AJAX
+def insert_tutor_ajax(request):
+    if request.method == "POST":
+        # Aqui você pega os dados do request.POST e salva no banco
+        nome = request.POST.get("nome")
+        email = request.POST.get("email")
+        senha = request.POST.get("senha")
+        cpf = request.POST.get("cpf")
+        data_nascimento = request.POST.get("data_nascimento")
+        # TODO: salvar no banco
+        return JsonResponse({"success": True})
+    return JsonResponse({"error": "Método inválido"}, status=400)

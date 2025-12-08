@@ -1,139 +1,95 @@
-{% extends "base.html" %}
-{% load static %}
-
-{% block content %}
-<div class="bg-gray-50 flex h-screen overflow-hidden">
-    {% block aside %}
-    {% include "partials/aside/aside_tutor.html" %}
-    {% endblock %}
-    <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
-        {% block header %}
-        {% include "partials/header/header_tutor.html" %}
-        {% endblock %}
-        <!-- Scrollable Content -->
-        <div class="flex-1 overflow-y-auto p-6 md:p-10 pb-24">
-            
-            <!-- Quick Stats/Alerts -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                <div class="bg-brand-purple text-white p-6 rounded-3xl shadow-lg relative overflow-hidden">
-                    <div class="relative z-10">
-                        <div class="text-purple-200 text-sm font-medium mb-1">Próxima Vacina</div>
-                        <div class="text-2xl font-bold">12 Outubro</div>
-                        <div class="text-sm mt-2 flex items-center gap-2">
-                            <i data-lucide="clock" width="14" height="14"></i> 14:00 - Clínica Vet Care
-                        </div>
-                    </div>
-                    <i data-lucide="syringe" class="absolute -bottom-4 -right-4 text-white/20 w-32 h-32"></i>
-                </div>
-
-                <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col justify-between">
-                    <div>
-                        <div class="text-gray-500 text-sm font-medium mb-1">Humor do Paçoca</div>
-                        <div class="text-2xl font-bold text-green-600 flex items-center gap-2">
-                            <i data-lucide="smile" width="24" height="24"></i> Feliz
-                        </div>
-                    </div>
-                    <div class="w-full bg-gray-100 h-2 rounded-full mt-4">
-                        <div class="bg-green-500 h-2 rounded-full" style="width: 80%"></div>
-                    </div>
-                    <div class="text-xs text-gray-400 mt-2">Baseado no registro de ontem</div>
-                </div>
-
-                <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-between group cursor-pointer hover:border-brand-teal transition-colors">
-                    <div>
-                        <div class="text-gray-500 text-sm font-medium mb-1">Novo Registro</div>
-                        <div class="text-lg font-bold text-gray-800">Adicionar Diário</div>
-                    </div>
-                    <div class="bg-brand-teal/10 text-brand-teal p-3 rounded-full group-hover:bg-brand-teal group-hover:text-white transition-colors">
-                        <i data-lucide="plus" width="24" height="24"></i>
-                    </div>
-                </div>
+<!-- Quick Stats/Alerts -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+    <!-- Próxima Vacina -->
+    <div class="bg-brand-purple text-white p-6 rounded-3xl shadow-lg relative overflow-hidden">
+        <div class="relative z-10">
+            <div class="text-purple-200 text-sm font-medium mb-1">Próxima Vacina</div>
+            {% if proxima_vacinacao %}
+            <div class="text-2xl font-bold">{{ proxima_vacinacao.data_consulta|date:"d F" }}</div>
+            <div class="text-sm mt-2 flex items-center gap-2">
+                <i data-lucide="clock" width="14" height="14"></i> {{ proxima_vacinacao.horario_consulta }} - {{ proxima_vacinacao.local_consulta }}
             </div>
-
-            <!-- My Pets Section -->
-            <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
-                Meus Pets <span class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">2</span>
-            </h3>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Pet Card 1 -->
-                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex gap-6 hover:shadow-md transition-shadow">
-                    <div class="w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0">
-                        <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=1000&auto=format&fit=crop" class="w-full h-full object-cover" alt="Paçoca">
-                    </div>
-                    <div class="flex-1">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <h4 class="text-xl font-bold text-gray-900">Paçoca</h4>
-                                <p class="text-sm text-gray-500">Vira-lata • 4 anos</p>
-                            </div>
-                            <button class="text-gray-400 hover:text-brand-purple"><i data-lucide="more-vertical" width="20" height="20"></i></button>
-                        </div>
-                        
-                        <div class="mt-4 flex gap-2">
-                            <span class="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-bold">Saudável</span>
-                            <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-bold">3.5 kg</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Pet Card 2 -->
-                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex gap-6 hover:shadow-md transition-shadow">
-                    <div class="w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0">
-                        <img src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?q=80&w=1000&auto=format&fit=crop" class="w-full h-full object-cover" alt="Luna">
-                    </div>
-                    <div class="flex-1">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <h4 class="text-xl font-bold text-gray-900">Luna</h4>
-                                <p class="text-sm text-gray-500">Siamês • 2 anos</p>
-                            </div>
-                            <button class="text-gray-400 hover:text-brand-purple"><i data-lucide="more-vertical" width="20" height="20"></i></button>
-                        </div>
-                        
-                        <div class="mt-4 flex gap-2">
-                            <span class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-lg text-xs font-bold">Em observação</span>
-                            <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-bold">4.2 kg</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Recent Activity Timeline -->
-            <h3 class="text-lg font-bold text-gray-800 mt-10 mb-6">Histórico Recente</h3>
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                <div class="relative border-l-2 border-gray-100 ml-3 space-y-8">
-                    
-                    <div class="relative pl-8">
-                        <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-brand-purple ring-4 ring-white"></div>
-                        <p class="text-xs text-gray-400 mb-1">Hoje, 09:00</p>
-                        <h5 class="text-sm font-bold text-gray-800">Registro de Humor (Paçoca)</h5>
-                        <p class="text-sm text-gray-600 mt-1">Paçoca acordou muito animado e brincou por 20 minutos.</p>
-                    </div>
-
-                    <div class="relative pl-8">
-                        <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-brand-teal ring-4 ring-white"></div>
-                        <p class="text-xs text-gray-400 mb-1">Ontem, 16:30</p>
-                        <h5 class="text-sm font-bold text-gray-800">Consulta Veterinária (Luna)</h5>
-                        <p class="text-sm text-gray-600 mt-1">Check-up de rotina. Tudo certo com a respiração.</p>
-                    </div>
-
-                </div>
-            </div>
-
+            {% else %}
+            <div class="text-2xl font-bold">Sem vacina agendada</div>
+            {% endif %}
         </div>
-        <div class="absolute bottom-0 left-0 w-full overflow-hidden leading-none rotate-180 bg-brand-teal">
-            <svg class="relative block w-[calc(100%+1.3px)] h-[60px]" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
-                <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" fill="#F9FAFB"></path>
-            </svg>
-        </div>
-    </main>
+        <i data-lucide="syringe" class="absolute -bottom-4 -right-4 text-white/20 w-32 h-32"></i>
+    </div>
 
-    <script>
-        lucide.createIcons();
-    </script>
-    </main>
+    <!-- Humor do Pet -->
+    <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col justify-between">
+        <div>
+            <div class="text-gray-500 text-sm font-medium mb-1">Humor do Pet</div>
+            {% if humor_mais_recente %}
+            <div class="text-2xl font-bold text-green-600 flex items-center gap-2">
+                <i data-lucide="smile" width="24" height="24"></i> {{ humor_mais_recente.estado }}
+            </div>
+            <div class="w-full bg-gray-100 h-2 rounded-full mt-4">
+                <div class="bg-green-500 h-2 rounded-full" style="width: 80%"></div>
+            </div>
+            {% else %}
+            <div class="text-2xl font-bold text-gray-600">Sem registros de humor</div>
+            {% endif %}
+        </div>
+        <div class="text-xs text-gray-400 mt-2">Baseado no último registro</div>
+    </div>
+
+    <!-- Novo Registro de Humor -->
+    <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-between group cursor-pointer hover:border-brand-teal transition-colors">
+        <div>
+            <div class="text-gray-500 text-sm font-medium mb-1">Novo Registro</div>
+            <div class="text-lg font-bold text-gray-800">Adicionar Diário</div>
+        </div>
+        <div class="bg-brand-teal/10 text-brand-teal p-3 rounded-full group-hover:bg-brand-teal group-hover:text-white transition-colors">
+            <i data-lucide="plus" width="24" height="24"></i>
+        </div>
+    </div>
 </div>
 
-{% endblock %}
+<!-- Meus Pets -->
+<h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
+    Meus Pets <span class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">{{ pets.count }}</span>
+</h3>
 
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    {% for pet in pets %}
+    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex gap-6 hover:shadow-md transition-shadow">
+        <div class="w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0">
+            <img src="{{ pet.imagem_pet.url }}" class="w-full h-full object-cover" alt="{{ pet.nome }}">
+        </div>
+        <div class="flex-1">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h4 class="text-xl font-bold text-gray-900">{{ pet.nome }}</h4>
+                    <p class="text-sm text-gray-500">{{ pet.especie }} • {{ pet.idade }} anos</p>
+                </div>
+                <button class="text-gray-400 hover:text-brand-purple"><i data-lucide="more-vertical" width="20" height="20"></i></button>
+            </div>
+
+            <div class="mt-4 flex gap-2">
+                <span class="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-bold">Saudável</span>
+                <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-bold">{{ pet.peso }} kg</span>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <p class="text-gray-400 text-sm">Nenhum pet registrado.</p>
+    {% endfor %}
+</div>
+
+<!-- Histórico Recente -->
+<h3 class="text-lg font-bold text-gray-800 mt-10 mb-6">Histórico Recente</h3>
+<div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+    <div class="relative border-l-2 border-gray-100 ml-3 space-y-8">
+        {% for atividade in tutor.atividades_tutor.all %}
+        <div class="relative pl-8">
+            <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-brand-purple ring-4 ring-white"></div>
+            <p class="text-xs text-gray-400 mb-1">{{ atividade.data_atividade|date:"d F Y, H:i" }}</p>
+            <h5 class="text-sm font-bold text-gray-800">{{ atividade.titulo }}</h5>
+            <p class="text-sm text-gray-600 mt-1">{{ atividade.descricao }}</p>
+        </div>
+        {% empty %}
+        <p class="text-gray-400 text-sm">Nenhuma atividade registrada.</p>
+        {% endfor %}
+    </div>
+</div>

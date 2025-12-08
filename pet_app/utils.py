@@ -42,3 +42,40 @@ def get_tutor_logado(request):
         from django.contrib.sessions.models import Session
         request.session.flush()
         return None
+
+def get_veterinario_logado(request):
+    """
+    Retorna o objeto Veterinario logado ou None se não estiver logado como veterinario
+    """
+    # Verifica se o usuário logado é veterinário
+    if not request.session.get('user_role') == 'veterinario':
+        return None
+    
+    vet_id = request.session.get('user_id')
+    if not vet_id:
+        return None
+
+    # Cache na própria sessão para evitar query repetida
+    if 'veterinario_obj' in request.session:
+        return request.session['veterinario_obj']
+
+    try:
+        vet = models.Veterinario.objects.get(id=vet_id)
+
+        # Salvar dados serializáveis na sessão
+        request.session['veterinario_obj'] = {
+            'id': vet.id,
+            'nome': vet.nome,
+            'email': vet.email,
+            'crmv': vet.crmv,
+            'uf_crmv': vet.uf_crmv,
+            'telefone': vet.telefone,
+            'pessoa_fisica': vet.pessoa_fisica_idpessoa_fisica.id if vet.pessoa_fisica_idpessoa_fisica else None,
+            'pessoa_juridica': vet.pessoa_juridica_idpessoa_juridica.id if vet.pessoa_juridica_idpessoa_juridica else None,
+        }
+
+        return request.session['veterinario_obj']
+
+    except models.Veterinario.DoesNotExist:
+        request.session.flush()
+        return None

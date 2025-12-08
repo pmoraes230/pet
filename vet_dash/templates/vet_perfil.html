@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="bg-gray-50 flex h-screen overflow-hidden">
+    {% include "partials/aside/aside_veterinario.html" %}
+
+    <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+        {% include "partials/header/header_veterinario.html" %}
+
+        <!-- Conteúdo rolável -->
+        <div class="flex-1 overflow-y-auto p-6 md:p-10 pb-24">
+
+            <div class="max-w-5xl mx-auto">
+
+                <!-- Cabeçalho do Perfil -->
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 mb-8">
+                    <div class="flex flex-col md:flex-row items-center md:items-start gap-8">
+                        <div
+                            class="w-32 h-32 rounded-full overflow-hidden border-4 border-brand-purple/20 flex-shrink-0">
+                            {% if veterinario.imagem_perfil_veterinario %}
+                            <img src="{{ veterinario.imagem_perfil_veterinario.url }}" alt="{{ veterinario.nome }}">
+                            {% else %}
+                            <img src="{% static "icons/image_user_default.svg" %}" alt="Foto do veterinário"
+                                class="w-full h-full object-cover">
+                            {% endif %}
+                        </div>
+
+                        <div class="flex-1 text-center md:text-left">
+                            <h2 class="text-3xl font-bold text-gray-900">{{ veterinario.nome }}</h2>
+                            <p class="text-gray-500 mt-1">
+                                {% if veterinario.date_joined %}
+                                Veterinário cadastrado desde {{ veterinario.date_joined|date:"d \\d\\e F \\d\\e Y" }}
+                                {% else %}
+                                Veterinário ativo
+                                {% endif %}
+                            </p>
+
+                            <div class="flex flex-wrap gap-3 mt-5 justify-center md:justify-start">
+                                <span
+                                    class="px-4 py-2 bg-brand-purple/10 text-brand-purple rounded-full text-sm font-medium flex items-center gap-2">
+                                    <i data-lucide="mail" class="w-4 h-4"></i>
+                                    {{ veterinario.email }}
+                                </span>
+                                <span
+                                    class="px-4 py-2 bg-brand-teal/10 text-brand-teal rounded-full text-sm font-medium flex items-center gap-2">
+                                    <i data-lucide="phone" class="w-4 h-4"></i>
+                                    {{ veterinario.telefone|default:"Não informado" }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 md:mt-0">
+                            <a href="{% url "edicao_perfil_veterinario" %}"
+                                class="inline-flex items-center gap-2 px-5 py-3 bg-brand-purple text-white rounded-xl hover:bg-brand-purple/90 transition-colors font-medium">
+                                <i data-lucide="edit-3" class="w-5 h-5"></i>
+                                Editar Perfil
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Informações Detalhadas -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+
+                    <!-- Card Dados Pessoais -->
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                        <h3 class="text-lg font-bold text-gray-800 mb-5 flex items-center gap-2">
+                            <i data-lucide="user" class="w-5 h-5 text-brand-purple"></i>
+                            Dados Pessoais
+                        </h3>
+                        <div class="space-y-4 text-sm">
+                            <div class="flex justify-between py-2 border-b border-gray-100">
+                                <span class="text-gray-500">CRMV</span>
+                                <span class="font-medium text-gray-900">
+                                    {% if veterinario.crmv %}
+                                    {{ veterinario.crmv }}
+                                    {% else %}
+                                    <span class="text-gray-400">Não informado</span>
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="flex justify-between py-2 border-b border-gray-100">
+                                <span class="text-gray-500">UF do CRMV</span>
+                                <span class="font-medium text-gray-900">
+                                    {{ veterinario.uf_crmv }}
+                                </span>
+                            </div>
+                            <div class="flex justify-between py-2 border-b border-gray-100">
+                                <span class="text-gray-500">Data de Cadastro</span>
+                                <span class="font-medium text-gray-900">{{ veterinario.date_joined|date:"d/m/Y" }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card Meus Pacientes (resumo) -->
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                        <h3 class="text-lg font-bold text-gray-800 mb-5 flex items-center gap-2">
+                            <i data-lucide="paw-print" class="w-5 h-5 text-brand-teal"></i>
+                            Meus Pacientes
+                        </h3>
+                        <div class="space-y-4">
+                            {% for paciente in veterinario.paciente_set.all %}
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-xl overflow-hidden">
+                                    <img src="{{ paciente.foto.url|default:'https://via.placeholder.com/150' }}"
+                                        alt="{{ paciente.nome }}" class="w-full h-full object-cover">
+                                </div>
+                                <div class="flex-1">
+                                    <p class="font-semibold text-gray-900">{{ paciente.nome }}</p>
+                                    <p class="text-xs text-gray-500">
+                                        {{ paciente.raca }} • {{ paciente.idade }} ano{{ paciente.idade|pluralize }}
+                                    </p>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <p class="text-gray-500 text-sm">Nenhum paciente cadastrado ainda.</p>
+                            {% endfor %}
+                        </div>
+                        <a href="#" class="mt-5 inline-block text-brand-purple font-medium text-sm hover:underline">
+                            Ver todos os pacientes →</a>
+                    </div>
+
+                </div>
+
+                <!-- Card Segurança -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                    <h3 class="text-lg font-bold text-gray-800 mb-5 flex items-center gap-2">
+                        <i data-lucide="shield" class="w-5 h-5 text-brand-purple"></i>
+                        Segurança da Conta
+                    </h3>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <a href="#"
+                            class="flex-1 text-center px-6 py-4 border border-gray-200 rounded-xl hover:border-brand-purple hover:bg-brand-purple/5 transition-colors font-medium">
+                            <i data-lucide="lock" class="w-5 h-5 inline-block mr-2"></i>
+                            Alterar Senha
+                        </a>
+                        <a href="#"
+                            class="flex-1 text-center px-6 py-4 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-colors font-medium">
+                            <i data-lucide="log-out" class="w-5 h-5 inline-block mr-2"></i>
+                            Sair da Conta
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Onda decorativa no rodapé -->
+        <div class="absolute bottom-0 left-0 w-full overflow-hidden leading-none rotate-180 bg-brand-teal">
+            <svg class="relative block w-[calc(100%+1.3px)] h-[60px]" xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 1200 120" preserveAspectRatio="none">
+                <path
+                    d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"
+                    fill="#F9FAFB"></path>
+            </svg>
+        </div>
+    </main>
+</div>
+{% endblock %}

@@ -1,160 +1,67 @@
-{% extends "base.html" %}
-{% load static %}
-
-{% block content %}
-<div class="bg-gray-50 flex h-screen overflow-hidden">
-    {% block aside %}
-    {% include "partials/aside/aside_vet.html" %}
-    {% endblock %}
-    <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
-        {% block header %}
-        {% include "partials/header/header_vet.html" %}
-        {% endblock %}
-        <!-- Scrollable Content -->
-        <div class="flex-1 overflow-y-auto p-6 md:p-10 pb-24">
-            
-            <!-- Quick Stats -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="bg-blue-100 p-2 rounded-lg text-blue-600"><i data-lucide="users" width="20" height="20"></i></div>
-                        <span class="text-green-500 text-xs font-bold">+12%</span>
-                    </div>
-                    <div class="text-2xl font-bold text-gray-800">1,240</div>
-                    <div class="text-xs text-gray-400">Total Pacientes</div>
-                </div>
-
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="bg-purple-100 p-2 rounded-lg text-purple-600"><i data-lucide="calendar" width="20" height="20"></i></div>
-                    </div>
-                    <div class="text-2xl font-bold text-gray-800">8</div>
-                    <div class="text-xs text-gray-400">Consultas Hoje</div>
-                </div>
-
-                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="bg-yellow-100 p-2 rounded-lg text-yellow-600"><i data-lucide="activity" width="20" height="20"></i></div>
-                        <span class="text-red-500 text-xs font-bold">2 novos</span>
-                    </div>
-                    <div class="text-2xl font-bold text-gray-800">5</div>
-                    <div class="text-xs text-gray-400">Casos Críticos</div>
-                </div>
-
-                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="bg-green-100 p-2 rounded-lg text-green-600"><i data-lucide="dollar-sign" width="20" height="20"></i></div>
-                    </div>
-                    <div class="text-2xl font-bold text-gray-800">R$ 4.2k</div>
-                    <div class="text-xs text-gray-400">Faturamento Dia</div>
-                </div>
-            </div>
-
-            <!-- Appointments Section -->
-            <div class="flex flex-col lg:flex-row gap-8">
-                
-                <!-- Today's Schedule -->
-                <div class="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div class="p-6 border-b border-gray-100 flex justify-between items-center">
-                        <h3 class="font-bold text-gray-800">Agenda de Hoje</h3>
-                        <a href="#" class="text-sm text-brand-darkTeal font-semibold hover:underline">Ver tudo</a>
-                    </div>
-                    
-                    <div class="divide-y divide-gray-100">
-                        <!-- Item 1 -->
-                        <div class="p-4 flex items-center gap-4 hover:bg-gray-50 transition-colors cursor-pointer">
-                            <div class="text-center w-14">
-                                <div class="text-xs text-gray-400">09:00</div>
-                                <div class="font-bold text-gray-800">AM</div>
-                            </div>
-                            <div class="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
-                                <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=1000&auto=format&fit=crop" class="w-full h-full object-cover">
-                            </div>
-                            <div class="flex-1">
-                                <div class="font-bold text-gray-800">Paçoca</div>
-                                <div class="text-xs text-gray-500">Vacinação Anual • Tutor: Mariana</div>
-                            </div>
-                            <span class="bg-green-100 text-green-700 px-2 py-1 rounded-md text-xs font-bold">Confirmado</span>
-                        </div>
-
-                         <!-- Item 2 -->
-                        <div class="p-4 flex items-center gap-4 hover:bg-gray-50 transition-colors cursor-pointer">
-                            <div class="text-center w-14">
-                                <div class="text-xs text-gray-400">10:30</div>
-                                <div class="font-bold text-gray-800">AM</div>
-                            </div>
-                            <div class="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
-                                <img src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?q=80&w=1000&auto=format&fit=crop" class="w-full h-full object-cover">
-                            </div>
-                            <div class="flex-1">
-                                <div class="font-bold text-gray-800">Luna</div>
-                                <div class="text-xs text-gray-500">Avaliação Oncológica • Tutor: Carlos</div>
-                            </div>
-                            <span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded-md text-xs font-bold">Aguardando</span>
-                        </div>
-
-                         <!-- Item 3 -->
-                        <div class="p-4 flex items-center gap-4 hover:bg-gray-50 transition-colors cursor-pointer">
-                            <div class="text-center w-14">
-                                <div class="text-xs text-gray-400">02:00</div>
-                                <div class="font-bold text-gray-800">PM</div>
-                            </div>
-                            <div class="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
-                                <img src="https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?q=80&w=1000&auto=format&fit=crop" class="w-full h-full object-cover">
-                            </div>
-                            <div class="flex-1">
-                                <div class="font-bold text-gray-800">Thor</div>
-                                <div class="text-xs text-gray-500">Retorno Cirúrgico • Tutor: Ana</div>
-                            </div>
-                            <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded-md text-xs font-bold">Em sala</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Recent Alerts -->
-                <div class="w-full lg:w-1/3 space-y-6">
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                         <h3 class="font-bold text-gray-800 mb-4">Alertas de Saúde</h3>
-                         <div class="space-y-4">
-                             <div class="flex gap-3 items-start">
-                                 <div class="bg-red-100 text-red-500 p-1.5 rounded-full mt-1"><i data-lucide="alert-circle" width="16" height="16"></i></div>
-                                 <div>
-                                     <div class="text-sm font-bold text-gray-800">Bob (Golden Retriever)</div>
-                                     <div class="text-xs text-gray-500">Queda brusca de peso registrada pelo tutor.</div>
-                                 </div>
-                             </div>
-                             <div class="flex gap-3 items-start">
-                                 <div class="bg-orange-100 text-orange-500 p-1.5 rounded-full mt-1"><i data-lucide="activity" width="16" height="16"></i></div>
-                                 <div>
-                                     <div class="text-sm font-bold text-gray-800">Mel (Poodle)</div>
-                                     <div class="text-xs text-gray-500">Medicamento oncológico finalizando amanhã.</div>
-                                 </div>
-                             </div>
-                         </div>
-                    </div>
-
-                    <div class="bg-brand-purple text-white rounded-2xl shadow-lg p-6">
-                        <div class="flex items-center gap-2 mb-2 opacity-80">
-                            <i data-lucide="sparkles" width="18" height="18"></i>
-                            <span class="text-xs font-bold uppercase tracking-wider">IA Assistente</span>
-                        </div>
-                        <h4 class="font-bold text-lg mb-2">Resumo do dia</h4>
-                        <p class="text-sm text-purple-100 mb-4">Você tem 2 retornos importantes hoje focados em oncologia. Gostaria de revisar os protocolos?</p>
-                        <button class="w-full bg-white text-brand-purple py-2 rounded-lg text-sm font-bold hover:bg-gray-100 transition-colors">
-                            Revisar Prontuários
-                        </button>
-                    </div>
-                </div>
-
-            </div>
-
+<!-- Estatísticas -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <div class="flex justify-between items-start mb-4">
+            <div class="bg-blue-100 p-2 rounded-lg text-blue-600"><i data-lucide="users" width="20" height="20"></i></div>
         </div>
-    </main>
+        <div class="text-2xl font-bold text-gray-800">{{ total_pacientes }}</div>
+        <div class="text-xs text-gray-400">Total Pacientes</div>
+    </div>
 
-    <script>
-        lucide.createIcons();
-    </script>
-    </main>
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <div class="flex justify-between items-start mb-4">
+            <div class="bg-purple-100 p-2 rounded-lg text-purple-600"><i data-lucide="calendar" width="20" height="20"></i></div>
+        </div>
+        <div class="text-2xl font-bold text-gray-800">{{ consultas_hoje }}</div>
+        <div class="text-xs text-gray-400">Consultas Hoje</div>
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <div class="flex justify-between items-start mb-4">
+            <div class="bg-yellow-100 p-2 rounded-lg text-yellow-600"><i data-lucide="activity" width="20" height="20"></i></div>
+        </div>
+        <div class="text-2xl font-bold text-gray-800">{{ casos_criticos }}</div>
+        <div class="text-xs text-gray-400">Casos Críticos</div>
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <div class="flex justify-between items-start mb-4">
+            <div class="bg-green-100 p-2 rounded-lg text-green-600"><i data-lucide="dollar-sign" width="20" height="20"></i></div>
+        </div>
+        <div class="text-2xl font-bold text-gray-800">R$ {{ faturamento_dia }}</div>
+        <div class="text-xs text-gray-400">Faturamento Dia</div>
+    </div>
 </div>
 
-{% endblock %}
+<!-- Agenda do dia -->
+<div class="divide-y divide-gray-100">
+    {% for consulta in agenda_hoje %}
+    <div class="p-4 flex items-center gap-4 hover:bg-gray-50 transition-colors cursor-pointer">
+        <div class="text-center w-14">
+            <div class="text-xs text-gray-400">{{ consulta.horario_consulta }}</div>
+        </div>
+        <div class="flex-1">
+            <div class="font-bold text-gray-800">{{ consulta.id_pet.nome }}</div>
+            <div class="text-xs text-gray-500">{{ consulta.tipo_de_consulta }} • Tutor: {{ consulta.id_pet.id_tutor.nome_tutor }}</div>
+        </div>
+        <span class="bg-green-100 text-green-700 px-2 py-1 rounded-md text-xs font-bold">Confirmado</span>
+    </div>
+    {% empty %}
+    <p class="text-gray-400 text-sm">Nenhuma consulta hoje.</p>
+    {% endfor %}
+</div>
+
+<!-- Alertas -->
+<div class="space-y-4">
+    {% for alerta in alertas %}
+    <div class="flex gap-3 items-start">
+        <div class="bg-red-100 text-red-500 p-1.5 rounded-full mt-1"><i data-lucide="alert-circle" width="16" height="16"></i></div>
+        <div>
+            <div class="text-sm font-bold text-gray-800">{{ alerta.id_pet.nome }} ({{ alerta.id_pet.especie }})</div>
+            <div class="text-xs text-gray-500">Tipo: {{ alerta.tipo_de_consulta }}</div>
+        </div>
+    </div>
+    {% empty %}
+    <p class="text-gray-400 text-sm">Nenhum alerta de saúde.</p>
+    {% endfor %}
+</div>
