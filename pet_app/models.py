@@ -103,20 +103,21 @@ class ProntuarioPet(models.Model):
 
 
 class Tutor(models.Model):
-    id = models.AutoField(db_column='ID', primary_key=True)  # Field name made lowercase.
+    id = models.AutoField(db_column='ID', primary_key=True)
     nome_tutor = models.CharField(max_length=80, blank=True, null=True)
-    cpf = models.CharField(db_column='CPF', unique=True, max_length=14, blank=True, null=True)  # Field name made lowercase.
-    email = models.CharField(max_length=80, blank=True, null=True)
-    endereco = models.CharField(db_column='ENDERECO', max_length=100)  # Field name made lowercase.
-    data_nascimento = models.DateField(db_column='DATA_NASCIMENTO')  # Field name made lowercase.
-    id_feedback_sistema = models.ForeignKey(Feedback, models.DO_NOTHING, db_column='ID_FEEDBACK_SISTEMA', blank=True, null=True)  # Field name made lowercase.
-    id_feedback_pet = models.ForeignKey(FeedbackPet, models.DO_NOTHING, db_column='ID_FEEDBACK_PET', blank=True, null=True)  # Field name made lowercase.
+    cpf = models.CharField(db_column='CPF', unique=True, max_length=14, blank=True, null=True)
+    email = models.CharField(db_column='EMAIL', unique=True, max_length=80, blank=True, null=True)  # Agora é único
+    endereco = models.CharField(db_column='ENDERECO', max_length=100)
+    data_nascimento = models.DateField(db_column='DATA_NASCIMENTO')
+    id_feedback_sistema = models.ForeignKey(Feedback, models.DO_NOTHING, db_column='ID_FEEDBACK_SISTEMA', blank=True, null=True)
+    id_feedback_pet = models.ForeignKey(FeedbackPet, models.DO_NOTHING, db_column='ID_FEEDBACK_PET', blank=True, null=True)
     senha_tutor = models.CharField(max_length=150)
     imagem_perfil_tutor = models.ImageField(upload_to='tutor')
 
     class Meta:
         managed = False
         db_table = 'tutor'
+
 
 
 class Veterinario(models.Model):
@@ -149,3 +150,5 @@ class ContatoVeterinario(models.Model):
     class Meta:
         managed = False
         db_table = 'contato_veterinario'
+
+from pet_app.models import Tutor

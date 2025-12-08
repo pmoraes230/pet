@@ -1,19 +1,19 @@
 lucide.createIcons();
 
-// State
-let currentRole = window.currentRole || "tutor"; // 'tutor' or 'vet'
-let currentMode = "login"; // 'login' or 'register'
+// Estado
+let currentRole = window.currentRole || "tutor"; // 'tutor' ou 'vet'
+let currentMode = "login"; // 'login' ou 'register'
 
-// Elements1
+// Elementos
 const sidePanel = document.getElementById("side-panel");
 const roleBadge = document.getElementById("role-badge");
 const heroTitle = document.getElementById("hero-title");
 const heroDesc = document.getElementById("hero-desc");
 const tabTutor = document.getElementById("tab-tutor");
 const tabVet = document.getElementById("tab-vet");
-const crmField = document.getElementById("crm-field");
+const crmField = document.getElementById("crmv-field");
 const dateField = document.getElementById("date-field");
-const cpfField = document.getElementById("cpf-field");
+const cpfCnpjField = document.getElementById("cpf-cnpj-field");
 const registerNameField = document.getElementById("register-name-field");
 const submitBtn = document.getElementById("submit-btn");
 const formTitle = document.getElementById("form-title");
@@ -21,58 +21,58 @@ const formSubtitle = document.getElementById("form-subtitle");
 const toggleText = document.getElementById("toggle-text");
 const toggleBtn = document.getElementById("toggle-btn");
 
-// Check URL params for initial role
+// Checa params da URL
 const urlParams = new URLSearchParams(window.location.search);
 if (urlParams.get("type") === "vet") {
   switchRole("vet");
 }
 
+// Função para trocar de papel
 function switchRole(role) {
   currentRole = role;
 
   if (role === "tutor") {
-    // Style Tabs
-    tabTutor.className =
-      "flex-1 py-2 text-sm font-bold rounded-lg transition-all shadow-sm bg-white text-gray-800";
-    tabVet.className =
-      "flex-1 py-2 text-sm font-bold rounded-lg transition-all text-gray-500 hover:text-gray-700";
+    tabTutor.className = "flex-1 py-2 text-sm font-bold rounded-lg transition-all shadow-sm bg-white text-gray-800";
+    tabVet.className = "flex-1 py-2 text-sm font-bold rounded-lg transition-all text-gray-500 hover:text-gray-700";
 
-    // Panel Style
     sidePanel.classList.remove("bg-brand-darkTeal");
     sidePanel.classList.add("bg-brand-purple");
 
-    // Content
     roleBadge.textContent = "Área do Tutor";
-    heroTitle.textContent =
-      currentMode === "login" ? "Bem-vindo de volta!" : "Junte-se a nós!";
-    heroDesc.textContent =
-      "Acompanhe a saúde emocional e física do seu pet em um só lugar.";
+    heroTitle.textContent = currentMode === "login" ? "Bem-vindo de volta!" : "Junte-se a nós!";
+    heroDesc.textContent = "Acompanhe a saúde emocional e física do seu pet em um só lugar.";
 
     crmField.classList.add("hidden");
+    cpfCnpjField?.classList.add("hidden");
+    registerNameField.classList.toggle("hidden", currentMode !== "register");
+
     updateButtonColor("purple");
   } else {
-    // Style Tabs
-    tabVet.className =
-      "flex-1 py-2 text-sm font-bold rounded-lg transition-all shadow-sm bg-white text-gray-800";
-    tabTutor.className =
-      "flex-1 py-2 text-sm font-bold rounded-lg transition-all text-gray-500 hover:text-gray-700";
+    tabVet.className = "flex-1 py-2 text-sm font-bold rounded-lg transition-all shadow-sm bg-white text-gray-800";
+    tabTutor.className = "flex-1 py-2 text-sm font-bold rounded-lg transition-all text-gray-500 hover:text-gray-700";
 
-    // Panel Style
     sidePanel.classList.remove("bg-brand-purple");
     sidePanel.classList.add("bg-brand-darkTeal");
 
-    // Content
     roleBadge.textContent = "Área do Veterinário";
-    heroTitle.textContent =
-      currentMode === "login" ? "Olá, Doutor(a)" : "Expanda sua clínica";
-    heroDesc.textContent =
-      "Gerencie seus pacientes, prontuários e conecte-se com novos tutores.";
+    heroTitle.textContent = currentMode === "login" ? "Olá, Doutor(a)" : "Expanda sua clínica";
+    heroDesc.textContent = "Gerencie seus pacientes, prontuários e conecte-se com novos tutores.";
 
-    if (currentMode === "register") crmField.classList.remove("hidden");
+    if (currentMode === "register") {
+      crmField.classList.remove("hidden");
+      cpfCnpjField.classList.remove("hidden");
+      registerNameField.classList.remove("hidden");
+    } else {
+      crmField.classList.add("hidden");
+      cpfCnpjField.classList.add("hidden");
+      registerNameField.classList.add("hidden");
+    }
+
     updateButtonColor("teal");
   }
 }
 
+// Toggle login/register
 function toggleMode() {
   currentMode = currentMode === "login" ? "register" : "login";
 
@@ -82,31 +82,35 @@ function toggleMode() {
     submitBtn.textContent = "Cadastrar";
     toggleText.textContent = "Já tem uma conta?";
     toggleBtn.textContent = "Fazer Login";
+
     registerNameField.classList.remove("hidden");
     dateField.classList.remove("hidden");
-    cpfField.classList.remove("hidden");
 
-    if (currentRole === "vet") crmField.classList.remove("hidden");
+    if (currentRole === "vet") {
+      crmField.classList.remove("hidden");
+      cpfCnpjField.classList.remove("hidden");
+    } else {
+      cpfCnpjField?.classList.add("hidden");
+    }
 
-    // Update Hero text for context
-    heroTitle.textContent =
-      currentRole === "tutor" ? "Comece agora!" : "Parceria de sucesso";
+    heroTitle.textContent = currentRole === "tutor" ? "Comece agora!" : "Parceria de sucesso";
   } else {
     formTitle.textContent = "Acesse sua conta";
     formSubtitle.textContent = "Preencha seus dados para continuar.";
     submitBtn.textContent = "Entrar";
     toggleText.textContent = "Não tem conta?";
     toggleBtn.textContent = "Criar cadastro";
+
     registerNameField.classList.add("hidden");
     dateField.classList.add("hidden");
-    cpfField.classList.add("hidden");
     crmField.classList.add("hidden");
+    cpfCnpjField?.classList.add("hidden");
 
-    heroTitle.textContent =
-      currentRole === "tutor" ? "Bem-vindo de volta!" : "Olá, Doutor(a)";
+    heroTitle.textContent = currentRole === "tutor" ? "Bem-vindo de volta!" : "Olá, Doutor(a)";
   }
 }
 
+// Atualiza cor do botão
 function updateButtonColor(color) {
   if (color === "purple") {
     submitBtn.classList.remove("bg-brand-darkTeal");
@@ -117,55 +121,71 @@ function updateButtonColor(color) {
   }
 }
 
+// Máscara CPF / CNPJ
+document.querySelectorAll("#cpf-cnpj-input").forEach(input => {
+  input?.addEventListener("input", e => {
+    let value = e.target.value.replace(/\D/g, "");
+    if (value.length <= 11) {
+      value = value.replace(/(\d{3})(\d)/, "$1.$2");
+      value = value.replace(/(\d{3})(\d)/, "$1.$2");
+      value = value.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+    } else {
+      value = value.replace(/^(\d{2})(\d)/, "$1.$2");
+      value = value.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3");
+      value = value.replace(/\.(\d{3})(\d)/, ".$1/$2");
+      value = value.replace(/(\d{4})(\d{1,2})$/, "$1-$2");
+    }
+    e.target.value = value;
+  });
+});
+
+// Submit
+document.getElementById("auth-form").onsubmit = handleSubmit;
+
 async function handleSubmit(e) {
   e.preventDefault();
 
   const email = document.querySelector('input[type="email"]').value.trim();
   const senha = document.querySelector('input[type="password"]').value;
   const nome = document.querySelector("#register-name-field input")?.value.trim() || "";
-  const crmv = document.querySelector("#crm-field input")?.value.trim() || "";
-  const cpfInput = document.querySelector("#cpf-field input")?.value || "";
-  const cpf = cpfInput.replace(/\D/g, "");
+  const crmv = document.querySelector("#crmv-field input")?.value.trim() || "";
   const nascimento = document.querySelector('#date-field input')?.value.trim() || "";
 
-  // Validações básicas
   if (!email || !senha) {
     showModal("error", "Campos obrigatórios", "Preencha email e senha");
     return;
   }
 
-  // Validações do modo cadastro
-  if (currentMode === "register") {
-    if (!nome) {
-      showModal("warning", "Nome faltando", "Por favor, informe seu nome completo");
-      return;
-    }
-    if (!cpf) {
-      showModal("warning", "CPF necessário", "O campo CPF é obrigatório no cadastro");
-      return;
-    }
-    if (cpf.length !== 11) {
-      showModal("error", "CPF inválido", "O CPF deve conter exatamente 11 dígitos");
-      return;
-    }
-    if (!nascimento) {
-      showModal("warning", "Data de nascimento", "Informe sua data de nascimento");
-      return;
-    }
-  }
-
-  // Monta o payload
-  const payload = {
-    email,
-    senha,
-    role: currentRole,
-  };
+  const payload = { email, senha, role: currentRole };
 
   if (currentMode === "register") {
     payload.nome = nome;
-    payload.cpf = cpf;
     payload.nascimento = nascimento;
-    if (currentRole === "vet") payload.crmv = crmv;
+
+    if (currentRole === "vet") {
+      const cpfCnpjInput = document.querySelector("#cpf-cnpj-input").value.replace(/\D/g, "");
+      if (!cpfCnpjInput) {
+        showModal("warning", "CPF/CNPJ necessário", "Informe um CPF ou CNPJ válido");
+        return;
+      }
+      if (!(cpfCnpjInput.length === 11 || cpfCnpjInput.length === 14)) {
+        showModal("error", "Inválido", "O CPF deve ter 11 dígitos ou o CNPJ 14 dígitos");
+        return;
+      }
+      payload.cpf_cnpj = cpfCnpjInput;
+      if (crmv) payload.crmv = crmv;
+    } else {
+      const cpf = document.querySelector("#cpf-cnpj-input")?.value.replace(/\D/g, "") || "";
+      if (!cpf) {
+        showModal("warning", "CPF necessário", "O campo CPF é obrigatório no cadastro");
+        return;
+      }
+      if (cpf.length !== 11) {
+        showModal("error", "CPF inválido", "O CPF deve conter exatamente 11 dígitos");
+        return;
+      }
+      payload.cpf = cpf;
+    }
   }
 
   const url = currentMode === "login" ? "/login/" : "/register/";
@@ -184,31 +204,24 @@ async function handleSubmit(e) {
 
     if (result.success) {
       showModal("success", "Tudo certo!", currentMode === "login" ? "Login realizado com sucesso!" : "Cadastro realizado com sucesso!");
-      setTimeout(() => {
-        window.location.href = result.redirect;
-      }, 1800);
+      setTimeout(() => window.location.href = result.redirect, 1800);
     } else {
-      showModal("error", "Não foi possível continuar", result.error || "Verifique os dados e tente novamente");
+      showModal("error", "Erro", result.error || "Verifique os dados e tente novamente");
     }
   } catch (err) {
-    console.error(err);
-    showModal("error", "Erro de conexão", "Não foi possível conectar ao servidor. Verifique sua internet e tente novamente.");
+    showModal("error", "Erro de conexão", "Não foi possível conectar ao servidor.");
   }
 }
 
-// Só isso! O resto (trocar abas, modo login/cadastro) continua igual
-document.getElementById("auth-form").onsubmit = handleSubmit;
-
+// Modal
 function showModal(type = "info", title = "Atenção", message = "Algo aconteceu") {
   const modal = document.getElementById("custom-modal");
   const icon = document.getElementById("modal-icon");
   const modalTitle = document.getElementById("modal-title");
   const modalMessage = document.getElementById("modal-message");
 
-  // Remove classes anteriores
   icon.className = "w-12 h-12 rounded-full flex items-center justify-center text-white text-2xl";
 
-  // Define tipo
   if (type === "success") {
       icon.classList.add("bg-green-500");
       icon.innerHTML = "✓";
@@ -239,7 +252,6 @@ function closeModal() {
   setTimeout(() => modal.classList.add("hidden"), 300);
 }
 
-// Fecha com ESC ou clique fora
 document.getElementById("custom-modal").addEventListener("click", function(e) {
   if (e.target === this) closeModal();
 });

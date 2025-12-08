@@ -1,13 +1,12 @@
-from django.contrib import messages
 from django.shortcuts import redirect, render
-from django.contrib.auth.decorators import login_required
 from pet_app import models
 from pet_app.utils import get_tutor_logado
+from django.contrib import messages
 
-# Create your views here.
+# Dash do Tutor
 def dash_tutor(request):
     tutor_data = get_tutor_logado(request)
-    
+
     if not tutor_data:
         return redirect('login')  # ou sua página de login
 
@@ -20,22 +19,22 @@ def dash_tutor(request):
     context = {
         'tutor': tutor,
         'tutor_data': tutor_data
-
     }
     return render(request, 'dash_tutor.html', context)
 
+# Perfil do Tutor
 def perfil_tutor(request):
     tutor_data = get_tutor_logado(request)
 
     if not tutor_data:
-        return redirect('login')
-    
+        return redirect('login')  # Redireciona para o login se não estiver logado
+
     try:
         tutor = models.Tutor.objects.prefetch_related('pet_set').get(id=tutor_data['id'])
     except models.Tutor.DoesNotExist:
-        request.session.flush()
+        request.session.flush()  # Limpa a sessão se o tutor não for encontrado
         return redirect('login')
-    
+
     context = {
         'tutor': tutor,
         'tutor_data': tutor_data
@@ -43,6 +42,7 @@ def perfil_tutor(request):
 
     return render(request, 'tutor_perfil.html', context)
 
+# Editar Perfil do Tutor
 def editar_perfil_tutor(request):
     tutor_data = get_tutor_logado(request)
     if not tutor_data:
@@ -74,7 +74,7 @@ def editar_perfil_tutor(request):
         for i in range(len(tipos)):
             if ddds[i].strip() and numeros[i].strip():
                 models.ContatoTutor.objects.create(
-                    id_tutor=tutor,          
+                    id_tutor=tutor,
                     tipo_contato=tipos[i],
                     ddd=ddds[i],
                     numero=numeros[i]

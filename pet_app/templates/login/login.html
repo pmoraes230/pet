@@ -75,11 +75,22 @@
                     </div>
                 </div>
 
-                <div id="cpf-field" class="hidden">
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">CPF</label>
-                    <input type="text" name="cpf" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" id="cpf-input" class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all outline-none peer">
-                    <p class="text-xs text-red-500 mt-1 hidden peer-invalid:block">CPF inválido</p>
+                <div id="cpf-cnpj-field" class="hidden">
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">CPF ou CNPJ</label>
+                <input type="text" name="cpf_cnpj" placeholder="000.000.000-00 ou 00.000.000/0000-00" id="cpf-cnpj-input"
+                class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all outline-none peer">
+                <p class="text-xs text-red-500 mt-1 hidden peer-invalid:block" id="cpf-cnpj-error">Informe um CPF ou CNPJ válido</p>
                 </div>
+
+
+                <div id="crmv-field" class="hidden">
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">CRMV</label>
+                <input type="text" name="crmv" placeholder="CRMV do veterinário"
+                class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 
+                focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 
+                transition-all outline-none">
+                </div>
+
 
                 <div id="date-field" class="hidden">
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Data de nascimento</label>

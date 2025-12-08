@@ -9,9 +9,6 @@ def call_procedure(proc_name, params):
     return result
 
 def get_tutor_logado(request):
-    """
-    Retorna o objeto Tutor logado ou None se não estiver logado como tutor
-    """
     if not request.session.get('user_role') == 'tutor':
         return None
     
@@ -19,13 +16,12 @@ def get_tutor_logado(request):
     if not tutor_id:
         return None
     
-    # Cache na própria sessão para evitar query repetida
     if 'tutor_obj' in request.session:
         return request.session['tutor_obj']
     
     try:
         tutor = models.Tutor.objects.get(id=tutor_id)
-        # Salva no cache da sessão (serializável!)
+
         request.session['tutor_obj'] = {
             'id': tutor.id,
             'nome_tutor': tutor.nome_tutor,
@@ -33,15 +29,15 @@ def get_tutor_logado(request):
             'cpf': tutor.cpf,
             'endereco': tutor.endereco,
             'data_nascimento': tutor.data_nascimento.strftime('%Y-%m-%d') if tutor.data_nascimento else None,
-            'image_tutor': tutor.imagem_perfil_tutor
-            # adicione outros campos que você usa com frequência
+            'image_tutor': tutor.imagem_perfil_tutor.url if tutor.imagem_perfil_tutor else None,  # ✔️ Aqui corrigido
         }
+
         return request.session['tutor_obj']
+
     except models.Tutor.DoesNotExist:
-        # Sessão inválida → desloga
-        from django.contrib.sessions.models import Session
         request.session.flush()
         return None
+
 
 def get_veterinario_logado(request):
     """
