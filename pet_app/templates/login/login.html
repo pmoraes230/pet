@@ -51,62 +51,61 @@
             </div>
 
             <!-- Form -->
-            <form id="auth-form" method="POST" action="{% url 'insert_tutor_ajax' %}" class="space-y-5 max-w-sm mx-auto md:mx-0 w-full pt-8 md:pt-0">
-                {% csrf_token %}
-                <!-- Register Fields -->
-                <div id="register-name-field" class="hidden">
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nome Completo</label>
-                    <input type="text" name="nome" placeholder="Seu nome" class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all outline-none">
-                </div>
+            <form id="auth-form" method="POST" action="{% url 'register' %}" class="space-y-5 max-w-sm mx-auto md:mx-0 w-full pt-8 md:pt-0">
+    {% csrf_token %}
+    
+    <!-- Campo hidden para role -->
+    <input type="hidden" name="role" id="role-input" value="tutor">
 
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Email</label>
-                    <div class="relative">
-                        <i data-lucide="mail" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" width="18" height="18"></i>
-                        <input type="email" name="email" placeholder="seu@email.com" class="w-full pl-11 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all outline-none" required>
-                    </div>
-                </div>
+    <!-- Nome -->
+    <div id="register-name-field" class="hidden">
+        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nome Completo</label>
+        <input type="text" name="nome" placeholder="Seu nome" class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all outline-none">
+    </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Senha</label>
-                    <div class="relative">
-                        <i data-lucide="lock" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" width="18" height="18"></i>
-                        <input type="password" name="senha" placeholder="••••••••" class="w-full pl-11 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all outline-none" required>
-                    </div>
-                </div>
+    <!-- Email -->
+    <div>
+        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Email</label>
+        <div class="relative">
+            <i data-lucide="mail" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" width="18" height="18"></i>
+            <input type="email" name="email" placeholder="seu@email.com" class="w-full pl-11 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all outline-none" required>
+        </div>
+    </div>
 
-                <div id="cpf-cnpj-field" class="hidden">
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">CPF ou CNPJ</label>
-                <input type="text" name="cpf_cnpj" placeholder="000.000.000-00 ou 00.000.000/0000-00" id="cpf-cnpj-input"
-                class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all outline-none peer">
-                <p class="text-xs text-red-500 mt-1 hidden peer-invalid:block" id="cpf-cnpj-error">Informe um CPF ou CNPJ válido</p>
-                </div>
+    <!-- Senha -->
+    <div>
+        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Senha</label>
+        <div class="relative">
+            <i data-lucide="lock" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" width="18" height="18"></i>
+            <input type="password" name="senha" placeholder="••••••••" class="w-full pl-11 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all outline-none" required>
+        </div>
+    </div>
 
+    <!-- CPF/CNPJ -->
+    <div id="cpf-cnpj-field" class="hidden">
+        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">CPF ou CNPJ</label>
+        <input type="text" name="cpf_cnpj" placeholder="000.000.000-00 ou 00.000.000/0000-00" id="cpf-cnpj-input"
+        class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all outline-none peer">
+        <p class="text-xs text-red-500 mt-1 hidden peer-invalid:block" id="cpf-cnpj-error">Informe um CPF ou CNPJ válido</p>
+    </div>
 
-                <div id="crmv-field" class="hidden">
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">CRMV</label>
-                <input type="text" name="crmv" placeholder="CRMV do veterinário"
-                class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 
-                focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 
-                transition-all outline-none">
-                </div>
+    <!-- CRMV -->
+    <div id="crmv-field" class="hidden">
+        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">CRMV</label>
+        <input type="text" name="crmv" placeholder="CRMV do veterinário"
+        class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 
+        focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 
+        transition-all outline-none">
+    </div>
 
+    <!-- Data de nascimento -->
+    <div id="date-field" class="hidden">
+        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Data de nascimento</label>
+        <input type="date" name="data_nascimento" class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all outline-none">
+    </div>
 
-                <div id="date-field" class="hidden">
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Data de nascimento</label>
-                    <input type="date" name="data_nascimento" class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all outline-none">
-                </div>
-
-                <div class="flex justify-between items-center text-sm">
-                    <label class="flex items-center gap-2 cursor-pointer text-gray-600">
-                        <input type="checkbox" class="rounded border-gray-300 text-brand-purple focus:ring-brand-purple">
-                        Lembrar de mim
-                    </label>
-                    <a href="#" class="text-brand-purple font-semibold hover:underline">Esqueceu a senha?</a>
-                </div>
-
-                <button id="submit-btn" type="submit" class="w-full bg-brand-purple text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all">Entrar</button>
-            </form>
+    <button id="submit-btn" type="submit" class="w-full bg-brand-purple text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all">Entrar</button>
+</form>
 
             <div class="mt-8 text-center md:text-left text-sm text-gray-600">
                 <span id="toggle-text">Não tem conta?</span>

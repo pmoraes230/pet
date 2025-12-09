@@ -6,6 +6,8 @@ from django.contrib.auth.hashers import make_password, check_password
 from MySQLdb import OperationalError, ProgrammingError
 from . import models
 from .utils import call_procedure  # Apenas se usar para cadastrar tutor via procedure
+import traceback
+import datetime
 
 
 # -------------------
@@ -58,13 +60,19 @@ def login_view(request):
                 request.session['user_id'] = vet.id
                 request.session['user_role'] = 'vet'
                 request.session['user_nome'] = vet.nome
-                return JsonResponse({"success": True, "redirect": "/dashboard/vet/"})
+                return JsonResponse({"success": True, "redirect": "/vet_dash/"})
             else:
                 return JsonResponse({"success": False, "error": "Senha incorreta"})
         except models.Veterinario.DoesNotExist:
             return JsonResponse({"success": False, "error": "Email não encontrado"})
+        
 
     return JsonResponse({"success": False, "error": "Tipo de usuário inválido"})
+
+
+
+    
+    
 
 
 # -------------------
@@ -136,69 +144,82 @@ def register_view(request):
 
         return JsonResponse({"success": True, "redirect": "/tutor_dash/dash_tutor/"})
 
-   # -------------------
-# Cadastro do Veterinário
-# -------------------
+    # -------------------
+    # Cadastro do Veterinário
+    # -------------------
     elif role == "vet":
-        if not nome or not crmv:
-            return JsonResponse({"success": False, "error": "Nome e CRMV são obrigatórios"})
-
-        # Limpar CPF/CNPJ para apenas números
-        cpf_cnpj = "".join(filter(str.isdigit, cpf_cnpj))
-        if not cpf_cnpj or len(cpf_cnpj) not in [11, 14]:
-            return JsonResponse({"success": False, "error": "CPF ou CNPJ inválido"})
-
-        # Verificar duplicidade
-        if models.Veterinario.objects.filter(email__iexact=email).exists():
-            return JsonResponse({"success": False, "error": "Este email já está cadastrado"})
-        if models.Veterinario.objects.filter(cpf_cnpj=cpf_cnpj).exists():
-            return JsonResponse({"success": False, "error": "Este CPF/CNPJ já está cadastrado"})
-
-        # Validar CRMV
         try:
-            crmv_num = int(crmv.split("/")[0])
-            uf = crmv.split("/")[-1].upper()[:2] if "/" in crmv else "SP"
-        except ValueError:
-            return JsonResponse({"success": False, "error": "CRMV inválido"})
+            if not nome or not crmv:
+                return JsonResponse({"success": False, "error": "Nome e CRMV são obrigatórios"})
 
-        try:
-            # Criar PessoaFisica
-            pessoa_fisica = models.PessoaFisica.objects.create(
-                cpf=int(cpf_cnpj) if len(cpf_cnpj) == 11 else 0,  # CPF válido ou 0
-                data_nascimento=data_nascimento if data_nascimento else "2000-01-01",
-                genero="N"  # Você pode ajustar para receber do form
-            )
+            # Limpar CPF/CNPJ para apenas números
+            cpf_cnpj = "".join(filter(str.isdigit, cpf_cnpj))
+            if not cpf_cnpj or len(cpf_cnpj) not in [11, 14]:
+                return JsonResponse({"success": False, "error": "CPF ou CNPJ inválido"})
 
-            # Criar PessoaJuridica
-            pessoa_juridica = models.PessoaJuridica.objects.create(
-                cnpj=int(cpf_cnpj) if len(cpf_cnpj) == 14 else 0,
-                nome_fantasia=nome,
-                endereco="Não informado",
-                data_criacao="2025-01-01"
-            )
+            # Verificar duplicidade
+            if models.Veterinario.objects.filter(email__iexact=email).exists():
+                return JsonResponse({"success": False, "error": "Este email já está cadastrado"})
+            if len(cpf_cnpj) == 11 and models.Veterinario.objects.filter(pessoa_fisica__cpf=cpf_cnpj).exists():
+                return JsonResponse({"success": False, "error": "Este CPF já está cadastrado"})
+            if len(cpf_cnpj) == 14 and models.Veterinario.objects.filter(pessoa_juridica__cnpj=cpf_cnpj).exists():
+                return JsonResponse({"success": False, "error": "Este CNPJ já está cadastrado"})
+
+            # Validar CRMV
+            try:
+                crmv_num = int(crmv.split("/")[0])
+                uf = crmv.split("/")[-1].upper()[:2] if "/" in crmv else "SP"
+            except ValueError:
+                return JsonResponse({"success": False, "error": "CRMV inválido"})
+
+            # Garantir data de nascimento válida
+            try:
+                data_nascimento_obj = datetime.datetime.strptime(data_nascimento, "%Y-%m-%d").date() if data_nascimento else datetime.date(2000,1,1)
+            except Exception:
+                data_nascimento_obj = datetime.date(2000,1,1)
+
+            # Criar PessoaFisica (apenas se for CPF)
+            pessoa_fisica = None
+            if len(cpf_cnpj) == 11:
+                pessoa_fisica = models.PessoaFisica.objects.create(
+                    cpf=cpf_cnpj,
+                    data_nascimento=data_nascimento_obj,
+                    genero="N"
+                )
+
+            # Criar PessoaJuridica (apenas se for CNPJ)
+            pessoa_juridica = None
+            if len(cpf_cnpj) == 14:
+                pessoa_juridica = models.PessoaJuridica.objects.create(
+                    cnpj=cpf_cnpj,
+                    nome_fantasia=nome,
+                    endereco="Não informado",
+                    data_criacao=datetime.date.today()
+                )
 
             # Criar Veterinario
-            vet = models.Veterinario(
+            vet = models.Veterinario.objects.create(
                 nome=nome,
                 email=email,
                 crmv=crmv_num,
                 uf_crmv=uf,
                 senha_veterinario=make_password(senha),
-                telefone=0,
-                pessoa_fisica_idpessoa_fisica=pessoa_fisica,
-                pessoa_juridica_idpessoa_juridica=pessoa_juridica
+                telefone="0",
+                pessoa_fisica=pessoa_fisica,
+                pessoa_juridica=pessoa_juridica
             )
-            vet.save()
+
+            # Criar sessão
+            request.session['user_id'] = vet.id
+            request.session['user_role'] = 'vet'
+            request.session['user_nome'] = vet.nome
+
+            return JsonResponse({"success": True, "redirect": "/dashboard/vet/"})
 
         except Exception as e:
+            print(traceback.format_exc())
             return JsonResponse({"success": False, "error": f"Erro ao salvar veterinário: {str(e)}"})
 
-        # Criar sessão
-        request.session['user_id'] = vet.id
-        request.session['user_role'] = 'vet'
-        request.session['user_nome'] = vet.nome
-
-        return JsonResponse({"success": True, "redirect": "/dashboard/vet/"})
 
 @csrf_exempt
 def insert_tutor_ajax(request):
@@ -210,3 +231,12 @@ def insert_tutor_ajax(request):
         data_nascimento = request.POST.get("data_nascimento")
         return JsonResponse({"success": True})
     return JsonResponse({"error": "Método inválido"}, status=400)
+
+def vet_dashboard_view(request):
+    # Aqui você renderiza o template do dashboard do veterinário
+    return render(request, "vet_dashboard.html")
+
+
+def tutor_dashboard_view(request):
+    # Aqui você renderiza o template do dashboard do tutor
+    return render(request, "tutor_dashboard.html")

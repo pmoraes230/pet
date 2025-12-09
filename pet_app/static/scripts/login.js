@@ -1,3 +1,4 @@
+// Ativa ícones Lucide
 lucide.createIcons();
 
 // Estado
@@ -20,6 +21,7 @@ const formTitle = document.getElementById("form-title");
 const formSubtitle = document.getElementById("form-subtitle");
 const toggleText = document.getElementById("toggle-text");
 const toggleBtn = document.getElementById("toggle-btn");
+const authForm = document.getElementById("auth-form");
 
 // Checa params da URL
 const urlParams = new URLSearchParams(window.location.search);
@@ -122,8 +124,9 @@ function updateButtonColor(color) {
 }
 
 // Máscara CPF / CNPJ
-document.querySelectorAll("#cpf-cnpj-input").forEach(input => {
-  input?.addEventListener("input", e => {
+const cpfCnpjInput = document.getElementById("cpf-cnpj-input");
+if (cpfCnpjInput) {
+  cpfCnpjInput.addEventListener("input", e => {
     let value = e.target.value.replace(/\D/g, "");
     if (value.length <= 11) {
       value = value.replace(/(\d{3})(\d)/, "$1.$2");
@@ -137,10 +140,10 @@ document.querySelectorAll("#cpf-cnpj-input").forEach(input => {
     }
     e.target.value = value;
   });
-});
+}
 
 // Submit
-document.getElementById("auth-form").onsubmit = handleSubmit;
+authForm.onsubmit = handleSubmit;
 
 async function handleSubmit(e) {
   e.preventDefault();
@@ -163,24 +166,16 @@ async function handleSubmit(e) {
     payload.nascimento = nascimento;
 
     if (currentRole === "vet") {
-      const cpfCnpjInput = document.querySelector("#cpf-cnpj-input").value.replace(/\D/g, "");
-      if (!cpfCnpjInput) {
-        showModal("warning", "CPF/CNPJ necessário", "Informe um CPF ou CNPJ válido");
+      const cpfCnpj = cpfCnpjInput.value.replace(/\D/g, "");
+      if (!cpfCnpj || !(cpfCnpj.length === 11 || cpfCnpj.length === 14)) {
+        showModal("error", "CPF/CNPJ inválido", "Informe um CPF com 11 ou CNPJ com 14 dígitos");
         return;
       }
-      if (!(cpfCnpjInput.length === 11 || cpfCnpjInput.length === 14)) {
-        showModal("error", "Inválido", "O CPF deve ter 11 dígitos ou o CNPJ 14 dígitos");
-        return;
-      }
-      payload.cpf_cnpj = cpfCnpjInput;
+      payload.cpf_cnpj = cpfCnpj;
       if (crmv) payload.crmv = crmv;
     } else {
-      const cpf = document.querySelector("#cpf-cnpj-input")?.value.replace(/\D/g, "") || "";
-      if (!cpf) {
-        showModal("warning", "CPF necessário", "O campo CPF é obrigatório no cadastro");
-        return;
-      }
-      if (cpf.length !== 11) {
+      const cpf = cpfCnpjInput.value.replace(/\D/g, "");
+      if (!cpf || cpf.length !== 11) {
         showModal("error", "CPF inválido", "O CPF deve conter exatamente 11 dígitos");
         return;
       }
@@ -223,21 +218,21 @@ function showModal(type = "info", title = "Atenção", message = "Algo aconteceu
   icon.className = "w-12 h-12 rounded-full flex items-center justify-center text-white text-2xl";
 
   if (type === "success") {
-      icon.classList.add("bg-green-500");
-      icon.innerHTML = "✓";
-      modalTitle.textContent = title || "Sucesso!";
+    icon.classList.add("bg-green-500");
+    icon.innerHTML = "✓";
+    modalTitle.textContent = title;
   } else if (type === "error") {
-      icon.classList.add("bg-red-500");
-      icon.innerHTML = "✕";
-      modalTitle.textContent = title || "Erro";
+    icon.classList.add("bg-red-500");
+    icon.innerHTML = "✕";
+    modalTitle.textContent = title;
   } else if (type === "warning") {
-      icon.classList.add("bg-yellow-500");
-      icon.innerHTML = "!";
-      modalTitle.textContent = title || "Atenção";
+    icon.classList.add("bg-yellow-500");
+    icon.innerHTML = "!";
+    modalTitle.textContent = title;
   } else {
-      icon.classList.add("bg-blue-500");
-      icon.innerHTML = "i";
-      modalTitle.textContent = title || "Informação";
+    icon.classList.add("bg-blue-500");
+    icon.innerHTML = "i";
+    modalTitle.textContent = title;
   }
 
   modalMessage.textContent = message;
@@ -252,9 +247,9 @@ function closeModal() {
   setTimeout(() => modal.classList.add("hidden"), 300);
 }
 
-document.getElementById("custom-modal").addEventListener("click", function(e) {
-  if (e.target === this) closeModal();
+document.getElementById("custom-modal").addEventListener("click", e => {
+  if (e.target === e.currentTarget) closeModal();
 });
-document.addEventListener("keydown", function(e) {
+document.addEventListener("keydown", e => {
   if (e.key === "Escape") closeModal();
 });
