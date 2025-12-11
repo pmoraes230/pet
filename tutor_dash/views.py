@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import logout
 from pet_app import models
 from pet_app.utils import get_tutor_logado
 
@@ -22,7 +23,7 @@ def dash_tutor(request):
         'tutor_data': tutor_data
 
     }
-    return render(request, 'dash_tutor.html', context)
+    return render(request, 'dash_tutor/dash_tutor.html', context)
 
 def perfil_tutor(request):
     tutor_data = get_tutor_logado(request)
@@ -41,7 +42,7 @@ def perfil_tutor(request):
         'tutor_data': tutor_data
     }
 
-    return render(request, 'tutor_perfil.html', context)
+    return render(request, 'edit_tutor/tutor_perfil.html', context)
 
 def editar_perfil_tutor(request):
     tutor_data = get_tutor_logado(request)
@@ -87,4 +88,47 @@ def editar_perfil_tutor(request):
         'tutor': tutor,
         'contatos': contatos,
     }
-    return render(request, 'editar_perfil.html', context)
+    return render(request, 'edit_tutor/editar_perfil.html', context)
+
+def config_tutor(request):
+    tutor_data = get_tutor_logado(request)
+
+    if not tutor_data:
+        return redirect('login')
+    
+    try:
+        tutor = models.Tutor.objects.prefetch_related('pet_set').get(id=tutor_data['id'])
+    except models.Tutor.DoesNotExist:
+        request.session.flush()
+        return redirect('login')
+    
+    context = {
+        'tutor': tutor,
+        'tutor_data': tutor_data
+    }
+    return render(request, 'edit_tutor/configuracoes_tutor.html', context)
+
+def desativar_conta(request):
+    if request.method != "POST":
+        return redirect('configuracoes_tutor')
+
+    tutor_data = get_tutor_logado(request)
+    if not tutor_data:
+        return redirect('login')
+
+    try:
+        tutor = models.Tutor.objects.get(id=tutor_data['id'])
+    except models.Tutor.DoesNotExist:
+        messages.error(request, "Erro ao encontrar sua conta.")
+        return redirect('login')
+
+    tutor.status_conta = False
+    tutor.save()
+
+    logout(request)
+    request.session.flush() 
+
+    messages.success(request, "Sua conta foi desativada com sucesso. "
+                              "Você pode reativá-la entrando em contato com o suporte.")
+    
+    return redirect('login')

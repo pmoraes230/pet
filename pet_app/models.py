@@ -113,6 +113,7 @@ class Tutor(models.Model):
     id_feedback_pet = models.ForeignKey(FeedbackPet, models.DO_NOTHING, db_column='ID_FEEDBACK_PET', blank=True, null=True)  # Field name made lowercase.
     senha_tutor = models.CharField(max_length=150)
     imagem_perfil_tutor = models.ImageField(upload_to='tutor')
+    status_conta = models.BooleanField(default=True)
 
     class Meta:
         managed = False

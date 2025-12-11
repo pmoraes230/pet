@@ -38,6 +38,12 @@ def login_view(request):
     if role == "tutor":
         try:
             user = models.Tutor.objects.get(email__iexact=email)
+            if not models.Tutor.status_conta:
+                return JsonResponse({
+                    "success": False,
+                    "error": "Esta conta está desativada. Entre em contato com o suporte."
+                })
+            
             if check_password(senha, user.senha_tutor):
                 request.session['user_id'] = user.id
                 request.session['user_role'] = 'tutor'
