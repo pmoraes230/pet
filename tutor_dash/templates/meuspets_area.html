@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Coração em Patas - {{ pet.nome }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{% static 'css/pet_detalhes.css' %}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-[#FDFDFD] font-sans antialiased">
+
+<div class="flex min-h-screen">
+  
+    <!-- SIDEBAR (igual em todas as telas) -->
+    {% include 'components/sidebar.html' %}
+
+    <!-- MAIN CONTENT -->
+    <div class="flex-1 ml-64 flex flex-col">
+        
+        <!-- HEADER -->
+        {% include 'components/header.html' with nome=tutor.nome_tutor %}
+
+        <!-- CONTEÚDO PRINCIPAL -->
+        <main class="flex-1 p-8">
+            <div class="flex justify-between items-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Detalhes do pet</h1>
+                <a href="{% url 'dash_tutor' %}" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-arrow-left mr-2"></i> Voltar
+                </a>
+            </div>
+
+            <div class="flex flex-col lg:flex-row gap-8 max-w-6xl">
+
+                <!-- COLUNA ESQUERDA - FOTO E INFO RÁPIDA -->
+                <div class="w-full lg:w-1/3 flex flex-col gap-6">
+
+                    <!-- Card principal do pet -->
+                    <div class="bg-white rounded-[32px] p-2 pb-6 shadow-sm border border-gray-100">
+                        <div class="w-full aspect-[4/3] relative rounded-[28px] overflow-hidden mb-4">
+                            {% if pet.foto %}
+                                <img src="{{ pet.foto.url }}" alt="{{ pet.nome }}" class="w-full h-full object-cover">
+                            {% else %}
+                                <div class="w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center">
+                                    <i class="fas fa-paw text-white text-6xl"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="text-center px-4">
+                            <h2 class="text-3xl font-bold text-gray-900 mb-1">{{ pet.nome }}</h2>
+                            <p class="text-gray-400 text-sm font-medium">{{ pet.raca }} • {{ pet.idade }} ano{{ pet.idade|pluralize }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Cards de status -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-[#E9D5FF] rounded-2xl p-4 text-center text-[#6B21A8]">
+                            <span class="text-xs font-semibold opacity-80 block mb-1">Peso</span>
+                            <span class="text-xl font-bold">{{ pet.peso|default:"—" }} kg</span>
+                        </div>
+                        <div class="bg-[#BAE6FD] rounded-2xl p-4 text-center text-[#0369A1]">
+                            <span class="text-xs font-semibold opacity-80 block mb-1">Sexo</span>
+                            <span class="text-xl font-bold">{{ pet.get_sexo_display }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Próxima consulta -->
+                    {% if proxima_consulta %}
+                    <div class="bg-[#9333EA] rounded-[32px] p-6 text-white relative overflow-hidden shadow-lg">
+                        <div class="absolute top-4 right-4 w-8 h-8 bg-white/20 rounded-lg rotate-12"></div>
+                        <p class="text-xs font-medium text-white/80 mb-2">Próxima consulta</p>
+                        <h3 class="text-4xl font-bold mb-4">{{ proxima_consulta.data|date:"d \\de M" }}</h3>
+                        <p class="text-sm font-semibold">{{ proxima_consulta.veterinario }} - {{ proxima_consulta.motivo }}</p>
+                    </div>
+                    {% endif %}
+
+                </div>
+
+                <!-- COLUNA DIREITA - TABS -->
+                <div class="w-full lg:w-2/3 flex flex-col gap-6">
+
+                    <!-- Navegação das tabs -->
+                    <div class="bg-white rounded-full p-1 inline-flex shadow-sm border border-gray-100">
+                        <button data-tab="sobre" class="tab-btn active px-8 py-2 rounded-full text-sm font-bold bg-[#9333EA] text-white">Sobre</button>
+                        <button data-tab="saude" class="tab-btn px-8 py-2 rounded-full text-sm font-bold text-gray-500">Saúde</button>
+                    </div>
+
+                    <!-- Conteúdo das tabs -->
+                    <div class="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100">
+
+                        <!-- TAB SOBRE -->
+                        <div id="tab-sobre" class="tab-content">
+                            <div class="mb-8">
+                                <h3 class="text-sm font-bold text-gray-900 mb-3">Sobre o {{ pet.nome }}:</h3>
+                                <p class="text-gray-700 leading-relaxed">{{ pet.sobre|default:"Ainda não há descrição." }}</p>
+                            </div>
+
+                            <div>
+                                <h3 class="text-sm font-bold text-gray-900 mb-4">Personalidade</h3>
+                                <div class="flex flex-wrap gap-3">
+                                    {% for trait in pet.personalidade.all %}
+                                        <span class="bg-[#FEF3C7] text-[#92400E] px-4 py-1.5 rounded-full text-sm font-bold">{{ trait.nome }}</span>
+                                    {% empty %}
+                                        <span class="text-gray-400 italic">Nenhuma característica cadastrada</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB SAÚDE -->
+                        <div id="tab-saude" class="tab-content hidden">
+                            <div class="flex justify-between items-center mb-6">
+                                <h3 class="text-sm font-bold text-gray-900">Carteira de vacinação</h3>
+                                <a href="#" class="text-[#9333EA] text-sm font-bold hover:underline">+ Adicionar registro</a>
+                            </div>
+
+                            <div class="space-y-4">
+                                {% for vacina in pet.vacinacao_set.all %}
+                                <div class="flex items-center gap-4 p-4 hover:bg-gray-50 rounded-xl border border-gray-100/50 transition">
+                                    <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                                        <i class="fas fa-syringe text-purple-600"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <h4 class="font-bold text-gray-900">{{ vacina.vacina.nome }}</h4>
+                                        <p class="text-xs text-gray-600">Aplicada em: {{ vacina.data_aplicacao|date:"d/m/Y" }}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-xs text-gray-500 block">Próxima dose</span>
+                                        <p class="text-[#9333EA] font-bold text-sm">
+                                            {{ vacina.proxima_dose|date:"d/m/Y"|default:"Anual" }}
+                                        </p>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <p class="text-gray-400 text-center py-8">Nenhuma vacina registrada ainda.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+    // Tabs simples com JS puro
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Remove active de todos
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('bg-[#9333EA]', 'text-white'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.add('text-gray-500'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+
+            // Ativa o clicado
+            btn.classList.add('bg-[#9333EA]', 'text-white');
+            btn.classList.remove('text-gray-500');
+            document.getElementById('tab-' + btn.dataset.tab).classList.remove('hidden');
+        });
+    });
+</script>
+</body>
+</html>

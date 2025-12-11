@@ -180,7 +180,22 @@ async function handleSubmit(e) {
       body: JSON.stringify(payload),
     });
 
+    const contentType = response.headers.get("content-type");
+
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await response.text();
+        console.error("Resposta não é JSON:\n", text);
+
+        showModal(
+          "error",
+          "Erro no servidor",
+          "O servidor retornou uma resposta inválida (HTML). Verifique o backend."
+        );
+        return;
+      }
+
     const result = await response.json();
+
 
     if (result.success) {
       showModal("success", "Tudo certo!", currentMode === "login" ? "Login realizado com sucesso!" : "Cadastro realizado com sucesso!");

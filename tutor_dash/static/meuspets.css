@@ -1,0 +1,12 @@
+/* Importando a fonte Inter do Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #FAFAFA;
+}
+
+/* 
+  A maior parte dos estilos é controlada pelo Tailwind CSS no HTML.
+  Use este arquivo para estilizações muito específicas ou overrides globais.
+*/

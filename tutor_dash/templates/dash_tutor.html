@@ -3,24 +3,28 @@
 
 {% block content %}
 <div class="bg-gray-50 flex h-screen overflow-hidden">
+
     {% block aside %}
     {% include "partials/aside/aside_tutor.html" %}
     {% endblock %}
+
     <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+        
         {% block header %}
         {% include "partials/header/header_tutor.html" %}
         {% endblock %}
+
         <!-- Scrollable Content -->
         <div class="flex-1 overflow-y-auto p-6 md:p-10 pb-24">
-            
-            <!-- Quick Stats/Alerts -->
+
+            <!-- Quick Stats -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
                 <div class="bg-brand-purple text-white p-6 rounded-3xl shadow-lg relative overflow-hidden">
                     <div class="relative z-10">
                         <div class="text-purple-200 text-sm font-medium mb-1">Próxima Vacina</div>
                         <div class="text-2xl font-bold">12 Outubro</div>
                         <div class="text-sm mt-2 flex items-center gap-2">
-                            <i data-lucide="clock" width="14" height="14"></i> 14:00 - Clínica Vet Care
+                            14:00 - Clínica Vet Care
                         </div>
                     </div>
                     <i data-lucide="syringe" class="absolute -bottom-4 -right-4 text-white/20 w-32 h-32"></i>
@@ -28,15 +32,12 @@
 
                 <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col justify-between">
                     <div>
-                        <div class="text-gray-500 text-sm font-medium mb-1">Humor do Paçoca</div>
-                        <div class="text-2xl font-bold text-green-600 flex items-center gap-2">
-                            <i data-lucide="smile" width="24" height="24"></i> Feliz
+                        <div class="text-gray-500 text-sm font-medium mb-1">Total de Pets</div>
+                        <div class="text-3xl font-bold text-brand-purple">
+                            {{ pets.count }}
                         </div>
                     </div>
-                    <div class="w-full bg-gray-100 h-2 rounded-full mt-4">
-                        <div class="bg-green-500 h-2 rounded-full" style="width: 80%"></div>
-                    </div>
-                    <div class="text-xs text-gray-400 mt-2">Baseado no registro de ontem</div>
+                    <div class="text-xs text-gray-400 mt-4">Cadastrados no sistema</div>
                 </div>
 
                 <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-between group cursor-pointer hover:border-brand-teal transition-colors">
@@ -52,88 +53,70 @@
 
             <!-- My Pets Section -->
             <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
-                Meus Pets <span class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">2</span>
+                Meus Pets <span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm font-medium">{{ pets.count }}</span>
             </h3>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Pet Card 1 -->
-                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex gap-6 hover:shadow-md transition-shadow">
-                    <div class="w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0">
-                        <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=1000&auto=format&fit=crop" class="w-full h-full object-cover" alt="Paçoca">
-                    </div>
-                    <div class="flex-1">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <h4 class="text-xl font-bold text-gray-900">Paçoca</h4>
-                                <p class="text-sm text-gray-500">Vira-lata • 4 anos</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+                {% for pet in pets %}
+                <a href="{% url 'detalhes_pet' pet.id %}" class="group block transform hover:-translate-y-3 transition-all duration-300">
+                    <div class="bg-white rounded-3xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-2xl transition-shadow">
+                        {% if pet.foto %}
+                            <img src="{{ pet.foto.url }}" 
+                                 alt="{{ pet.nome }}"
+                                 class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500">
+                        {% else %}
+                            <div class="h-64 bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center">
+                                <i class="fas fa-paw text-white text-7xl opacity-80"></i>
                             </div>
-                            <button class="text-gray-400 hover:text-brand-purple"><i data-lucide="more-vertical" width="20" height="20"></i></button>
-                        </div>
-                        
-                        <div class="mt-4 flex gap-2">
-                            <span class="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-bold">Saudável</span>
-                            <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-bold">3.5 kg</span>
-                        </div>
-                    </div>
-                </div>
+                        {% endif %}
 
-                <!-- Pet Card 2 -->
-                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex gap-6 hover:shadow-md transition-shadow">
-                    <div class="w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0">
-                        <img src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?q=80&w=1000&auto=format&fit=crop" class="w-full h-full object-cover" alt="Luna">
-                    </div>
-                    <div class="flex-1">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <h4 class="text-xl font-bold text-gray-900">Luna</h4>
-                                <p class="text-sm text-gray-500">Siamês • 2 anos</p>
+                        <div class="p-6 text-center">
+                            <h4 class="text-2xl font-bold text-gray-900 mb-1">{{ pet.nome }}</h4>
+                            <p class="text-gray-500 font-medium">
+                                {{ pet.raca|default:"Não informado" }} • {{ pet.idade }} ano{{ pet.idade|pluralize }}
+                            </p>
+                            <div class="mt-4 flex justify-center gap-2">
+                                <span class="px-4 py-1.5 bg-green-100 text-green-700 rounded-full text-xs font-bold">Saudável</span>
+                                {% if pet.peso %}
+                                <span class="px-4 py-1.5 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">{{ pet.peso }} kg</span>
+                                {% endif %}
                             </div>
-                            <button class="text-gray-400 hover:text-brand-purple"><i data-lucide="more-vertical" width="20" height="20"></i></button>
-                        </div>
-                        
-                        <div class="mt-4 flex gap-2">
-                            <span class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-lg text-xs font-bold">Em observação</span>
-                            <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-bold">4.2 kg</span>
+                            <span class="inline-block mt-5 px-8 py-3 bg-purple-100 text-purple-700 rounded-full text-sm font-bold hover:bg-purple-200 transition">
+                                Ver detalhes →
+                            </span>
                         </div>
                     </div>
+                </a>
+                {% empty %}
+                <div class="col-span-3 text-center py-20">
+                    <i class="fas fa-heart-broken text-gray-300 text-8xl mb-6"></i>
+                    <h3 class="text-2xl font-bold text-gray-500 mb-4">Nenhum pet cadastrado ainda</h3>
+                    <a href="{% url 'adicionar_pet' %}" class="text-brand-purple font-bold text-lg hover:underline">
+                        Cadastrar meu primeiro amor em patas
+                    </a>
                 </div>
+                {% endfor %}
             </div>
 
-            <!-- Recent Activity Timeline -->
-            <h3 class="text-lg font-bold text-gray-800 mt-10 mb-6">Histórico Recente</h3>
+            <!-- Recent Activity (opcional - pode deixar como está ou popular depois) -->
+            <h3 class="text-lg font-bold text-gray-800 mb-6">Histórico Recente</h3>
             <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                <div class="relative border-l-2 border-gray-100 ml-3 space-y-8">
-                    
-                    <div class="relative pl-8">
-                        <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-brand-purple ring-4 ring-white"></div>
-                        <p class="text-xs text-gray-400 mb-1">Hoje, 09:00</p>
-                        <h5 class="text-sm font-bold text-gray-800">Registro de Humor (Paçoca)</h5>
-                        <p class="text-sm text-gray-600 mt-1">Paçoca acordou muito animado e brincou por 20 minutos.</p>
-                    </div>
-
-                    <div class="relative pl-8">
-                        <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-brand-teal ring-4 ring-white"></div>
-                        <p class="text-xs text-gray-400 mb-1">Ontem, 16:30</p>
-                        <h5 class="text-sm font-bold text-gray-800">Consulta Veterinária (Luna)</h5>
-                        <p class="text-sm text-gray-600 mt-1">Check-up de rotina. Tudo certo com a respiração.</p>
-                    </div>
-
-                </div>
+                <p class="text-center text-gray-400 py-8">Nenhuma atividade recente</p>
             </div>
 
         </div>
+
+        <!-- Onda no fundo -->
         <div class="absolute bottom-0 left-0 w-full overflow-hidden leading-none rotate-180 bg-brand-teal">
-            <svg class="relative block w-[calc(100%+1.3px)] h-[60px]" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+            <svg class="relative block w-[calc(100%+1.3px)] h-[60px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
                 <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" fill="#F9FAFB"></path>
             </svg>
         </div>
     </main>
-
-    <script>
-        lucide.createIcons();
-    </script>
-    </main>
 </div>
 
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script>
+    lucide.createIcons();
+</script>
 {% endblock %}
-
