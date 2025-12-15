@@ -174,3 +174,87 @@ CREATE TABLE contato_veterinario (
     DATA_CADASTRO DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (ID_VETERINARIO) REFERENCES veterinario(ID)
 );
+
+-- ===============================
+-- PROCEDURE PET
+-- ===============================
+DROP PROCEDURE IF EXISTS insert_pet;
+DELIMITER $$
+
+CREATE PROCEDURE insert_pet (
+    IN p_nome VARCHAR(45),
+    IN p_data_nascimento DATE,
+    IN p_especie VARCHAR(45),
+    IN p_raca VARCHAR(45),
+    IN p_sexo VARCHAR(5),
+    IN p_pelagem VARCHAR(45),
+    IN p_castrado VARCHAR(3),
+    IN p_id_tutor INT
+)
+BEGIN
+    -- ===============================
+    -- VALIDAÇÕES
+    -- ===============================
+
+    IF p_nome IS NULL OR TRIM(p_nome) = '' THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'O nome do pet é obrigatório';
+    END IF;
+
+    IF p_especie IS NULL OR TRIM(p_especie) = '' THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'A espécie do pet é obrigatória';
+    END IF;
+
+    IF p_sexo IS NULL OR TRIM(p_sexo) = '' THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'O sexo do pet é obrigatório';
+    END IF;
+
+    IF p_castrado IS NULL OR TRIM(p_castrado) = '' THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Informe se o pet é castrado';
+    END IF;
+
+    IF p_id_tutor IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'O tutor é obrigatório';
+    END IF;
+
+    -- ===============================
+    -- VALIDAÇÃO DE CHAVE ESTRANGEIRA
+    -- ===============================
+
+    IF NOT EXISTS (SELECT 1 FROM tutor WHERE ID = p_id_tutor) THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Tutor informado não existe';
+    END IF;
+
+    -- ===============================
+    -- INSERÇÃO
+    -- ===============================
+
+    INSERT INTO pet (
+        NOME,
+        DATA_NASCIMENTO,
+        ESPECIE,
+        RACA,
+        SEXO,
+        PELAGEM,
+        CASTRADO,
+        ID_TUTOR
+    )
+    VALUES (
+        p_nome,
+        p_data_nascimento,
+        p_especie,
+        p_raca,
+        p_sexo,
+        p_pelagem,
+        p_castrado,
+        p_id_tutor
+    );
+
+END $$
+
+DELIMITER ;
