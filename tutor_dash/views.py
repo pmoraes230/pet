@@ -7,22 +7,44 @@ from pet_app.utils import get_tutor_logado
 
 # Create your views here.
 def dash_tutor(request):
-    tutor_data = get_tutor_logado(request)
-    
-    if not tutor_data:
-        return redirect('login')  # ou sua página de login
-
-    try:
-        tutor = models.Tutor.objects.prefetch_related('pet_set').get(id=tutor_data['id'])
-    except models.Tutor.DoesNotExist:
-        request.session.flush()
+    if request.session.get('user_role') != 'tutor':
         return redirect('login')
 
-    context = {
-        'tutor': tutor,
-        'tutor_data': tutor_data
+    tutor_id = request.session['user_id']
+    
+    try:
+        tutor = models.Tutor.objects.get(id=tutor_id)
+    except models.Tutor.DoesNotExist:
+        return redirect('login')
 
+    # Pegamos os pets normalmente
+    pets_qs = models.Pet.objects.filter(id_tutor=tutor_id).order_by('nome')
+
+    # Convertemos manualmente para dicionário SEM passar ImageField ou qualquer objeto não serializável
+    pets = []
+    for pet in pets_qs:
+        pets.append({
+            "id": pet.id,
+            "nome": pet.nome,
+            "especie": pet.especie,
+            "raca": pet.raca or "Não informada",
+            "sexo": pet.sexo,
+            "pelagem": pet.pelagem or "Não informada",
+            "castrado": pet.castrado == "Sim",
+            "data_nascimento": pet.data_nascimento.isoformat() if pet.data_nascimento else None,
+            "idade": pet.calcular_idade() if hasattr(pet, 'calcular_idade') else None,
+            # Foto gerada automaticamente (sem campo no banco!)
+            "foto": f"https://api.dicebear.com/7.x/avataaars/svg?seed=pet-{pet.id}&backgroundColor=ffdfbf,b6e3f4,c0a5ff,d1d4f9"
+        })
+
+    context = {
+        "tutor": {
+            "nome": tutor.nome_tutor or "Tutor",
+            "email": tutor.email,
+        },
+        "pets": pets,  # ← 100% serializável, sem ImageFieldFile!
     }
+
     return render(request, 'dash_tutor/dash_tutor.html', context)
 
 def perfil_tutor(request):
