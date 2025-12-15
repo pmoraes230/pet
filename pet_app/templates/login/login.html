@@ -104,15 +104,27 @@
         <input type="date" name="data_nascimento" class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all outline-none">
     </div>
 
-    <button id="submit-btn" type="submit" class="w-full bg-brand-purple text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all">Entrar</button>
-</form>
+    <button
+    id="submit-btn"
+    type="submit"
+    class="w-full bg-brand-purple text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
+    >
+    Entrar
+    </button>
+    </form>
 
-            <div class="mt-8 text-center md:text-left text-sm text-gray-600">
-                <span id="toggle-text">Não tem conta?</span>
-                <button onclick="toggleMode()" class="text-brand-purple font-bold hover:underline ml-1" id="toggle-btn">Criar cadastro</button>
-            </div>
-        </div>
+    <div class="mt-8 text-center md:text-left text-sm text-gray-600">
+    <span id="toggle-text">Não tem conta?</span>
+    <button
+        type="button"
+        onclick="toggleMode()"
+        class="text-brand-purple font-bold hover:underline ml-1"
+        id="toggle-btn"
+    >
+        Criar cadastro
+    </button>
     </div>
+
 </div>
 
 <div id="custom-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
@@ -131,20 +143,7 @@
     </div>
 </div>
 
-<script>
-document.getElementById('cpf-input')?.addEventListener('input', function (e) {
-    let value = e.target.value.replace(/\D/g, '');
-    if (value.length <= 11) {
-        value = value.replace(/(\d{3})(\d)/, '$1.$2');
-        value = value.replace(/(\d{3})(\d)/, '$1.$2');
-        value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-    }
-    e.target.value = value;
-    if (value.replace(/\D/g, '').length === 11) e.target.setCustomValidity('');
-    else e.target.setCustomValidity('CPF deve ter 11 dígitos');
-});
-window.csrfToken = "{{ csrf_token }}";
-</script>
+
 {% endblock %}
 {% block scripts %}
 <script src="{% static 'scripts/login.js' %}"></script>
