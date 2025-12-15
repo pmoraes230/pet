@@ -84,7 +84,10 @@ class Pet(models.Model):
 
 class ProntuarioPet(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
-    historico_veterinario = models.CharField(db_column='HISTORICO_VETERINARIO', unique=True, max_length=150)
+    historico_veterinario = models.CharField(
+        db_column='HISTORICO_VETERINARIO',
+        max_length=255
+    )
     motivo_consulta = models.TextField(db_column='MOTIVO_CONSULTA')
     avaliacao_geral = models.TextField(db_column='AVALIACAO_GERAL')
     procedimentos = models.TextField(db_column='PROCEDIMENTOS')
@@ -93,17 +96,25 @@ class ProntuarioPet(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'prontuario_pet'
+        db_table = 'prontuariopet'
 
 
 class Consulta(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     tipo_de_consulta = models.CharField(db_column='TIPO_DE_CONSULTA', max_length=45)
-    retorno_agendado = models.DateField(db_column='RETORNO_AGENDADO')
-    tratamento = models.CharField(db_column='TRATAMENTO', max_length=100)
+    retorno_agendado = models.DateField(db_column='RETORNO_AGENDADO', null=True, blank=True)
+    tratamento = models.CharField(db_column='TRATAMENTO', max_length=100, null=True, blank=True)
     data_consulta = models.DateField(db_column='DATA_CONSULTA')
     horario_consulta = models.TimeField(db_column='HORARIO_CONSULTA')
-    observacoes = models.CharField(db_column='OBSERVACOES', max_length=45)
+    observacoes = models.CharField(db_column='OBSERVACOES', max_length=255, null=True, blank=True)
+
+    valor_consulta = models.DecimalField(
+        db_column='VALOR_CONSULTA',
+        max_digits=10,
+        decimal_places=2,
+        default=0.00
+    )
+
     id_pet = models.ForeignKey('Pet', models.DO_NOTHING, db_column='ID_PET')
     id_veterinario = models.ForeignKey('Veterinario', models.DO_NOTHING, db_column='ID_VETERINARIO')
 

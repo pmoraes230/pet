@@ -64,7 +64,7 @@ def dash_veterinario(request):
         'alertas': alertas,
     }
 
-    return render(request, 'dash_veterinario.html', context)
+    return render(request, 'vet_dash.html', context)
 
 
 # ------------------------

@@ -289,7 +289,7 @@ def vet_dashboard_view(request):
         'agenda_hoje': agenda,
         'total_pacientes': models.Pet.objects.count()
     }
-    return render(request, 'dash_veterinario.html', context)
+    return render(request, 'vet_dash.html', context)
 
 def perfil_veterinario(request):
     if request.session.get('user_role') != 'vet':
