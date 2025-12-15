@@ -3,9 +3,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('dash_tutor/', views.dash_tutor, name='dash_tutor'),
-    path('perfil_tutor/', views.perfil_tutor, name='perfil_tutor'),
-    path('editar_perfil/', views.editar_perfil_tutor, name='editar_perfil'),
-
-
+    path('meus-pets/', views.meus_pets, name='meus_pets'),
+    path('adicionar-pet/', views.adicionar_pet, name='adicionar_pet'),
+    path('excluir-pet/<int:pet_id>/', views.excluir_pet, name='excluir_pet'),
 ]

@@ -1,242 +1,307 @@
-import json
-from django.shortcuts import render, redirect
-from django.http import JsonResponse
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.hashers import make_password, check_password
-from MySQLdb import OperationalError, ProgrammingError
-from . import models
-from .utils import call_procedure  # Apenas se usar para cadastrar tutor via procedure
-import traceback
+from django.db.models import Sum
+from datetime import date
 import datetime
+from . import models
+from .utils import call_procedure # Mantenha se você usa, senão pode remover
 
+# ========================================================
+# PÁGINA INICIAL E AUTENTICAÇÃO
+# ========================================================
 
-# -------------------
-# Página inicial
-# -------------------
 def home(request):
     return render(request, 'tela_inicio/index.html')
 
-
-# -------------------
-# Login
-# -------------------
 @csrf_exempt
 def login_view(request):
     if request.method == 'GET':
         return render(request, 'login/login.html')
     
-    if request.method != "POST":
-        return JsonResponse({"success": False, "error": "Método não permitido"}, status=405)
+    if request.method == "POST":
+        email = request.POST.get("email", "").strip().lower()
+        senha = request.POST.get("senha", "")
+        role = request.POST.get("role")
 
-    try:
-        data = json.loads(request.body)
-    except json.JSONDecodeError:
-        return JsonResponse({"success": False, "error": "JSON inválido"}, status=400)
+        if not email or not senha:
+            messages.error(request, "Email e senha são obrigatórios.")
+            return render(request, 'login/login.html')
 
-    email = (data.get("email") or "").strip().lower()
-    senha = data.get("senha") or ""
-    role = data.get("role")  # 'tutor' ou 'vet'
+        if role == "tutor":
+            try:
+                user = models.Tutor.objects.get(email__iexact=email)
+                if check_password(senha, user.senha_tutor) or senha == user.senha_tutor:
+                    request.session['user_id'] = user.id
+                    request.session['user_role'] = 'tutor'
+                    request.session['user_nome'] = user.nome_tutor
+                    return redirect('tutor_dashboard')
+                else:
+                    messages.error(request, "Senha incorreta.")
+            except models.Tutor.DoesNotExist:
+                messages.error(request, "Email de tutor não encontrado.")
 
-    if not email or not senha:
-        return JsonResponse({"success": False, "error": "Email e senha obrigatórios"})
+        elif role == "vet":
+            try:
+                vet = models.Veterinario.objects.get(email__iexact=email)
+                if check_password(senha, vet.senha_veterinario) or senha == vet.senha_veterinario:
+                    request.session['user_id'] = vet.id
+                    request.session['user_role'] = 'vet'
+                    request.session['user_nome'] = vet.nome
+                    return redirect('vet_dashboard')
+                else:
+                    messages.error(request, "Senha incorreta.")
+            except models.Veterinario.DoesNotExist:
+                messages.error(request, "Email de veterinário não encontrado.")
+        else:
+            messages.error(request, "Selecione o tipo de usuário.")
 
-    if role == "tutor":
-        try:
-            user = models.Tutor.objects.get(email__iexact=email)
-            if check_password(senha, user.senha_tutor):
-                request.session['user_id'] = user.id
-                request.session['user_role'] = 'tutor'
-                request.session['user_nome'] = user.nome_tutor or "Tutor"
-                return JsonResponse({"success": True, "redirect": "/tutor_dash/dash_tutor/"})
-            else:
-                return JsonResponse({"success": False, "error": "Senha incorreta"})
-        except models.Tutor.DoesNotExist:
-            return JsonResponse({"success": False, "error": "Email não encontrado"})
+    return render(request, 'login/login.html')
 
-    elif role == "vet":
-        try:
-            vet = models.Veterinario.objects.get(email__iexact=email)
-            if check_password(senha, vet.senha_veterinario):
-                request.session['user_id'] = vet.id
-                request.session['user_role'] = 'vet'
-                request.session['user_nome'] = vet.nome
-                return JsonResponse({"success": True, "redirect": "/vet_dash/"})
-            else:
-                return JsonResponse({"success": False, "error": "Senha incorreta"})
-        except models.Veterinario.DoesNotExist:
-            return JsonResponse({"success": False, "error": "Email não encontrado"})
-        
-
-    return JsonResponse({"success": False, "error": "Tipo de usuário inválido"})
-
-
-
-    
-    
-
-
-# -------------------
-# Logout
-# -------------------
 def logout_view(request):
-    request.session.flush()  # Limpa a sessão
+    request.session.flush()
     return redirect('login')
 
-
-# -------------------
-# Registro
-# -------------------
 @csrf_exempt
 def register_view(request):
     if request.method != "POST":
-        return JsonResponse({"success": False, "error": "Método não permitido"}, status=405)
+        return redirect('login')
 
-    try:
-        data = json.loads(request.body)
-    except json.JSONDecodeError:
-        return JsonResponse({"success": False, "error": "JSON inválido"}, status=400)
-
-    email = (data.get("email") or "").strip().lower()
-    senha = data.get("senha") or ""
-    nome = (data.get("nome") or "").strip()
-    crmv = (data.get("crmv") or "").strip()
-    role = data.get("role")
-    data_nascimento = data.get("nascimento")
-    cpf = (data.get("cpf") or "").strip()
-    cpf_cnpj = (data.get("cpf_cnpj") or "").strip()
+    email = request.POST.get("email", "").strip().lower()
+    senha = request.POST.get("senha", "")
+    nome = request.POST.get("nome", "").strip()
+    role = request.POST.get("role")
+    crmv = request.POST.get("crmv", "").strip()
+    data_nascimento = request.POST.get("data_nascimento")
+    cpf_cnpj = request.POST.get("cpf_cnpj", "").strip()
 
     if not email or not senha:
-        return JsonResponse({"success": False, "error": "Email e senha são obrigatórios"})
+        messages.error(request, "Dados incompletos.")
+        return render(request, 'login/login.html')
 
-    # -------------------
-    # Cadastro do Tutor
-    # -------------------
     if role == "tutor":
-        if not nome:
-            return JsonResponse({"success": False, "error": "Nome é obrigatório"})
-        if not cpf or len(cpf) != 11 or not cpf.isdigit():
-            return JsonResponse({"success": False, "error": "CPF deve ter 11 dígitos numéricos"})
-        if not data_nascimento:
-            return JsonResponse({"success": False, "error": "Data de nascimento é obrigatória"})
-
-        senha_hash = make_password(senha)
         try:
-            call_procedure('insert_tutor', [
-                nome,
-                email,
-                senha_hash,
-                cpf,
-                data_nascimento
-            ])
-        except (OperationalError, ProgrammingError) as e:
-            error_msg = str(e)
-            if "45000" in error_msg:
-                msg = error_msg.split("45000")[-1].strip()
-                return JsonResponse({"success": False, "error": msg})
-            return JsonResponse({"success": False, "error": "Erro no banco de dados"})
+            # Tenta criar direto pelo ORM se a procedure falhar, ou ajuste conforme necessidade
+            # Aqui mantendo a lógica simples de criação:
+            cpf_limpo = "".join(filter(str.isdigit, cpf_cnpj))
+            models.Tutor.objects.create(
+                nome_tutor=nome,
+                email=email,
+                senha_tutor=make_password(senha), # ou senha pura se preferir
+                cpf=cpf_limpo,
+                data_nascimento=data_nascimento,
+                endereco="Endereço não informado"
+            )
+            
+            # Login automático
+            tutor = models.Tutor.objects.get(email=email)
+            request.session['user_id'] = tutor.id
+            request.session['user_role'] = 'tutor'
+            request.session['user_nome'] = tutor.nome_tutor
+            return redirect('tutor_dashboard')
+
         except Exception as e:
-            return JsonResponse({"success": False, "error": f"Erro inesperado: {str(e)}"})
+            print(e)
+            messages.error(request, "Erro ao cadastrar tutor.")
+            return render(request, 'login/login.html')
 
-        tutor = models.Tutor.objects.get(email=email)
-        request.session['user_id'] = tutor.id
-        request.session['user_role'] = 'tutor'
-        request.session['user_nome'] = tutor.nome_tutor or nome
-
-        return JsonResponse({"success": True, "redirect": "/tutor_dash/dash_tutor/"})
-
-    # -------------------
-    # Cadastro do Veterinário
-    # -------------------
     elif role == "vet":
         try:
-            if not nome or not crmv:
-                return JsonResponse({"success": False, "error": "Nome e CRMV são obrigatórios"})
-
-            # Limpar CPF/CNPJ para apenas números
-            cpf_cnpj = "".join(filter(str.isdigit, cpf_cnpj))
-            if not cpf_cnpj or len(cpf_cnpj) not in [11, 14]:
-                return JsonResponse({"success": False, "error": "CPF ou CNPJ inválido"})
-
-            # Verificar duplicidade
             if models.Veterinario.objects.filter(email__iexact=email).exists():
-                return JsonResponse({"success": False, "error": "Este email já está cadastrado"})
-            if len(cpf_cnpj) == 11 and models.Veterinario.objects.filter(pessoa_fisica__cpf=cpf_cnpj).exists():
-                return JsonResponse({"success": False, "error": "Este CPF já está cadastrado"})
-            if len(cpf_cnpj) == 14 and models.Veterinario.objects.filter(pessoa_juridica__cnpj=cpf_cnpj).exists():
-                return JsonResponse({"success": False, "error": "Este CNPJ já está cadastrado"})
+                messages.error(request, "Email já cadastrado.")
+                return render(request, 'login/login.html')
 
-            # Validar CRMV
-            try:
-                crmv_num = int(crmv.split("/")[0])
-                uf = crmv.split("/")[-1].upper()[:2] if "/" in crmv else "SP"
-            except ValueError:
-                return JsonResponse({"success": False, "error": "CRMV inválido"})
+            cpf_cnpj_limpo = "".join(filter(str.isdigit, cpf_cnpj))
+            
+            # Cria Pessoa Física ou Jurídica Dummy (ajuste conforme seu banco exige)
+            pf, pj = None, None
+            if len(cpf_cnpj_limpo) == 11:
+                pf = models.PessoaFisica.objects.create(cpf=cpf_cnpj_limpo, data_nascimento=date.today(), genero="N")
+            elif len(cpf_cnpj_limpo) == 14:
+                pj = models.PessoaJuridica.objects.create(cnpj=cpf_cnpj_limpo, nome_fantasia=nome, endereco="-", data_criacao=date.today())
 
-            # Garantir data de nascimento válida
-            try:
-                data_nascimento_obj = datetime.datetime.strptime(data_nascimento, "%Y-%m-%d").date() if data_nascimento else datetime.date(2000,1,1)
-            except Exception:
-                data_nascimento_obj = datetime.date(2000,1,1)
-
-            # Criar PessoaFisica (apenas se for CPF)
-            pessoa_fisica = None
-            if len(cpf_cnpj) == 11:
-                pessoa_fisica = models.PessoaFisica.objects.create(
-                    cpf=cpf_cnpj,
-                    data_nascimento=data_nascimento_obj,
-                    genero="N"
-                )
-
-            # Criar PessoaJuridica (apenas se for CNPJ)
-            pessoa_juridica = None
-            if len(cpf_cnpj) == 14:
-                pessoa_juridica = models.PessoaJuridica.objects.create(
-                    cnpj=cpf_cnpj,
-                    nome_fantasia=nome,
-                    endereco="Não informado",
-                    data_criacao=datetime.date.today()
-                )
-
-            # Criar Veterinario
             vet = models.Veterinario.objects.create(
-                nome=nome,
-                email=email,
-                crmv=crmv_num,
-                uf_crmv=uf,
-                senha_veterinario=make_password(senha),
-                telefone="0",
-                pessoa_fisica=pessoa_fisica,
-                pessoa_juridica=pessoa_juridica
+                nome=nome, email=email, crmv=int(crmv.split('/')[0]) if crmv else 0, uf_crmv='SP',
+                senha_veterinario=make_password(senha), telefone=0,
+                pessoa_fisica=pf, pessoa_juridica=pj
             )
-
-            # Criar sessão
             request.session['user_id'] = vet.id
             request.session['user_role'] = 'vet'
-            request.session['user_nome'] = vet.nome
-
-            return JsonResponse({"success": True, "redirect": "/dashboard/vet/"})
+            return redirect('vet_dashboard')
 
         except Exception as e:
-            print(traceback.format_exc())
-            return JsonResponse({"success": False, "error": f"Erro ao salvar veterinário: {str(e)}"})
+            print(e)
+            messages.error(request, "Erro ao cadastrar veterinário.")
+            return render(request, 'login/login.html')
 
+    return redirect('login')
 
 @csrf_exempt
 def insert_tutor_ajax(request):
-    if request.method == "POST":
-        nome = request.POST.get("nome")
-        email = request.POST.get("email")
-        senha = request.POST.get("senha")
-        cpf = request.POST.get("cpf")
-        data_nascimento = request.POST.get("data_nascimento")
-        return JsonResponse({"success": True})
-    return JsonResponse({"error": "Método inválido"}, status=400)
+    return redirect('login')
 
-def vet_dashboard_view(request):
-    # Aqui você renderiza o template do dashboard do veterinário
-    return render(request, "vet_dashboard.html")
 
+# ========================================================
+# ÁREA DO TUTOR
+# ========================================================
 
 def tutor_dashboard_view(request):
-    # Aqui você renderiza o template do dashboard do tutor
-    return render(request, "tutor_dashboard.html")
+    if request.session.get('user_role') != 'tutor':
+        return redirect('login')
+
+    tutor_id = request.session.get('user_id')
+    try:
+        tutor = models.Tutor.objects.get(id=tutor_id)
+    except models.Tutor.DoesNotExist:
+        request.session.flush()
+        return redirect('login')
+
+    pets = models.Pet.objects.filter(id_tutor=tutor)
+    
+    proxima_consulta = models.Consulta.objects.filter(
+        id_pet__in=pets, 
+        data_consulta__gte=date.today()
+    ).order_by('data_consulta', 'horario_consulta').first()
+
+    historico_recente = models.Consulta.objects.filter(
+        id_pet__in=pets
+    ).order_by('-data_consulta', '-horario_consulta')[:5]
+
+    context = {
+        'tutor': tutor,
+        'pets': pets,
+        'proxima_consulta': proxima_consulta,
+        'historico_recente': historico_recente,
+        'total_pets': pets.count()
+    }
+    return render(request, 'dash_tutor.html', context)
+
+# --- PERFIL DO TUTOR ---
+def perfil_tutor(request):
+    if request.session.get('user_role') != 'tutor':
+        return redirect('login')
+    
+    tutor = models.Tutor.objects.get(id=request.session['user_id'])
+    # Se tiver tabela de contatos, busque aqui
+    # contatos = models.ContatoTutor.objects.filter(id_tutor=tutor)
+    
+    return render(request, 'tutor_perfil.html', {'tutor': tutor})
+
+def editar_perfil_tutor(request):
+    if request.session.get('user_role') != 'tutor':
+        return redirect('login')
+
+    tutor = models.Tutor.objects.get(id=request.session['user_id'])
+    
+    if request.method == "POST":
+        tutor.nome_tutor = request.POST.get('nome')
+        tutor.endereco = request.POST.get('endereco')
+        
+        if request.FILES.get('image_tutor'):
+            tutor.imagem_perfil_tutor = request.FILES['image_tutor']
+            
+        tutor.save()
+        messages.success(request, "Perfil atualizado!")
+        return redirect('perfil_tutor')
+
+    return render(request, 'editar_perfil_tutor.html', {'tutor': tutor})
+
+# --- PETS DO TUTOR ---
+def meus_pets(request):
+    if request.session.get('user_role') != 'tutor':
+        return redirect('login')
+
+    tutor = models.Tutor.objects.get(id=request.session['user_id'])
+    pets = models.Pet.objects.filter(id_tutor=tutor)
+    
+    return render(request, 'meus_pets.html', {'tutor': tutor, 'pets': pets})
+
+def adicionar_pet(request):
+    if request.session.get('user_role') != 'tutor':
+        return redirect('login')
+
+    tutor = models.Tutor.objects.get(id=request.session['user_id'])
+
+    if request.method == "POST":
+        nome = request.POST.get('nome')
+        especie = request.POST.get('especie')
+        raca = request.POST.get('raca')
+        data_nascimento = request.POST.get('data_nascimento')
+        sexo = request.POST.get('sexo')
+        
+        # Cria Prontuário Dummy (Necessário pelo seu banco)
+        prontuario = models.ProntuarioPet.objects.create(
+            historico_veterinario="Inicial",
+            motivo_consulta="Cadastro",
+            avaliacao_geral="-", procedimentos="-", diagnostico_conslusivo="-", observacao="-"
+        )
+
+        models.Pet.objects.create(
+            nome=nome, especie=especie, raca=raca,
+            data_nascimento=data_nascimento, sexo=sexo,
+            pelagem="Padrão", castrado="Não",
+            id_tutor=tutor, id_consulta=prontuario
+        )
+        messages.success(request, "Pet adicionado!")
+        return redirect('meus_pets')
+
+    return render(request, 'adicionar_pet.html')
+
+def excluir_pet(request, pet_id):
+    if request.session.get('user_role') != 'tutor':
+        return redirect('login')
+    
+    tutor_id = request.session['user_id']
+    # Garante que só deleta se for dono
+    pet = models.Pet.objects.filter(id=pet_id, id_tutor_id=tutor_id).first()
+    
+    if pet:
+        pet.delete()
+        messages.success(request, "Pet removido.")
+    
+    return redirect('meus_pets')
+
+
+# ========================================================
+# ÁREA DO VETERINÁRIO
+# ========================================================
+
+def vet_dashboard_view(request):
+    if request.session.get('user_role') != 'vet':
+        return redirect('login')
+
+    vet_id = request.session.get('user_id')
+    try:
+        veterinario = models.Veterinario.objects.get(id=vet_id)
+    except models.Veterinario.DoesNotExist:
+        request.session.flush()
+        return redirect('login')
+
+    consultas_hoje = models.Consulta.objects.filter(id_veterinario=veterinario, data_consulta=date.today()).count()
+    faturamento = models.Consulta.objects.filter(id_veterinario=veterinario, data_consulta=date.today()).aggregate(Sum('valor_consulta'))['valor_consulta__sum'] or 0
+    agenda = models.Consulta.objects.filter(id_veterinario=veterinario, data_consulta=date.today()).select_related('id_pet').order_by('horario_consulta')
+    
+    context = {
+        'veterinario': veterinario,
+        'consultas_hoje': consultas_hoje,
+        'faturamento_dia': faturamento,
+        'agenda_hoje': agenda,
+        'total_pacientes': models.Pet.objects.count()
+    }
+    return render(request, 'dash_veterinario.html', context)
+
+def perfil_veterinario(request):
+    if request.session.get('user_role') != 'vet':
+        return redirect('login')
+    
+    veterinario = models.Veterinario.objects.get(id=request.session['user_id'])
+    return render(request, 'veterinario_perfil.html', {'veterinario': veterinario})
+
+def editar_perfil_veterinario(request):
+    if request.session.get('user_role') != 'vet':
+        return redirect('login')
+    
+    veterinario = models.Veterinario.objects.get(id=request.session['user_id'])
+    # ... lógica de post ...
+    return render(request, 'editar_perfil_veterinario.html', {'veterinario': veterinario})

@@ -10,14 +10,18 @@
     </div>
 
     <nav class="flex-1 px-4 space-y-2 mt-4">
-        <a href="{% url "dash_tutor" %}" class="flex items-center gap-3 px-4 py-3 bg-brand-purple/10 text-brand-purple rounded-xl font-medium">
+        <!-- CORREÇÃO 1: Mudei dash_tutor para tutor_dashboard -->
+        <a href="{% url 'tutor_dashboard' %}" class="flex items-center gap-3 px-4 py-3 bg-brand-purple/10 text-brand-purple rounded-xl font-medium">
             <i data-lucide="layout-dashboard" width="20" height="20"></i>
             Visão Geral
         </a>
-        <a href="#" class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-xl font-medium transition-colors">
+
+        <!-- CORREÇÃO 2: Já apontei para a tela de Meus Pets que criamos -->
+        <a href="{% url 'meus_pets' %}" class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-xl font-medium transition-colors">
             <i data-lucide="cat" width="20" height="20"></i>
             Meus Pets
         </a>
+
         <a href="#" class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-xl font-medium transition-colors">
             <i data-lucide="calendar" width="20" height="20"></i>
             Agendamentos
