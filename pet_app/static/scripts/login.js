@@ -29,15 +29,36 @@ document.addEventListener("DOMContentLoaded", function () {
   const toggleBtn = document.getElementById("toggle-btn");
 
   // ================= VISIBILIDADE =================
-  function updateVisibility() {
-    const isRegister = currentMode === "register";
-    const isVet = currentRole === "vet";
+function updateVisibility() {
+  const isRegister = currentMode === "register";
 
-    registerNameField.classList.toggle("hidden", !isRegister);
-    dateField.classList.toggle("hidden", !isRegister);
-    cpfCnpjField.classList.toggle("hidden", !isRegister);
-    crmField.classList.toggle("hidden", !(isRegister && isVet));
+  // ---------------- Nome e Data de Nascimento ----------------
+  // Só aparecem no register (para todos os roles)
+  if (isRegister) {
+    registerNameField.classList.remove("hidden");
+    dateField.classList.remove("hidden");
+  } else {
+    registerNameField.classList.add("hidden");
+    dateField.classList.add("hidden");
   }
+
+  // ---------------- CPF/CNPJ ----------------
+  // Aparece no register, para tutor e veterinário
+  if (isRegister && (currentRole === "tutor" || currentRole === "vet")) {
+    cpfCnpjField.classList.remove("hidden");
+  } else {
+    cpfCnpjField.classList.add("hidden");
+  }
+
+  // ---------------- CRMV ----------------
+  // Aparece apenas no register e para veterinário
+  if (isRegister && currentRole === "vet") {
+    crmField.classList.remove("hidden");
+  } else {
+    crmField.classList.add("hidden");
+  }
+}
+
 
   // ================= ROLE =================
   window.switchRole = function (role) {
@@ -104,6 +125,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     updateVisibility();
+    switchRole(currentRole);  // <--- ADICIONE ESSA LINHA
   };
 
   // ================= CPF / CNPJ =================
@@ -126,6 +148,14 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // ================= INIT =================
-  updateVisibility();
+  // Força o estado inicial correto
+  currentRole = "tutor";  // garante
+  currentMode = "login";  // garante
+  roleInput.value = "tutor";
+
+  // Aplica o visual inicial do role tutor
+  switchRole("tutor");
+
+
 
 });
