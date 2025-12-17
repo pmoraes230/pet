@@ -13,7 +13,7 @@ class Consulta(models.Model):
     id_veterinario = models.ForeignKey('Veterinario', models.DO_NOTHING, db_column='ID_VETERINARIO')  # Field name made lowercase.
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'consulta'
 
 
@@ -26,7 +26,7 @@ class ContatoTutor(models.Model):
     data_cadastro = models.DateTimeField(db_column='DATA_CADASTRO', blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'contato_tutor'
         unique_together = (('id_tutor', 'ddd', 'numero'),)
 
@@ -35,7 +35,7 @@ class Feedback(models.Model):
     feedback_app = models.TextField(blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'feedback'
 
 
@@ -44,7 +44,7 @@ class FeedbackPet(models.Model):
     feedback_pet = models.TextField(blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'feedback_pet'
 
 
@@ -55,7 +55,7 @@ class PessoaFisica(models.Model):
     genero = models.CharField(db_column='GENERO', max_length=45)  # Field name made lowercase.
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'pessoa fisica'
 
 
@@ -67,7 +67,7 @@ class PessoaJuridica(models.Model):
     data_criacao = models.DateField(db_column='DATA_CRIACAO')  # Field name made lowercase.
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'pessoa juridica'
 
 
@@ -84,7 +84,7 @@ class Pet(models.Model):
     id_consulta = models.ForeignKey('ProntuarioPet', models.DO_NOTHING, db_column='ID_CONSULTA')  # Field name made lowercase.
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'pet'
 
 
@@ -98,7 +98,7 @@ class ProntuarioPet(models.Model):
     observacao = models.TextField(db_column='OBSERVACAO')  # Field name made lowercase.
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'prontuario_pet'
 
 
@@ -115,7 +115,7 @@ class Tutor(models.Model):
     imagem_perfil_tutor = models.ImageField(upload_to='tutor')
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'tutor'
 
 
@@ -131,5 +131,5 @@ class Veterinario(models.Model):
     senha_veterinario = models.CharField(max_length=150)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'veterinario'
