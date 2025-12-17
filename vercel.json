@@ -1,18 +1,22 @@
 {
     "builds": [
       {
-        "src": "setup/wsgi.py",  
+        "src": "setup/wsgi.py",
         "use": "@vercel/python"
       },
       {
-        "src": "setup/wsgi.py",
-        "use": "@ardnt/vercel-python-wsgi" 
+        "src": "staticfiles/**",
+        "use": "@vercel/static"
       }
     ],
     "routes": [
       {
         "src": "/static/(.*)",
-        "dest": "/static/$1"
+        "dest": "/staticfiles/$1"
+      },
+      {
+        "src": "/media/(.*)",
+        "dest": "/media/$1"
       },
       {
         "src": "/(.*)",
