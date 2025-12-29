@@ -305,3 +305,13 @@ def editar_perfil_veterinario(request):
 
     veterinario = models.Veterinario.objects.get(id=request.session['user_id'])
     return render(request, 'editar_perfil_veterinario.html', {'veterinario': veterinario})
+
+from django.http import JsonResponse
+
+@csrf_exempt
+def insert_tutor_ajax(request):
+    if request.method == "POST":
+        # exemplo simples (ajuste depois conforme sua lógica)
+        return JsonResponse({"success": True})
+
+    return JsonResponse({"success": False, "error": "Método inválido"})

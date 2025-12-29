@@ -62,7 +62,11 @@ class Tutor(models.Model):
 
 class ContatoTutor(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
-    tutor = models.ForeignKey(Tutor, models.DO_NOTHING, db_column='ID', blank=True, null=True)
+    tutor = models.ForeignKey(
+        Tutor,
+        models.DO_NOTHING,
+        db_column='ID_TUTOR'
+    )
     tipo_contato = models.CharField(max_length=16)
     ddd = models.CharField(max_length=2)
     numero = models.CharField(max_length=9)
@@ -71,7 +75,8 @@ class ContatoTutor(models.Model):
     class Meta:
         managed = False
         db_table = 'contato_tutor'
-        unique_together = (('tutor', 'ddd', 'numero'),)
+
+
 
 
 # ===============================
@@ -80,29 +85,30 @@ class ContatoTutor(models.Model):
 
 class Pet(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
-    nome = models.CharField(max_length=45)
-    data_nascimento = models.DateField()
-    especie = models.CharField(max_length=45)
-    raca = models.CharField(max_length=45)
-    sexo = models.CharField(max_length=5)
-    pelagem = models.CharField(max_length=45)
-    castrado = models.CharField(max_length=3)
+    # Adicionamos db_column para o Django saber que no SQL o nome é MAIÚSCULO
+    nome = models.CharField(max_length=45, db_column='NOME')
+    data_nascimento = models.DateField(db_column='DATA_NASCIMENTO')
+    especie = models.CharField(max_length=45, db_column='ESPECIE')
+    raca = models.CharField(max_length=45, db_column='RACA')
+    sexo = models.CharField(max_length=5, db_column='SEXO')
+    pelagem = models.CharField(max_length=45, db_column='PELAGEM')
+    castrado = models.CharField(max_length=3, db_column='CASTRADO')
+    
+    # Novos campos que você adicionou
+    peso = models.CharField(max_length=10, db_column='PESO', blank=True, null=True)
+    descricao = models.TextField(db_column='DESCRICAO', blank=True, null=True)
+    imagem = models.ImageField(upload_to='pets/', db_column='IMAGEM', blank=True, null=True)
+    personalidade = models.TextField(db_column='PERSONALIDADE', blank=True, null=True)
 
-    tutor = models.ForeignKey(Tutor, models.DO_NOTHING, db_column='ID')
-    prontuario = models.ForeignKey(ProntuarioPet, models.DO_NOTHING, db_column='ID_CONSULTA')
+    tutor = models.ForeignKey(
+        Tutor,
+        models.DO_NOTHING,
+        db_column='ID_TUTOR'
+    )
 
     class Meta:
         managed = False
         db_table = 'pet'
-
-    @property
-    def idade(self):
-        if not self.data_nascimento:
-            return 0
-        today = date.today()
-        return today.year - self.data_nascimento.year - (
-            (today.month, today.day) < (self.data_nascimento.month, self.data_nascimento.day)
-        )
 
 
 # ===============================

@@ -92,30 +92,33 @@ class Tutor(models.Model):
 # =====================================================
 class Veterinario(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
-    nome = models.CharField(db_column='NOME', max_length=45)
-    email = models.CharField(db_column='EMAIL', max_length=45, unique=True)
-    crmv = models.IntegerField(db_column='CRMV', unique=True)
-    uf_crmv = models.CharField(db_column='UF_CRMV', max_length=5)
-    telefone = models.CharField(db_column='TELEFONE', max_length=15)
+    nome = models.CharField(max_length=45)
+    email = models.CharField(max_length=45)
+    crmv = models.IntegerField(unique=True)
+    uf_crmv = models.CharField(max_length=5)
+    telefone = models.CharField(max_length=15)
+    senha_veterinario = models.CharField(max_length=150)
+
     pessoa_fisica = models.ForeignKey(
-        PessoaFisica,
+        'PessoaFisica',
         models.DO_NOTHING,
-        db_column='ID_PESSOA_FISICA',
-        null=True,
-        blank=True
+        db_column='pessoa_fisica_id',
+        blank=True,
+        null=True
     )
+
     pessoa_juridica = models.ForeignKey(
-        PessoaJuridica,
+        'PessoaJuridica',
         models.DO_NOTHING,
-        db_column='ID_PESSOA_JURIDICA',
-        null=True,
-        blank=True
+        db_column='pessoa_juridica_id',
+        blank=True,
+        null=True
     )
-    senha_veterinario = models.CharField(db_column='SENHA_VETERINARIO', max_length=150)
 
     class Meta:
         managed = False
         db_table = 'veterinario'
+
 
 
 # =====================================================

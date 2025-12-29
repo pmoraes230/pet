@@ -83,7 +83,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'pet_patrick_db',
         'USER': 'root',
-        'PASSWORD': '',
+        'PASSWORD': 'Meufilho@2233',
         'HOST': 'localhost',  # ou IP do seu servidor de banco de dados
         'PORT': '3306',  # ou a porta correta
     }
@@ -157,3 +157,11 @@ LOGGING = {
 }
 
 SECRET_KEY = 'hqi)anr=qj4=e7e!z+50bdz*33ysft0ocnovx8d=+8pjg_7r6l'
+
+
+# No final do arquivo settings.py
+import os
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+LOGIN_URL = '/login/'

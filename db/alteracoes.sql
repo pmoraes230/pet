@@ -1,5 +1,5 @@
 -- ===============================
--- BANCO DE DADOS
+-- BANCO DE DADOS COMPLETO
 -- ===============================
 DROP DATABASE IF EXISTS pet_patrick_db;
 CREATE DATABASE pet_patrick_db;
@@ -8,7 +8,6 @@ USE pet_patrick_db;
 -- ===============================
 -- TABELAS AUXILIARES
 -- ===============================
-
 CREATE TABLE pessoa_fisica (
     ID INT AUTO_INCREMENT PRIMARY KEY,
     CPF VARCHAR(14) UNIQUE,
@@ -57,7 +56,6 @@ CREATE TABLE tutor (
 -- ===============================
 DROP PROCEDURE IF EXISTS insert_tutor;
 DELIMITER $$
-
 CREATE PROCEDURE insert_tutor (
     IN p_nome_tutor VARCHAR(80),
     IN p_cpf VARCHAR(14),
@@ -94,7 +92,6 @@ BEGIN
         p_nome_tutor, p_cpf, p_email, p_endereco, p_data_nascimento, p_senha_tutor
     );
 END $$
-
 DELIMITER ;
 
 -- ===============================
@@ -140,8 +137,70 @@ CREATE TABLE pet (
     PELAGEM VARCHAR(45),
     CASTRADO VARCHAR(3),
     ID_TUTOR INT,
+    PESO VARCHAR(10),
+    DESCRICAO TEXT,
+    IMAGEM VARCHAR(255),
+    PERSONALIDADE TEXT,
     FOREIGN KEY (ID_TUTOR) REFERENCES tutor(ID)
 );
+
+-- ===============================
+-- PROCEDURE PET
+-- ===============================
+DROP PROCEDURE IF EXISTS insert_pet;
+DELIMITER $$
+CREATE PROCEDURE insert_pet (
+    IN p_nome VARCHAR(45),
+    IN p_data_nascimento DATE,
+    IN p_especie VARCHAR(45),
+    IN p_raca VARCHAR(45),
+    IN p_sexo VARCHAR(5),
+    IN p_pelagem VARCHAR(45),
+    IN p_castrado VARCHAR(3),
+    IN p_id_tutor INT
+)
+BEGIN
+    -- VALIDAÇÕES
+    IF p_nome IS NULL OR TRIM(p_nome) = '' THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'O nome do pet é obrigatório';
+    END IF;
+
+    IF p_especie IS NULL OR TRIM(p_especie) = '' THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'A espécie do pet é obrigatória';
+    END IF;
+
+    IF p_sexo IS NULL OR TRIM(p_sexo) = '' THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'O sexo do pet é obrigatório';
+    END IF;
+
+    IF p_castrado IS NULL OR TRIM(p_castrado) = '' THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Informe se o pet é castrado';
+    END IF;
+
+    IF p_id_tutor IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'O tutor é obrigatório';
+    END IF;
+
+    -- VALIDAÇÃO DE CHAVE ESTRANGEIRA
+    IF NOT EXISTS (SELECT 1 FROM tutor WHERE ID = p_id_tutor) THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Tutor informado não existe';
+    END IF;
+
+    -- INSERÇÃO
+    INSERT INTO pet (
+        NOME, DATA_NASCIMENTO, ESPECIE, RACA, SEXO, PELAGEM, CASTRADO, ID_TUTOR
+    )
+    VALUES (
+        p_nome, p_data_nascimento, p_especie, p_raca, p_sexo, p_pelagem, p_castrado, p_id_tutor
+    );
+END $$
+DELIMITER ;
 
 -- ===============================
 -- CONSULTA
@@ -176,85 +235,13 @@ CREATE TABLE contato_veterinario (
 );
 
 -- ===============================
--- PROCEDURE PET
+-- VACINA
 -- ===============================
-DROP PROCEDURE IF EXISTS insert_pet;
-DELIMITER $$
-
-CREATE PROCEDURE insert_pet (
-    IN p_nome VARCHAR(45),
-    IN p_data_nascimento DATE,
-    IN p_especie VARCHAR(45),
-    IN p_raca VARCHAR(45),
-    IN p_sexo VARCHAR(5),
-    IN p_pelagem VARCHAR(45),
-    IN p_castrado VARCHAR(3),
-    IN p_id_tutor INT
-)
-BEGIN
-    -- ===============================
-    -- VALIDAÇÕES
-    -- ===============================
-
-    IF p_nome IS NULL OR TRIM(p_nome) = '' THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'O nome do pet é obrigatório';
-    END IF;
-
-    IF p_especie IS NULL OR TRIM(p_especie) = '' THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'A espécie do pet é obrigatória';
-    END IF;
-
-    IF p_sexo IS NULL OR TRIM(p_sexo) = '' THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'O sexo do pet é obrigatório';
-    END IF;
-
-    IF p_castrado IS NULL OR TRIM(p_castrado) = '' THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Informe se o pet é castrado';
-    END IF;
-
-    IF p_id_tutor IS NULL THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'O tutor é obrigatório';
-    END IF;
-
-    -- ===============================
-    -- VALIDAÇÃO DE CHAVE ESTRANGEIRA
-    -- ===============================
-
-    IF NOT EXISTS (SELECT 1 FROM tutor WHERE ID = p_id_tutor) THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Tutor informado não existe';
-    END IF;
-
-    -- ===============================
-    -- INSERÇÃO
-    -- ===============================
-
-    INSERT INTO pet (
-        NOME,
-        DATA_NASCIMENTO,
-        ESPECIE,
-        RACA,
-        SEXO,
-        PELAGEM,
-        CASTRADO,
-        ID_TUTOR
-    )
-    VALUES (
-        p_nome,
-        p_data_nascimento,
-        p_especie,
-        p_raca,
-        p_sexo,
-        p_pelagem,
-        p_castrado,
-        p_id_tutor
-    );
-
-END $$
-
-DELIMITER ;
+CREATE TABLE vacina (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    NOME VARCHAR(100),
+    DATA_APLICACAO DATE,
+    PROXIMA_DOSE DATE,
+    ID_PET INT,
+    FOREIGN KEY (ID_PET) REFERENCES pet(ID)
+);
