@@ -32,7 +32,7 @@
                                 <i data-lucide="clock" width="14" height="14"></i> 
                                 {{ proxima_consulta.horario_consulta|date:"H:i" }} • {{ proxima_consulta.pet.nome }}
                             </div>
-                            <div class="text-xs text-purple-200 mt-1">
+                            <div class="text-xs text-purple-200 mt-1 uppercase">
                                 {{ proxima_consulta.tipo_de_consulta }}
                             </div>
                         {% else %}
@@ -49,19 +49,15 @@
                         <div class="text-gray-500 text-sm font-medium mb-1">Meus Amigos</div>
                         <div class="text-2xl font-bold text-gray-800 flex items-center gap-2">
                             <i data-lucide="heart" class="text-red-500" width="24" height="24"></i> 
-                            {{ total_pets }} Pets ativos
+                            {{ total_pets }} Pet{{ total_pets|pluralize }} ativo{{ total_pets|pluralize }}
                         </div>
                     </div>
-                    {% if pets %}
                     <div class="text-sm text-gray-500 mt-4">
-                        Tutor(a): <span class="font-bold text-gray-700">{{ user.username }}</span>
+                        Tutor(a): <span class="font-bold text-gray-700">{{ tutor.nome_tutor }}</span>
                     </div>
-                    {% else %}
-                    <div class="text-sm text-gray-400 mt-4">Cadastre seu primeiro pet!</div>
-                    {% endif %}
                 </div>
 
-                <!-- Card 3: BOTÃO ADICIONAR PET (Ação Rápida) -->
+                <!-- Card 3: Ação Rápida -->
                 <a href="{% url 'adicionar_pet' %}" class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-between group cursor-pointer hover:border-purple-500 transition-all hover:shadow-md">
                     <div>
                         <div class="text-gray-500 text-sm font-medium mb-1">Ação Rápida</div>
@@ -81,18 +77,17 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {% for pet in pets %}
-                <!-- Card do Pet agora é clicável e vai para a página de detalhes -->
                 <a href="{% url 'detalhe_pet' pet.id %}" class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex gap-6 hover:shadow-md hover:border-purple-200 transition-all group">
-                    <!-- Foto do Pet Dinâmica -->
                     <div class="w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0 bg-gray-100 border border-gray-50">
                         {% if pet.imagem %}
                             <img src="{{ pet.imagem.url }}" class="w-full h-full object-cover" alt="{{ pet.nome }}">
                         {% else %}
-                            <img src="{% static 'img/pet_placeholder.png' %}" class="w-full h-full object-cover opacity-50" alt="Sem foto">
+                            <div class="w-full h-full flex items-center justify-center text-gray-300">
+                                <i data-lucide="paw-print" width="32"></i>
+                            </div>
                         {% endif %}
                     </div>
                     
-                    <!-- Infos -->
                     <div class="flex-1">
                         <div class="flex justify-between items-start">
                             <div>
@@ -129,7 +124,9 @@
                     {% for consulta in historico_recente %}
                     <div class="relative pl-8">
                         <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-purple-500 ring-4 ring-white"></div>
-                        <p class="text-xs text-gray-400 font-bold mb-1 uppercase tracking-wider">{{ consulta.data_consulta|date:"d/m/Y" }} • {{ consulta.horario_consulta|date:"H:i" }}</p>
+                        <p class="text-xs text-gray-400 font-bold mb-1 uppercase tracking-wider">
+                            {{ consulta.data_consulta|date:"d/m/Y" }} • {{ consulta.horario_consulta|date:"H:i" }}
+                        </p>
                         <h5 class="text-sm font-black text-gray-800">
                             {{ consulta.tipo_de_consulta }} — <span class="text-purple-600">{{ consulta.pet.nome }}</span>
                         </h5>
@@ -155,7 +152,6 @@
 </div>
 
 <script>
-    // Inicializa os ícones do Lucide
     lucide.createIcons();
 </script>
 {% endblock %}

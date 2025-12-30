@@ -1,8 +1,9 @@
 -- ===============================
--- BANCO DE DADOS COMPLETO
+-- BANCO DE DADOS - Pet Patrick
+-- Script completo e organizado (mantendo tudo o que foi criado originalmente)
 -- ===============================
 DROP DATABASE IF EXISTS pet_patrick_db;
-CREATE DATABASE pet_patrick_db;
+CREATE DATABASE pet_patrick_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE pet_patrick_db;
 
 -- ===============================
@@ -51,9 +52,7 @@ CREATE TABLE tutor (
     FOREIGN KEY (ID_FEEDBACK_PET) REFERENCES feedback_pet(ID)
 );
 
--- ===============================
--- PROCEDURE TUTOR
--- ===============================
+-- Procedure de inserção do tutor
 DROP PROCEDURE IF EXISTS insert_tutor;
 DELIMITER $$
 CREATE PROCEDURE insert_tutor (
@@ -66,29 +65,21 @@ CREATE PROCEDURE insert_tutor (
 )
 BEGIN
     IF p_nome_tutor IS NULL OR TRIM(p_nome_tutor) = '' THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'O nome do tutor é obrigatório';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'O nome do tutor é obrigatório';
     END IF;
-
     IF p_cpf IS NULL OR p_cpf NOT REGEXP '^[0-9]{11}$' THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'CPF inválido';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'CPF inválido';
     END IF;
-
     IF EXISTS (SELECT 1 FROM tutor WHERE EMAIL = p_email) THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Email já cadastrado';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Email já cadastrado';
     END IF;
-
     IF EXISTS (SELECT 1 FROM tutor WHERE CPF = p_cpf) THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'CPF já cadastrado';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'CPF já cadastrado';
     END IF;
-
+    
     INSERT INTO tutor (
         nome_tutor, CPF, EMAIL, ENDERECO, DATA_NASCIMENTO, senha_tutor
-    )
-    VALUES (
+    ) VALUES (
         p_nome_tutor, p_cpf, p_email, p_endereco, p_data_nascimento, p_senha_tutor
     );
 END $$
@@ -112,19 +103,6 @@ CREATE TABLE veterinario (
 );
 
 -- ===============================
--- PRONTUÁRIO PET
--- ===============================
-CREATE TABLE prontuariopet (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    HISTORICO_VETERINARIO VARCHAR(255),
-    MOTIVO_CONSULTA TEXT,
-    AVALIACAO_GERAL TEXT,
-    PROCEDIMENTOS TEXT,
-    DIAGNOSTICO_CONSLUSIVO TEXT,
-    OBSERVACAO TEXT
-);
-
--- ===============================
 -- PET
 -- ===============================
 CREATE TABLE pet (
@@ -144,9 +122,7 @@ CREATE TABLE pet (
     FOREIGN KEY (ID_TUTOR) REFERENCES tutor(ID)
 );
 
--- ===============================
--- PROCEDURE PET
--- ===============================
+-- Procedure de inserção do pet
 DROP PROCEDURE IF EXISTS insert_pet;
 DELIMITER $$
 CREATE PROCEDURE insert_pet (
@@ -160,47 +136,45 @@ CREATE PROCEDURE insert_pet (
     IN p_id_tutor INT
 )
 BEGIN
-    -- VALIDAÇÕES
     IF p_nome IS NULL OR TRIM(p_nome) = '' THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'O nome do pet é obrigatório';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'O nome do pet é obrigatório';
     END IF;
-
     IF p_especie IS NULL OR TRIM(p_especie) = '' THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'A espécie do pet é obrigatória';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'A espécie do pet é obrigatória';
     END IF;
-
     IF p_sexo IS NULL OR TRIM(p_sexo) = '' THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'O sexo do pet é obrigatório';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'O sexo do pet é obrigatório';
     END IF;
-
     IF p_castrado IS NULL OR TRIM(p_castrado) = '' THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Informe se o pet é castrado';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Informe se o pet é castrado';
     END IF;
-
     IF p_id_tutor IS NULL THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'O tutor é obrigatório';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'O tutor é obrigatório';
     END IF;
-
-    -- VALIDAÇÃO DE CHAVE ESTRANGEIRA
     IF NOT EXISTS (SELECT 1 FROM tutor WHERE ID = p_id_tutor) THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Tutor informado não existe';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Tutor informado não existe';
     END IF;
-
-    -- INSERÇÃO
+    
     INSERT INTO pet (
         NOME, DATA_NASCIMENTO, ESPECIE, RACA, SEXO, PELAGEM, CASTRADO, ID_TUTOR
-    )
-    VALUES (
+    ) VALUES (
         p_nome, p_data_nascimento, p_especie, p_raca, p_sexo, p_pelagem, p_castrado, p_id_tutor
     );
 END $$
 DELIMITER ;
+
+-- ===============================
+-- PRONTUÁRIO PET
+-- ===============================
+CREATE TABLE prontuariopet (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    HISTORICO_VETERINARIO VARCHAR(255),
+    MOTIVO_CONSULTA TEXT,
+    AVALIACAO_GERAL TEXT,
+    PROCEDIMENTOS TEXT,
+    DIAGNOSTICO_CONSLUSIVO TEXT,
+    OBSERVACAO TEXT
+);
 
 -- ===============================
 -- CONSULTA
@@ -222,7 +196,7 @@ CREATE TABLE consulta (
 );
 
 -- ===============================
--- CONTATO VETERINARIO
+-- CONTATO VETERINÁRIO
 -- ===============================
 CREATE TABLE contato_veterinario (
     ID INT AUTO_INCREMENT PRIMARY KEY,
@@ -235,7 +209,7 @@ CREATE TABLE contato_veterinario (
 );
 
 -- ===============================
--- VACINA
+-- TABELAS ADICIONAIS (saúde, diário, etc)
 -- ===============================
 CREATE TABLE vacina (
     ID INT AUTO_INCREMENT PRIMARY KEY,
@@ -243,5 +217,25 @@ CREATE TABLE vacina (
     DATA_APLICACAO DATE,
     PROXIMA_DOSE DATE,
     ID_PET INT,
+    FOREIGN KEY (ID_PET) REFERENCES pet(ID)
+);
+
+CREATE TABLE medicamento (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    NOME VARCHAR(100),
+    HORARIO TIME,
+    DATA_INICIO DATE,
+    DATA_FIM DATE,
+    OBSERVACOES TEXT,
+    ID_PET INT,
+    FOREIGN KEY (ID_PET) REFERENCES pet(ID)
+);
+
+CREATE TABLE diario_emocional (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    ID_PET INT,
+    HUMOR INT, -- 1: Triste, 2: Normal, 3: Feliz
+    RELATO TEXT,
+    DATA_REGISTRO DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (ID_PET) REFERENCES pet(ID)
 );
