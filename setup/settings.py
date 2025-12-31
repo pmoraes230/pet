@@ -70,17 +70,22 @@ WSGI_APPLICATION = 'setup.wsgi.application'
 
 # Database
 if os.getenv('DATABASE_URL'):
-    # Produção ou MySQL/Postgres remoto via string
-    DATABASES = {'default': dj_database_url.config(conn_max_age=600)}
+    DATABASES = {
+        'default': dj_database_url.config(
+            conn_max_age=600,
+            ssl_require=True 
+        )
+    }
 else:
-    # MySQL local direto
+    # Fallback local: aqui você pode escolher entre:
+    # Opção 1: Continuar usando seu MySQL local atual
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'db_pet',           # nome do banco
-            'USER': 'root',             # usuário
-            'PASSWORD': '',             # senha (vazia se não tiver)
-            'HOST': '127.0.0.1',        # ou localhost
+            'NAME': 'db_pet',
+            'USER': 'root',
+            'PASSWORD': '',
+            'HOST': '127.0.0.1',
             'PORT': '3306',
             'OPTIONS': {
                 'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
