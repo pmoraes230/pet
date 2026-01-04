@@ -335,3 +335,58 @@ def prontuarios_view(request):
         'pet_selecionado': pet_selecionado,
     }
     return render(request, 'prontuarios.html', context)
+
+from django.shortcuts import get_object_or_404
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from datetime import date
+from . import models  # Certifique-se de que está importando o models correto
+
+def detalhe_pet_view(request, pet_id):
+    vet_data = get_veterinario_logado(request)
+    if not vet_data: return redirect('login_veterinario')
+    
+    # 1. CORREÇÃO DO VETERINÁRIO: O defer ignora a coluna que não existe no seu SQL
+    veterinario = models.Veterinario.objects.defer('imagem_perfil_veterinario').get(id=vet_data['id'])
+
+    # 2. BUSCA DO PET: As colunas existem no banco, então busca normal
+    pet = get_object_or_404(models.Pet, id=pet_id)
+
+    # Lógica para SALVAR alterações (POST)
+    if request.method == "POST":
+        pet.peso = request.POST.get('peso')
+        pet.sexo = request.POST.get('sexo')
+        pet.descricao = request.POST.get('descricao')
+        pet.especie = request.POST.get('especie')
+        pet.raca = request.POST.get('raca')
+        pet.pelagem = request.POST.get('pelagem')
+        pet.personalidade = request.POST.get('personalidade')
+        
+        if request.FILES.get('imagem'):
+            pet.imagem = request.FILES.get('imagem')
+            
+        pet.save()
+        messages.success(request, f"Dados de {pet.nome} atualizados com sucesso!")
+        return redirect('detalhes_pet', pet_id=pet.id)
+
+    # 3. PRÓXIMA CONSULTA: Usando 'id_pet' que é o nome no seu models.py
+    proxima_consulta = models.Consulta.objects.filter(
+        id_pet=pet, 
+        data_consulta__gte=date.today()
+    ).order_by('data_consulta').first()
+
+    # 4. VACINAS: No seu modelo Vacina o campo se chama 'pet'
+    vacinas = models.Vacina.objects.filter(pet=pet).order_by('-data_aplicacao')
+
+    # Trata a personalidade (string para lista)
+    list_personalidades = pet.personalidade.split(',') if pet.personalidade else []
+
+    context = {
+        'veterinario': veterinario,
+        'pet': pet,
+        'proxima_consulta': proxima_consulta,
+        'vacinas': vacinas,
+        'list_personalidades': list_personalidades,
+    }
+    return render(request, 'detalhes_pet.html', context)

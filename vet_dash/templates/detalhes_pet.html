@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .tab-btn.active { background-color: #26C2B9; color: white; border-radius: 9999px; }
+    .tab-btn.inactive { background-color: transparent; color: #6B7280; }
+    /* Corrigido !class para !important */
+    .is-selected { background-color: #f0fdfa !important; border-color: #26C2B9 !important; color: #26C2B9 !important; }
+</style>
+
+<div class="bg-gray-50 flex h-screen overflow-hidden">
+    <!-- Sidebar do Veterinário -->
+    {% include "partials/aside/aside_vet.html" %}
+
+    <main class="flex-1 flex flex-col overflow-hidden">
+        <!-- Header do Veterinário -->
+        {% include "partials/header/header_vet.html" %}
+
+        <div class="flex-1 p-6 md:p-10 overflow-y-auto">
+            
+            <form method="POST" enctype="multipart/form-data" class="max-w-7xl mx-auto flex flex-col lg:flex-row gap-10">
+                {% csrf_token %}
+
+                <!-- LADO ESQUERDO: CARD PERFIL DO PACIENTE -->
+                <div class="w-full lg:w-[380px] flex flex-col gap-6">
+                    
+                    <div class="bg-white rounded-[2.5rem] shadow-sm p-8 flex flex-col items-center border border-gray-100">
+                        <!-- Imagem do Pet -->
+                        <div class="w-full h-56 rounded-[2rem] overflow-hidden mb-6 relative group bg-gray-50 border-4 border-gray-50 shadow-inner">
+                            {% if pet.imagem %}
+                                <img src="{{ pet.imagem.url }}" class="w-full h-full object-cover">
+                            {% else %}
+                                <div class="w-full h-full flex items-center justify-center bg-teal-50">
+                                    <i data-lucide="dog" class="text-teal-200" width="64" height="64"></i>
+                                </div>
+                            {% endif %}
+                            <label class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                                <span class="text-white font-bold">Alterar Foto</span>
+                                <input type="file" name="imagem" class="hidden">
+                            </label>
+                        </div>
+
+                        <!-- Info Básica -->
+                        <h2 class="text-3xl font-black text-gray-800">{{ pet.nome }}</h2>
+                        <p class="text-[#26C2B9] font-bold text-sm mb-6 uppercase tracking-widest">{{ pet.raca }}</p>
+
+                        <!-- Nome do Tutor -->
+                        <div class="w-full p-4 bg-gray-50 rounded-2xl mb-6 flex items-center gap-3">
+                            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm">
+                                <i data-lucide="user" class="text-gray-400" width="18"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-tighter">Tutor Responsável</p>
+                                <p class="text-gray-800 font-bold leading-tight">{{ pet.id_tutor.nome_tutor }}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-4 w-full">
+                            <div class="bg-teal-50 rounded-2xl p-4 flex-1 text-center">
+                                <p class="text-teal-900 text-xs font-black uppercase mb-1 opacity-60 tracking-widest">Peso</p>
+                                <input type="text" name="peso" value="{{ pet.peso|default:'' }}" placeholder="--- kg" 
+                                       class="bg-transparent font-black text-xl w-full text-center focus:outline-none text-teal-950">
+                            </div>
+                            <div class="bg-blue-50 rounded-2xl p-4 flex-1 text-center">
+                                <p class="text-blue-900 text-xs font-black uppercase mb-1 opacity-60 tracking-widest">Sexo</p>
+                                <select name="sexo" class="bg-transparent font-black text-xl w-full text-center focus:outline-none text-blue-950 appearance-none cursor-pointer">
+                                    <option value="Macho" {% if pet.sexo == 'Macho' %}selected{% endif %}>Macho</option>
+                                    <option value="Femea" {% if pet.sexo == 'Femea' %}selected{% endif %}>Fêmea</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card Próxima Consulta (CORRIGIDO \d\e) -->
+                    <div class="bg-[#26C2B9] rounded-[2.5rem] p-8 text-white relative shadow-lg shadow-teal-100">
+                        <p class="font-bold text-lg opacity-80">Próxima consulta</p>
+                        <h3 class="text-4xl font-black my-3">
+                            {% if proxima_consulta %}
+                                {{ proxima_consulta.data_consulta|date:"d" }} de {{ proxima_consulta.data_consulta|date:"M" }}
+                            {% else %}
+                                ---
+                            {% endif %}
+                        </h3>
+                        <p class="font-bold text-lg opacity-90">{{ proxima_consulta.tipo_de_consulta|default:"Sem agendamentos" }}</p>
+                        <i data-lucide="calendar" class="absolute top-8 right-8 opacity-20" width="40" height="40"></i>
+                    </div>
+
+                    <!-- Botão Rápido para Prontuário -->
+                    <a href="{% url 'prontuarios_url' %}?pet_id={{ pet.id }}" class="bg-white border-2 border-[#26C2B9] text-[#26C2B9] py-4 rounded-2xl font-black text-center hover:bg-teal-50 transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="file-text" width="20"></i>
+                        Acessar Prontuário
+                    </a>
+                </div>
+
+                <!-- LADO DIREITO: ABAS -->
+                <div class="flex-1 bg-white rounded-[2.5rem] shadow-sm p-10 border border-gray-100 min-h-[600px] flex flex-col">
+                    
+                    <div class="flex bg-gray-100 rounded-full p-1.5 w-fit mb-12">
+                        <button type="button" onclick="switchTab('sobre')" id="btn-sobre" class="tab-btn active px-10 py-3 font-black transition-all text-sm uppercase tracking-widest">Sobre</button>
+                        <button type="button" onclick="switchTab('saude')" id="btn-saude" class="tab-btn inactive px-10 py-3 font-black transition-all text-sm uppercase tracking-widest">Saúde</button>
+                    </div>
+
+                    <!-- ABA SOBRE -->
+                    <div id="tab-sobre" class="tab-content active flex-1">
+                        <div class="space-y-10">
+                            <div>
+                                <h3 class="text-xl font-black mb-4 text-gray-800 flex items-center gap-2">
+                                    <i data-lucide="info" class="text-[#26C2B9]" width="20"></i> Observações Gerais:
+                                </h3>
+                                <textarea name="descricao" rows="5" 
+                                          class="w-full bg-gray-50 border-2 border-transparent rounded-3xl p-8 text-gray-700 font-medium focus:ring-0 focus:border-[#26C2B9] focus:bg-white transition-all outline-none" 
+                                          placeholder="Anotações sobre comportamento, alimentação ou histórico... ">{{ pet.descricao|default:'' }}</textarea>
+                            </div>
+
+                            <div>
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-xl font-black text-gray-800">Perfil de Personalidade</h3>
+                                    <button type="button" onclick="openModal()" class="text-[#26C2B9] font-black text-sm hover:underline">+ Editar</button>
+                                </div>
+                                <div id="personality-container" class="flex flex-wrap gap-3">
+                                    {% if list_personalidades %}
+                                        {% for p in list_personalidades %}
+                                            <span class="bg-teal-50 text-teal-700 border border-teal-100 px-6 py-2.5 rounded-full font-black text-xs uppercase">{{ p }}</span>
+                                        {% endfor %}
+                                    {% else %}
+                                        <p class="text-gray-400 italic font-medium">Nenhuma característica definida.</p>
+                                    {% endif %}
+                                </div>
+                                <input type="hidden" name="personalidade" id="personalidades_input" value="{{ pet.personalidade|default:'' }}">
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-gray-100">
+                                <div>
+                                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Espécie</label>
+                                    <input type="text" name="especie" value="{{ pet.especie }}" class="w-full bg-gray-50 p-4 rounded-xl border-none font-bold text-gray-700 mt-2">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Raça</label>
+                                    <input type="text" name="raca" value="{{ pet.raca }}" class="w-full bg-gray-50 p-4 rounded-xl border-none font-bold text-gray-700 mt-2">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Pelagem</label>
+                                    <input type="text" name="pelagem" value="{{ pet.pelagem }}" class="w-full bg-gray-50 p-4 rounded-xl border-none font-bold text-gray-700 mt-2">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ABA SAÚDE -->
+                    <div id="tab-saude" class="tab-content flex-1">
+                        <div class="flex items-center justify-between mb-8">
+                            <h3 class="text-xl font-black text-gray-800">Protocolo de Vacinação</h3>
+                            <button type="button" class="bg-teal-50 text-[#26C2B9] px-6 py-2 rounded-full font-black text-xs uppercase hover:bg-[#26C2B9] hover:text-white transition-all">+ Novo Registro</button>
+                        </div>
+
+                        <div class="space-y-4">
+                            {% for v in vacinas %}
+                            <div class="flex items-center justify-between p-8 border-2 border-gray-50 rounded-[2.5rem] hover:border-teal-100 hover:bg-teal-50/30 transition-all group">
+                                <div class="flex items-center gap-6">
+                                    <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-2xl shadow-sm group-hover:scale-110 transition-transform">💉</div>
+                                    <div>
+                                        <h4 class="font-black text-gray-800 text-xl">{{ v.nome }}</h4>
+                                        <p class="text-gray-400 font-bold text-sm italic">Aplicada: <span class="text-gray-600">{{ v.data_aplicacao|date:"d/m/Y" }}</span></p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Próximo Reforço</p>
+                                    <p class="text-[#26C2B9] font-black text-2xl">{{ v.proxima_dose|date:"d/m/Y" }}</p>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="text-center py-24 border-4 border-dashed border-gray-50 rounded-[2.5rem]">
+                                <i data-lucide="shield-alert" class="mx-auto text-gray-200 mb-4" width="48" height="48"></i>
+                                <p class="text-gray-400 font-black italic">Sem registros vacinais.</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="mt-auto pt-12 flex justify-end gap-4">
+                        <button type="submit" class="bg-[#26C2B9] text-white font-black py-4 px-12 rounded-2xl hover:bg-[#1eb0a8] transition shadow-lg shadow-teal-100">
+                            Salvar Alterações
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+
+<!-- MODAL DE PERSONALIDADE (ESTILO VET) -->
+<div id="modal-personalidade" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-[3rem] p-10 max-w-md w-full shadow-2xl">
+        <div class="text-center mb-8">
+            <h3 class="text-2xl font-black text-gray-800">Comportamento</h3>
+            <p class="text-gray-400 font-bold text-sm">Como o paciente se comporta em consulta?</p>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-3 mb-10">
+            <!-- Opções Manuais para garantir funcionamento -->
+            <button type="button" onclick="toggleTrait(this)" class="trait-opt border-2 border-gray-100 rounded-full py-3 px-4 font-black text-xs text-gray-400 hover:border-teal-200 transition-all uppercase tracking-tighter">Brincalhão</button>
+            <button type="button" onclick="toggleTrait(this)" class="trait-opt border-2 border-gray-100 rounded-full py-3 px-4 font-black text-xs text-gray-400 hover:border-teal-200 transition-all uppercase tracking-tighter">Protetor</button>
+            <button type="button" onclick="toggleTrait(this)" class="trait-opt border-2 border-gray-100 rounded-full py-3 px-4 font-black text-xs text-gray-400 hover:border-teal-200 transition-all uppercase tracking-tighter">Guloso</button>
+            <button type="button" onclick="toggleTrait(this)" class="trait-opt border-2 border-gray-100 rounded-full py-3 px-4 font-black text-xs text-gray-400 hover:border-teal-200 transition-all uppercase tracking-tighter">Calmo</button>
+            <button type="button" onclick="toggleTrait(this)" class="trait-opt border-2 border-gray-100 rounded-full py-3 px-4 font-black text-xs text-gray-400 hover:border-teal-200 transition-all uppercase tracking-tighter">Agitado</button>
+            <button type="button" onclick="toggleTrait(this)" class="trait-opt border-2 border-gray-100 rounded-full py-3 px-4 font-black text-xs text-gray-400 hover:border-teal-200 transition-all uppercase tracking-tighter">Curioso</button>
+            <button type="button" onclick="toggleTrait(this)" class="trait-opt border-2 border-gray-100 rounded-full py-3 px-4 font-black text-xs text-gray-400 hover:border-teal-200 transition-all uppercase tracking-tighter">Sociável</button>
+            <button type="button" onclick="toggleTrait(this)" class="trait-opt border-2 border-gray-100 rounded-full py-3 px-4 font-black text-xs text-gray-400 hover:border-teal-200 transition-all uppercase tracking-tighter">Agressivo</button>
+        </div>
+
+        <div class="flex gap-4">
+            <button type="button" onclick="closeModal()" class="flex-1 bg-gray-100 text-gray-500 font-black py-4 rounded-2xl hover:bg-gray-200 transition-all uppercase text-xs">Cancelar</button>
+            <button type="button" onclick="saveTraits()" class="flex-1 bg-[#26C2B9] text-white font-black py-4 rounded-2xl hover:bg-[#1eb0a8] transition-all uppercase text-xs shadow-lg shadow-teal-100">Confirmar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    lucide.createIcons();
+
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.replace('active', 'inactive');
+        });
+        document.getElementById('tab-' + tab).classList.add('active');
+        document.getElementById('btn-' + tab).classList.replace('inactive', 'active');
+    }
+
+    function openModal() { document.getElementById('modal-personalidade').classList.remove('hidden'); }
+    function closeModal() { document.getElementById('modal-personalidade').classList.add('hidden'); }
+
+    function toggleTrait(btn) {
+        btn.classList.toggle('is-selected');
+    }
+
+    function saveTraits() {
+        const selected = document.querySelectorAll('.trait-opt.is-selected');
+        const container = document.getElementById('personality-container');
+        const inputOculto = document.getElementById('personalidades_input');
+        container.innerHTML = '';
+        let traitsList = [];
+
+        selected.forEach(btn => {
+            traitsList.push(btn.innerText);
+            const span = document.createElement('span');
+            span.className = 'bg-teal-50 text-teal-700 border border-teal-100 px-6 py-2.5 rounded-full font-black text-xs uppercase';
+            span.innerText = btn.innerText;
+            container.appendChild(span);
+        });
+
+        inputOculto.value = traitsList.join(',');
+        closeModal();
+    }
+</script>
+{% endblock %}

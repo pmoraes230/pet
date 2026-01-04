@@ -238,3 +238,18 @@ class ContatoTutor(models.Model):
     class Meta:
         managed = False
         db_table = 'contato_tutor'
+
+
+class Vacina(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    nome = models.CharField(db_column='NOME', max_length=100)
+    data_aplicacao = models.DateField(db_column='DATA_APLICACAO')
+    proxima_dose = models.DateField(db_column='PROXIMA_DOSE', blank=True, null=True)
+    pet = models.ForeignKey(Pet, models.DO_NOTHING, db_column='ID_PET')
+    peso = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    descricao = models.TextField(null=True, blank=True)
+    personalidade = models.CharField(max_length=255, null=True, blank=True)
+    imagem = models.ImageField(upload_to='pets/', null=True, blank=True)
+    class Meta:
+        managed = False
+        db_table = 'vacina'          

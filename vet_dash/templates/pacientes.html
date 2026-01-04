@@ -79,9 +79,9 @@
                         </div>
 
                         <!-- Botão Ver Detalhes -->
-                        <a href="#" class="block w-full py-3 border-2 border-gray-100 rounded-full text-center font-black text-gray-800 hover:bg-gray-50 transition-colors shadow-sm">
-                            Ver detalhes
-                        </a>
+                    <a href="{% url 'detalhes_pet' pet.id %}" class="block w-full py-3 border-2 border-gray-100 rounded-full text-center font-black text-gray-800 hover:bg-gray-50 transition-colors shadow-sm">
+                        Ver detalhes
+                    </a>
                     </div>
                 </div>
                 {% empty %}
