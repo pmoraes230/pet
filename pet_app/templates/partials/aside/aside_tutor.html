@@ -1,13 +1,14 @@
 {% load static %}
 
-<!-- Sidebar -->
+<!-- Sidebar Tutor -->
 <aside class="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col z-20">
-    <!-- Logo -->
+    
+    <!-- LOGO E NOME (Branding Coração em Patas) -->
     <div class="p-6 flex items-center gap-3">
         <div class="bg-purple-600 p-2 rounded-lg text-white">
             <i data-lucide="paw-print" width="20" height="20"></i>
         </div>
-        <span class="font-bold text-lg text-gray-800 tracking-tight">Coração em patas</span>
+        <span class="font-black text-lg text-gray-800 tracking-tight">Coração em patas</span>
     </div>
 
     <!-- Navegação -->
@@ -29,7 +30,7 @@
             <span>Meus Pets</span>
         </a>
 
-        <!-- Agendamentos (Calendário) -->
+        <!-- Agendamentos -->
         <a href="{% url 'agendamentos' %}" 
            class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all
            {% if request.resolver_match.url_name == 'agendamentos' %} bg-purple-100 text-purple-700 {% else %} text-gray-600 hover:bg-gray-50 hover:text-gray-900 {% endif %}">
@@ -37,7 +38,7 @@
             <span>Agendamentos</span>
         </a>
 
-        <!-- Diário Emocional (CONSERTADO AQUI) -->
+        <!-- Diário Emocional -->
         <a href="{% url 'diario_emocional' %}" 
            class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all
            {% if request.resolver_match.url_name == 'diario_emocional' %} bg-purple-100 text-purple-700 {% else %} text-gray-600 hover:bg-gray-50 hover:text-gray-900 {% endif %}">
@@ -45,7 +46,7 @@
             <span>Diário Emocional</span>
         </a>
 
-        <!-- Medicamentos (Manhã/Tarde/Noite) -->
+        <!-- Medicamentos -->
         <a href="{% url 'medicamentos' %}" 
            class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all
            {% if request.resolver_match.url_name == 'medicamentos' %} bg-purple-100 text-purple-700 {% else %} text-gray-600 hover:bg-gray-50 hover:text-gray-900 {% endif %}">

@@ -15,52 +15,54 @@
         <!-- Conteúdo -->
         <div class="flex-1 overflow-y-auto p-6 md:p-10 space-y-8">
 
-            <!-- ESTATÍSTICAS -->
+            <!-- ESTATÍSTICAS (Agora clicáveis) -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                 
-                <!-- Pacientes -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <div class="bg-blue-100 w-10 h-10 flex items-center justify-center rounded-lg text-blue-600 mb-4">
+                <!-- Pacientes -> Vai para pacientes.html -->
+                <a href="{% url 'pacientes_url' %}" class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all group">
+                    <div class="bg-blue-100 w-10 h-10 flex items-center justify-center rounded-lg text-blue-600 mb-4 group-hover:scale-110 transition-transform">
                         <i data-lucide="users" width="20" height="20"></i>
                     </div>
                     <div class="text-2xl font-bold text-gray-800">{{ total_pacientes }}</div>
                     <div class="text-xs text-gray-400">Total Pacientes</div>
-                </div>
+                </a>
 
-                <!-- Consultas -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <div class="bg-purple-100 w-10 h-10 flex items-center justify-center rounded-lg text-purple-600 mb-4">
+                <!-- Consultas -> Vai para agenda.html -->
+                <a href="{% url 'agenda_url' %}" class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all group">
+                    <div class="bg-purple-100 w-10 h-10 flex items-center justify-center rounded-lg text-purple-600 mb-4 group-hover:scale-110 transition-transform">
                         <i data-lucide="calendar" width="20" height="20"></i>
                     </div>
                     <div class="text-2xl font-bold text-gray-800">{{ consultas_hoje }}</div>
                     <div class="text-xs text-gray-400">Consultas Hoje</div>
-                </div>
+                </a>
 
-                <!-- Críticos -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <div class="bg-yellow-100 w-10 h-10 flex items-center justify-center rounded-lg text-yellow-600 mb-4">
+                <!-- Críticos -> Pode ir para prontuários ou uma lista filtrada -->
+                <a href="{% url 'prontuarios_url' %}" class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all group">
+                    <div class="bg-yellow-100 w-10 h-10 flex items-center justify-center rounded-lg text-yellow-600 mb-4 group-hover:scale-110 transition-transform">
                         <i data-lucide="activity" width="20" height="20"></i>
                     </div>
                     <div class="text-2xl font-bold text-gray-800">{{ casos_criticos }}</div>
                     <div class="text-xs text-gray-400">Casos Críticos</div>
-                </div>
+                </a>
 
-                <!-- Faturamento -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <div class="bg-green-100 w-10 h-10 flex items-center justify-center rounded-lg text-green-600 mb-4">
+                <!-- Faturamento -> Vai para financeiro.html -->
+                <a href="{% url 'financeiro_url' %}" class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all group">
+                    <div class="bg-green-100 w-10 h-10 flex items-center justify-center rounded-lg text-green-600 mb-4 group-hover:scale-110 transition-transform">
                         <i data-lucide="dollar-sign" width="20" height="20"></i>
                     </div>
-                    <!-- Floatformat:2 garante R$ 100,00 -->
                     <div class="text-2xl font-bold text-gray-800">R$ {{ faturamento_dia|floatformat:2 }}</div>
                     <div class="text-xs text-gray-400">Faturamento Hoje</div>
-                </div>
+                </a>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 
                 <!-- AGENDA -->
                 <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <h2 class="text-xl font-bold text-gray-800 mb-6">Agenda de Hoje</h2>
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-bold text-gray-800">Agenda de Hoje</h2>
+                        <a href="{% url 'agenda_url' %}" class="text-blue-600 text-sm font-bold hover:underline">Ver tudo</a>
+                    </div>
                     <div class="divide-y divide-gray-100">
                         {% for consulta in agenda_hoje %}
                         <a href="#" class="block p-4 flex items-center gap-4 hover:bg-gray-50 transition-colors rounded-lg group">
@@ -76,7 +78,6 @@
                                 </div>
                             </div>
 
-                            <!-- BADGES DE STATUS (Agora usando o campo real do banco) -->
                             {% if consulta.status == 'Confirmado' %}
                                 <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">Confirmado</span>
                             {% elif consulta.status == 'Agendado' %}
@@ -86,7 +87,6 @@
                             {% elif consulta.status == 'Concluido' %}
                                 <span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-bold">Concluído</span>
                             {% else %}
-                                <!-- Caso venha algo diferente, mostra o texto cru -->
                                 <span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-bold">{{ consulta.status }}</span>
                             {% endif %}
                         </a>

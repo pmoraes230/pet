@@ -1,15 +1,44 @@
 {% load static %}
 
- <!-- Header -->
- <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 md:px-10">
-    <div>
-        <h2 class="text-xl font-bold text-gray-800">Clínica Vet Care</h2>
-        <p class="text-xs text-gray-400">Dr. Roberto Silva - CRMV 12345</p>
-    </div>
+<header class="bg-white border-b border-gray-100 h-24 flex items-center justify-between px-8 z-10">
     
-    <div class="flex items-center gap-4">
-        <button class="bg-brand-darkTeal text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-teal-800 transition-colors">
-            <i data-lucide="plus" width="16" height="16"></i> Novo Atendimento
+    <!-- Lado Esquerdo: Nome da Clínica e do Veterinário (O QUE VOCÊ QUER MUDAR) -->
+    <div class="flex flex-col">
+        <!-- Nome da Clínica (Puxa da Pessoa Jurídica ou usa o nome padrão) -->
+        <h1 class="text-2xl font-black text-gray-800 leading-tight">
+            {% if veterinario.pessoa_juridica %}
+                {{ veterinario.pessoa_juridica.nome_fantasia }}
+            {% else %}
+                Coração em Patas
+            {% endif %}
+        </h1>
+        
+        <!-- Nome do Veterinário e CRMV vindos do Banco -->
+        <p class="text-sm font-medium text-gray-400">
+            Dr. {{ veterinario.nome }} - CRMV {{ veterinario.crmv }}
+        </p>
+    </div>
+
+    <!-- Lado Direito: Notificações e Avatar -->
+    <div class="flex items-center gap-6">
+        <!-- Botão de Notificação -->
+        <button class="relative text-gray-400 hover:text-[#26C2B9] transition-colors">
+            <i data-lucide="bell" width="22" height="22"></i>
+            <span class="absolute -top-1 -right-1 bg-red-500 w-2 h-2 rounded-full border-2 border-white"></span>
         </button>
+
+        <!-- Avatar Dinâmico -->
+        <div class="w-12 h-12 rounded-full bg-[#26C2B9] border-2 border-white shadow-sm overflow-hidden flex items-center justify-center text-white">
+            {% if veterinario.imagem_perfil_veterinario %}
+                <img src="{{ veterinario.imagem_perfil_veterinario.url }}" class="w-full h-full object-cover">
+            {% else %}
+                <span class="text-xl font-black">{{ veterinario.nome|slice:":1" }}</span>
+            {% endif %}
+        </div>
     </div>
 </header>
+
+<script>
+    // Ativa os ícones
+    lucide.createIcons();
+</script>

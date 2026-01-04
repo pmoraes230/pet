@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="bg-gray-50 flex min-h-screen">
+
+    <!-- Sidebar -->
+    {% include "partials/aside/aside_vet.html" %}
+
+    <main class="flex-1 flex flex-col overflow-hidden">
+
+        <!-- Header -->
+        {% include "partials/header/header_vet.html" %}
+
+        <!-- Conteúdo da Página de Pacientes -->
+        <div class="flex-1 overflow-y-auto p-6 md:p-10">
+            
+            <!-- Título e Botão Novo Paciente -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+                <div>
+                    <h1 class="text-4xl font-black text-gray-900">Pacientes</h1>
+                    <p class="text-gray-500 font-medium">Gerencie os registros dos animais e tutores</p>
+                </div>
+                <a href="#" class="bg-[#26C2B9] hover:bg-[#1eb0a8] text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-sm">
+                    <i data-lucide="plus" width="20" height="20"></i>
+                    Novo Paciente
+                </a>
+            </div>
+
+            <!-- Barra de Pesquisa e Filtro -->
+            <div class="flex flex-col md:flex-row gap-4 mb-12">
+                <div class="relative flex-1">
+                    <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-gray-500">
+                        <i data-lucide="search" width="22" height="22"></i>
+                    </div>
+                    <input type="text" 
+                           placeholder="Pesquise por nome do tutor ou nome do pet" 
+                           class="block w-full pl-14 pr-4 py-4 bg-[#D9D9D9] border-none rounded-full focus:ring-2 focus:ring-[#26C2B9] focus:bg-gray-200 transition-all outline-none text-gray-700 placeholder-gray-500 font-medium">
+                </div>
+                <button class="bg-[#D9D9D9] hover:bg-gray-300 text-gray-800 px-10 py-4 rounded-2xl font-black transition-colors">
+                    Filtrar
+                </button>
+            </div>
+
+            <!-- Grid de Cards de Pets -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                
+                {% for pet in pacientes %}
+                <div class="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+                    
+                    <!-- Imagem do Pet (Corrigido para minúsculo) -->
+                    <div class="h-56 overflow-hidden">
+                        {% if pet.imagem %}
+                            <img src="{{ pet.imagem.url }}" alt="{{ pet.nome }}" class="w-full h-full object-cover">
+                        {% else %}
+                            <!-- Placeholder caso não tenha imagem -->
+                            <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+                                <i data-lucide="dog" class="text-gray-400" width="48" height="48"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Informações do Card -->
+                    <div class="p-8">
+                        <div class="flex items-center gap-3 mb-4">
+                            <!-- Nome (Corrigido para minúsculo) -->
+                            <h3 class="text-3xl font-black text-gray-800">{{ pet.nome }}</h3>
+                            
+                            <span class="bg-[#CFF7D3] text-[#2D8A39] text-[11px] px-3 py-1 rounded-lg font-bold">
+                                Saudável
+                            </span>
+                        </div>
+
+                        <div class="flex items-center justify-between text-gray-400 font-bold text-sm mb-8">
+                            <!-- Raça e Data (Corrigido para minúsculo) -->
+                            <span>{{ pet.raca }}</span>
+                            <span class="mx-2">•</span>
+                            <span>{{ pet.data_nascimento|timesince }}</span>
+                        </div>
+
+                        <!-- Botão Ver Detalhes -->
+                        <a href="#" class="block w-full py-3 border-2 border-gray-100 rounded-full text-center font-black text-gray-800 hover:bg-gray-50 transition-colors shadow-sm">
+                            Ver detalhes
+                        </a>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-span-full text-center py-20">
+                    <i data-lucide="info" class="mx-auto mb-4 text-gray-300" width="48" height="48"></i>
+                    <p class="text-gray-400 text-lg font-medium">Nenhum paciente cadastrado no momento.</p>
+                </div>
+                {% endfor %}
+
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    lucide.createIcons();
+</script>
+{% endblock %}

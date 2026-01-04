@@ -153,3 +153,17 @@ class Consulta(models.Model):
     class Meta:
         managed = False
         db_table = 'consulta'
+
+        
+class ProntuarioPet(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    historico_veterinario = models.CharField(db_column='HISTORICO_VETERINARIO', max_length=150, blank=True, null=True)
+    motivo_consulta = models.TextField(db_column='MOTIVO_CONSULTA', blank=True, null=True)
+    avaliacao_geral = models.TextField(db_column='AVALIACAO_GERAL', blank=True, null=True)
+    procedimentos = models.TextField(db_column='PROCEDIMENTOS', blank=True, null=True)
+    diagnostico_conslusivo = models.TextField(db_column='DIAGNOSTICO_CONSLUSIVO', blank=True, null=True)
+    observacao = models.TextField(db_column='OBSERVACAO', blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'prontuariopet' # Certifique-se que está IGUAL ao nome no MySQL        
