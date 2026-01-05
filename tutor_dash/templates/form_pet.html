@@ -1,56 +1,91 @@
-<form method="POST" action="{% url 'adicionar_pet' %}" class="space-y-6">
-    {% csrf_token %}
+{% extends "base.html" %}
+{% load static %}
 
-    <!-- Nome -->
-    <div>
-        <label class="block text-sm font-bold text-gray-700 mb-2">Nome do Pet</label>
-        <input type="text" name="nome" required
-               class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none"
-               placeholder="Ex: Paçoca">
-    </div>
+{% block content %}
+<div class="bg-gray-50 flex flex-col md:flex-row h-screen overflow-hidden">
+    
+    <!-- Sidebar -->
+    {% block aside %}
+        {% include "partials/aside/aside_tutor.html" %}
+    {% endblock %}
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Espécie -->
-        <div>
-            <label class="block text-sm font-bold text-gray-700 mb-2">Espécie</label>
-            <select name="especie"
-                    class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none">
-                <option value="Cachorro">Cachorro</option>
-                <option value="Gato">Gato</option>
-                <option value="Outro">Outro</option>
-            </select>
+    <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+        
+        <!-- Header -->
+        {% block header %}
+            {% include "partials/header/header_tutor.html" %}
+        {% endblock %}
+
+        <!-- Conteúdo Rolável -->
+        <div class="flex-1 overflow-y-auto p-6 md:p-10 pb-24 z-10">
+            <form method="POST" action="{% url 'adicionar_pet' %}" class="space-y-6">
+                {% csrf_token %}
+            
+                <!-- Nome -->
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Nome do Pet</label>
+                    <input type="text" name="nome" required
+                           class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none"
+                           placeholder="Ex: Paçoca">
+                </div>
+            
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Espécie -->
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Espécie</label>
+                        <select name="especie"
+                                class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none">
+                            <option value="Cachorro">Cachorro</option>
+                            <option value="Gato">Gato</option>
+                            <option value="Outro">Outro</option>
+                        </select>
+                    </div>
+            
+                    <!-- Raça -->
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Raça</label>
+                        <input type="text" name="raca" required
+                               class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none"
+                               placeholder="Ex: Vira-lata">
+                    </div>
+                </div>
+            
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Data -->
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Data de Nascimento</label>
+                        <input type="date" name="data_nascimento" required
+                               class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none">
+                    </div>
+            
+                    <!-- Sexo -->
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Sexo</label>
+                        <select name="sexo"
+                                class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none">
+                            <option value="M">Macho</option>
+                            <option value="F">Fêmea</option>
+                        </select>
+                    </div>
+                </div>
+            
+                <button type="submit"
+                        class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 rounded-xl shadow-lg">
+                    Salvar Pet
+                </button>
+            </form>
         </div>
 
-        <!-- Raça -->
-        <div>
-            <label class="block text-sm font-bold text-gray-700 mb-2">Raça</label>
-            <input type="text" name="raca" required
-                   class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none"
-                   placeholder="Ex: Vira-lata">
+        <!-- Footer Decorativo -->
+        <div class="absolute bottom-0 left-0 w-full overflow-hidden leading-none rotate-180 text-brand-teal pointer-events-none z-0 opacity-40">
+             <svg class="relative block w-[calc(100%+1.3px)] h-[60px] text-purple-100" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" fill="currentColor"></path>
+            </svg>
         </div>
-    </div>
+    </main>
+</div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Data -->
-        <div>
-            <label class="block text-sm font-bold text-gray-700 mb-2">Data de Nascimento</label>
-            <input type="date" name="data_nascimento" required
-                   class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none">
-        </div>
-
-        <!-- Sexo -->
-        <div>
-            <label class="block text-sm font-bold text-gray-700 mb-2">Sexo</label>
-            <select name="sexo"
-                    class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none">
-                <option value="M">Macho</option>
-                <option value="F">Fêmea</option>
-            </select>
-        </div>
-    </div>
-
-    <button type="submit"
-            class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 rounded-xl shadow-lg">
-        Salvar Pet
-    </button>
-</form>
+<script>
+    lucide.createIcons();
+</script>
+{% endblock %}
