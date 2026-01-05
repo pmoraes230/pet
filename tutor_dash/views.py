@@ -1,9 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from datetime import date, timedelta # Adicionado timedelta para o calendário
 from pet_app import models
 from pet_app.utils import get_tutor_logado
 from .models import Pet, Consulta # Certifique-se de que Vacina também está no seu models.py
+import json # Não esqueça de importar isso no topo do arquivo
+from django.contrib import messages # Importe isso no topo
+from django.shortcuts import render, redirect
+from pet_app import models
+from datetime import date, timedelta, datetime # Importe datetime também
 
 # ========================================================
 # DASHBOARD DO TUTOR
@@ -242,14 +246,6 @@ def medicamentos_view(request):
     }
     return render(request, 'medicamentos.html', context)
 
-
-
-from django.shortcuts import render, redirect
-from . import models
-from datetime import date, timedelta
-
-from datetime import date, timedelta, datetime # Importe datetime também
-
 def agendamentos_view(request):
     tutor_data = get_tutor_logado(request)
     if not tutor_data:
@@ -310,9 +306,6 @@ def agendamentos_view(request):
     return render(request, 'agendamentos.html', context)
     
     return render(request, 'agendamentos.html', context)
-import json # Não esqueça de importar isso no topo do arquivo
-
-from django.contrib import messages # Importe isso no topo
 
 def diario_emocional_view(request):
     tutor_data = get_tutor_logado(request)
