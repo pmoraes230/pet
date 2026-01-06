@@ -31,6 +31,6 @@ urlpatterns = [
     # ==================================================
     # ÁREA DO VETERINÁRIO
     # ==================================================
-    path("perfil-veterinario/", views.perfil_veterinario, name="perfil_veterinario"),
+    path("perfil-veterinario/", views.perfil_veterinario, name="perfil_vet"),
     path("editar-perfil-veterinario/", views.editar_perfil_veterinario, name="editar_perfil_veterinario"),
 ]

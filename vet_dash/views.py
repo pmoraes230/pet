@@ -269,7 +269,9 @@ def perfil_veterinario(request):
     veterinario = models.Veterinario.objects.get(id=vet_data['id'])
     contatos = models.ContatoVeterinario.objects.filter(id_veterinario=veterinario)
     
-    return render(request, 'veterinario_perfil.html', {
+    # MUDE AQUI: Verifique qual é o nome do seu arquivo HTML
+    # Se você criou como vet_perfil.html, mude para:
+    return render(request, 'vet_perfil.html', {
         'veterinario': veterinario, 
         'contatos': contatos
     })

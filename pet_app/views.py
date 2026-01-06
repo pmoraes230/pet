@@ -291,13 +291,16 @@ def vet_dashboard_view(request):
     return render(request, 'vet_dash.html', context)
 
 
+# No arquivo pet_app/views.py, por volta da linha 202
+
 def perfil_veterinario(request):
     if request.session.get('user_role') != 'vet':
         return redirect('login')
 
     veterinario = models.Veterinario.objects.get(id=request.session['user_id'])
-    return render(request, 'veterinario_perfil.html', {'veterinario': veterinario})
-
+    
+    # MUDE DE 'veterinario_perfil.html' PARA 'vet_perfil.html'
+    return render(request, 'vet_perfil.html', {'veterinario': veterinario})
 
 def editar_perfil_veterinario(request):
     if request.session.get('user_role') != 'vet':

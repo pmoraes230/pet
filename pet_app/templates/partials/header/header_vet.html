@@ -1,44 +1,85 @@
 {% load static %}
 
-<header class="bg-white border-b border-gray-100 h-24 flex items-center justify-between px-8 z-10">
-    
-    <!-- Lado Esquerdo: Nome da Clínica e do Veterinário (O QUE VOCÊ QUER MUDAR) -->
-    <div class="flex flex-col">
-        <!-- Nome da Clínica (Puxa da Pessoa Jurídica ou usa o nome padrão) -->
-        <h1 class="text-2xl font-black text-gray-800 leading-tight">
+<header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 md:px-10">
+  <!-- Lado Esquerdo: Saudação Dinâmica -->
+  <h2 class="text-xl font-bold text-gray-800">
+    {{ saudacao_horario }}, Dr. {{ veterinario.nome|default:"Veterinário" }}!
+  </h2>
+
+  <div class="flex items-center gap-4">
+    <!-- Notificações -->
+    <button class="p-2 text-gray-400 hover:bg-gray-100 rounded-full relative transition-colors">
+      <i data-lucide="bell" width="20" height="20"></i>
+      <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+    </button>
+
+    <!-- Dropdown do Perfil -->
+    <div class="relative" x-data="{ open: false }"
+      x-init="document.addEventListener('click', (e) => { if (!e.target.closest('[data-dropdown]')) open = false })">
+      
+      <button data-dropdown @click.stop="open = !open"
+        class="flex items-center gap-3 hover:bg-gray-50 rounded-xl px-3 py-2 transition-colors select-none"
+        :class="{ 'bg-gray-50': open }">
+        
+        <!-- Avatar Dinâmico -->
+        <div class="h-9 w-9 rounded-full flex items-center justify-center bg-[#26C2B9] text-white font-bold text-sm shadow-sm overflow-hidden">
+          {% if veterinario.imagem_perfil_veterinario %}
+            <img src="{{ veterinario.imagem_perfil_veterinario.url }}" class="w-full h-full object-cover">
+          {% else %}
+            <span class="text-sm font-black">{{ veterinario.nome|slice:":1"|upper }}</span>
+          {% endif %}
+        </div>
+
+        <!-- Textos do Perfil -->
+        <div class="hidden md:block text-left">
+          <p class="text-sm font-semibold text-gray-800">
+            Dr. {{ veterinario.nome }}
+          </p>
+          <p class="text-xs text-gray-500">CRMV {{ veterinario.crmv }}</p>
+        </div>
+
+        <i data-lucide="chevron-down" class="w-4 h-4 text-gray-500 transition-transform"
+          :class="{ 'rotate-180': open }"></i>
+      </button>
+
+      <!-- Menu Dropdown -->
+      <div data-dropdown x-show="open" @click.stop x-transition
+        class="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-lg border border-gray-100 py-2 z-50"
+        style="display: none">
+        
+        <!-- Informações da Clínica/Vet -->
+        <div class="px-4 py-3 border-b border-gray-100">
+          <p class="font-semibold text-gray-800 truncate">
             {% if veterinario.pessoa_juridica %}
                 {{ veterinario.pessoa_juridica.nome_fantasia }}
             {% else %}
-                Coração em Patas
+                Dr. {{ veterinario.nome }}
             {% endif %}
-        </h1>
-        
-        <!-- Nome do Veterinário e CRMV vindos do Banco -->
-        <p class="text-sm font-medium text-gray-400">
-            Dr. {{ veterinario.nome }} - CRMV {{ veterinario.crmv }}
-        </p>
-    </div>
-
-    <!-- Lado Direito: Notificações e Avatar -->
-    <div class="flex items-center gap-6">
-        <!-- Botão de Notificação -->
-        <button class="relative text-gray-400 hover:text-[#26C2B9] transition-colors">
-            <i data-lucide="bell" width="22" height="22"></i>
-            <span class="absolute -top-1 -right-1 bg-red-500 w-2 h-2 rounded-full border-2 border-white"></span>
-        </button>
-
-        <!-- Avatar Dinâmico -->
-        <div class="w-12 h-12 rounded-full bg-[#26C2B9] border-2 border-white shadow-sm overflow-hidden flex items-center justify-center text-white">
-            {% if veterinario.imagem_perfil_veterinario %}
-                <img src="{{ veterinario.imagem_perfil_veterinario.url }}" class="w-full h-full object-cover">
-            {% else %}
-                <span class="text-xl font-black">{{ veterinario.nome|slice:":1" }}</span>
-            {% endif %}
+          </p>
+          <p class="text-xs text-gray-500 truncate">{{ veterinario.email }}</p>
         </div>
-    </div>
-</header>
 
-<script>
-    // Ativa os ícones
-    lucide.createIcons();
-</script>
+        <!-- LINKS DO MENU CORRIGIDOS -->
+        <!-- No seu Header do Veterinário -->
+        <a href="{% url 'perfil_vet' %}" 
+        class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-gray-700">
+        <i data-lucide="user" width="18" height="18"></i>
+        <span class="text-sm font-medium">Meu Perfil</span>
+        </a>
+
+        <a href="#" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-gray-700">
+          <i data-lucide="settings" width="18" height="18"></i>
+          <span class="text-sm font-medium">Configurações da Clínica</span>
+        </a>
+
+        <div class="border-t border-gray-100 mt-1">
+            <a href="{% url 'logout' %}"
+              class="flex w-full items-center gap-3 px-4 py-3 hover:bg-red-50 text-red-600 transition-colors text-left text-sm font-medium">
+              <i data-lucide="log-out" width="18" height="18"></i>
+              Sair da conta
+            </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>

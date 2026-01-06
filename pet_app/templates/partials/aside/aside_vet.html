@@ -1,7 +1,7 @@
 {% load static %}
 
 <!-- Sidebar Veterinário -->
-<aside class="w-64 bg-brand-darkTeal border-r border-teal-800 hidden md:flex flex-col z-10 text-white">
+<aside class="w-64 bg-[#064e4b] border-r border-teal-800 hidden md:flex flex-col z-10 text-white">
     
     <!-- LOGO E NOME (Identidade Coração em patas) -->
     <div class="p-6 flex items-center gap-3">
@@ -53,13 +53,21 @@
             <i data-lucide="dollar-sign" width="20" height="20"></i>
             <span>Financeiro</span>
         </a>
+
+        <!-- Perfil (Adicionado para facilitar a navegação) -->
+        <a href="{% url 'perfil_veterinario' %}" 
+           class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all
+           {% if request.resolver_match.url_name == 'perfil_veterinario' %} bg-white/20 text-white shadow-sm {% else %} text-teal-100 hover:bg-white/5 hover:text-white {% endif %}">
+            <i data-lucide="user" width="20" height="20"></i>
+            <span>Meu Perfil</span>
+        </a>
     </nav>
 
     <!-- Rodapé da Sidebar (Botão Sair) -->
     <div class="p-4 border-t border-teal-800">
-        <a href="{% url 'login' %}" class="flex items-center gap-3 px-4 py-3 text-red-300 hover:bg-red-500/10 hover:text-red-100 rounded-xl font-bold transition-all">
+        <a href="{% url 'logout' %}" class="flex items-center gap-3 px-4 py-3 text-red-300 hover:bg-red-500/10 hover:text-red-100 rounded-xl font-bold transition-all">
             <i data-lucide="log-out" width="20" height="20"></i>
-            <span>Sair</span>
+            <span>Sair da conta</span>
         </a>
     </div>
 
