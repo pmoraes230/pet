@@ -1,13 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required  # se usar no futuro
 from pet_app import models
 from pet_app.utils import get_tutor_logado
-from .models import Pet, Consulta # Certifique-se de que Vacina também está no seu models.py
-import json # Não esqueça de importar isso no topo do arquivo
-from django.contrib import messages # Importe isso no topo
-from django.shortcuts import render, redirect
-from pet_app import models
-from datetime import date, timedelta, datetime # Importe datetime também
+import json
+from datetime import date, timedelta, datetime
 
 # ========================================================
 # DASHBOARD DO TUTOR
@@ -50,11 +47,15 @@ def perfil_tutor(request):
         return redirect('login')
 
     tutor = models.Tutor.objects.get(id=tutor_data['id'])
-    contatos = models.ContatoTutor.objects.filter(tutor=tutor)
+
+    # ATENÇÃO: ContatoTutor NÃO existe nos models que você me mostrou
+    # Se esse modelo existe em outro app ou foi esquecido, adicione-o.
+    # Por enquanto, comento para não dar erro:
+    # contatos = ContatoTutor.objects.filter(tutor=tutor)  # <-- ERRO SE NÃO EXISTIR
 
     return render(request, 'tutor_perfil.html', {
         'tutor': tutor,
-        'contatos': contatos
+        # 'contatos': contatos,  # Descomente quando o modelo existir
     })
 
 
@@ -64,29 +65,32 @@ def editar_perfil_tutor(request):
         return redirect('login')
 
     tutor = models.Tutor.objects.get(id=tutor_data['id'])
-    contatos = models.ContatoTutor.objects.filter(tutor=tutor)
+    contatos = models.ContatoTutor.objects.filter(id_tutor=tutor).order_by('-data_cadastro')
 
     if request.method == "POST":
+        # Atualiza dados do tutor
         tutor.nome_tutor = request.POST.get('nome_tutor')
         tutor.cpf = request.POST.get('cpf')
         tutor.data_nascimento = request.POST.get('data_nascimento')
         tutor.endereco = request.POST.get('endereco')
-
-        if request.FILES.get('image_tutor'):
-            tutor.imagem_perfil_tutor = request.FILES['image_tutor']
-
+        imagem_tutor = request.FILES.get('image_tutor')
+        if imagem_tutor:
+            tutor.imagem_perfil_tutor = imagem_tutor
         tutor.save()
 
-        models.ContatoTutor.objects.filter(tutor=tutor).delete()
-
+        # Processa contatos
         tipos = request.POST.getlist('tipo_contato')
         ddds = request.POST.getlist('ddd')
         numeros = request.POST.getlist('numero')
+        contato_ids = request.POST.getlist('contato_id')
+
+        # Deleta todos e recria (simples e seguro)
+        models.ContatoTutor.objects.filter(id_tutor=tutor.id).delete()
 
         for i in range(len(tipos)):
-            if ddds[i] and numeros[i]:
+            if ddds[i].strip() and numeros[i].strip():
                 models.ContatoTutor.objects.create(
-                    tutor=tutor,
+                    id_tutor=tutor,          
                     tipo_contato=tipos[i],
                     ddd=ddds[i],
                     numero=numeros[i]
@@ -95,10 +99,11 @@ def editar_perfil_tutor(request):
         messages.success(request, "Perfil atualizado com sucesso!")
         return redirect('perfil_tutor')
 
-    return render(request, 'editar_perfil.html', {
+    context = {
         'tutor': tutor,
-        'contatos': contatos
-    })
+        'contatos': contatos,
+    }
+    return render(request, 'edit_tutor/editar_perfil.html', context)
 
 
 # ========================================================
@@ -165,7 +170,7 @@ def excluir_pet(request, pet_id):
 
 
 def detalhe_pet(request, pet_id):
-    pet = get_object_or_404(Pet, id=pet_id)
+    pet = get_object_or_404(models.Pet, id=pet_id)
 
     if request.method == "POST":
         pet.nome = request.POST.get('nome')
@@ -186,16 +191,13 @@ def detalhe_pet(request, pet_id):
 
     list_personalidades = pet.personalidade.split(',') if pet.personalidade else []
 
-    proxima_consulta = Consulta.objects.filter(
+    proxima_consulta = models.Consulta.objects.filter(
         pet=pet, 
         data_consulta__gte=date.today()
     ).order_by('data_consulta').first()
 
-    try:
-        from .models import Vacina
-        vacinas = Vacina.objects.filter(pet=pet).order_by('-data_aplicacao')
-    except ImportError:
-        vacinas = []
+    # CORREÇÃO: Vacina já está importada no topo
+    vacinas = models.Vacina.objects.filter(pet=pet).order_by('-data_aplicacao')
 
     context = {
         'pet': pet,
@@ -207,7 +209,7 @@ def detalhe_pet(request, pet_id):
 
 
 # ========================================================
-# NOVA FUNÇÃO: MEDICAMENTOS / AGENDAMENTOS
+# MEDICAMENTOS / AGENDAMENTOS
 # ========================================================
 
 def medicamentos_view(request):
@@ -218,20 +220,16 @@ def medicamentos_view(request):
     tutor = models.Tutor.objects.get(id=tutor_data['id'])
     pets = models.Pet.objects.filter(tutor=tutor)
 
-    # Buscar todas as consultas que têm tratamento hoje
     hoje = date.today()
     atendimentos_hoje = models.Consulta.objects.filter(
         pet__in=pets,
         data_consulta=hoje
     ).exclude(tratamento__isnull=True).exclude(tratamento='')
 
-    # Separar por períodos
-    # Manhã: antes das 12:00 | Tarde: 12:00 as 18:00 | Noite: após 18:00
-    meds_manha = [m for m in atendimentos_hoje if m.horario_consulta.hour < 12]
-    meds_tarde = [m for m in atendimentos_hoje if 12 <= m.horario_consulta.hour < 18]
-    meds_noite = [m for m in atendimentos_hoje if m.horario_consulta.hour >= 18]
+    meds_manha = [m for m in atendimentos_hoje if m.horario_consulta and m.horario_consulta.hour < 12]
+    meds_tarde = [m for m in atendimentos_hoje if m.horario_consulta and 12 <= m.horario_consulta.hour < 18]
+    meds_noite = [m for m in atendimentos_hoje if m.horario_consulta and m.horario_consulta.hour >= 18]
 
-    # Tratamentos Ativos (Todas as consultas futuras que têm tratamento preenchido)
     tratamentos_ativos = models.Consulta.objects.filter(
         pet__in=pets,
         data_consulta__gte=hoje
@@ -246,6 +244,7 @@ def medicamentos_view(request):
     }
     return render(request, 'medicamentos.html', context)
 
+
 def agendamentos_view(request):
     tutor_data = get_tutor_logado(request)
     if not tutor_data:
@@ -254,8 +253,6 @@ def agendamentos_view(request):
     tutor = models.Tutor.objects.get(id=tutor_data['id'])
     pets = models.Pet.objects.filter(tutor=tutor)
 
-    # --- LÓGICA DE NAVEGAÇÃO DE SEMANA ---
-    # Pega a data da URL (?data=2025-10-12), se não tiver, usa HOJE
     data_url = request.GET.get('data')
     if data_url:
         try:
@@ -265,16 +262,14 @@ def agendamentos_view(request):
     else:
         hoje_referencia = date.today()
 
-    # Calcula a segunda-feira da semana que está sendo visualizada
     segunda_da_semana = hoje_referencia - timedelta(days=hoje_referencia.weekday())
     
-    # Datas para as setinhas (anterior e próxima)
     data_semana_anterior = segunda_da_semana - timedelta(days=7)
     data_semana_proxima = segunda_da_semana + timedelta(days=7)
 
     dias_semana = []
     nomes_curtos = ['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom']
-    hoje_real = date.today() # Para manter o destaque roxo no dia real
+    hoje_real = date.today()
     
     for i in range(7):
         dia_iterado = segunda_da_semana + timedelta(days=i)
@@ -285,7 +280,6 @@ def agendamentos_view(request):
             'data_full': dia_iterado
         })
 
-    # Busca dados no intervalo da semana visualizada
     fim_da_semana = segunda_da_semana + timedelta(days=6)
     vacinas = models.Vacina.objects.filter(pet__in=pets, data_aplicacao__range=[segunda_da_semana, fim_da_semana])
     consultas = models.Consulta.objects.filter(pet__in=pets, data_consulta__range=[segunda_da_semana, fim_da_semana])
@@ -298,14 +292,14 @@ def agendamentos_view(request):
         'dias_semana': dias_semana,
         'vacinas': vacinas,
         'consultas': consultas,
-        'mes_atual': meses[segunda_da_semana.month], # Mês da semana visualizada
+        'mes_atual': meses[segunda_da_semana.month],
         'ano_atual': segunda_da_semana.year,
         'data_anterior': data_semana_anterior.strftime('%Y-%m-%d'),
         'data_proxima': data_semana_proxima.strftime('%Y-%m-%d'),
     }
     return render(request, 'agendamentos.html', context)
-    
-    return render(request, 'agendamentos.html', context)
+    # Removido o return duplicado
+
 
 def diario_emocional_view(request):
     tutor_data = get_tutor_logado(request)
@@ -315,20 +309,17 @@ def diario_emocional_view(request):
     tutor = models.Tutor.objects.get(id=tutor_data['id'])
     pets = models.Pet.objects.filter(tutor=tutor)
 
-    # --- LÓGICA DE SALVAMENTO ---
     if request.method == "POST":
         pet_id = request.POST.get('pet_id')
         humor = request.POST.get('humor')
         relato = request.POST.get('relato')
 
-        # Verificação básica
         if not humor:
             messages.error(request, "Por favor, selecione um emoji de humor!")
         elif not relato:
             messages.error(request, "Escreva um pequeno relato sobre o pet.")
         else:
             try:
-                # Cria o registro no banco
                 models.DiarioEmocional.objects.create(
                     pet_id=pet_id,
                     humor=int(humor),
@@ -337,10 +328,8 @@ def diario_emocional_view(request):
                 messages.success(request, "Comportamento registrado com sucesso!")
                 return redirect('diario_emocional')
             except Exception as e:
-                print(f"Erro ao salvar: {e}")
                 messages.error(request, "Erro técnico ao salvar no banco.")
 
-    # --- DADOS PARA O GRÁFICO E LISTA ---
     pet_selecionado = pets.first()
     recentes = models.DiarioEmocional.objects.filter(pet__in=pets).order_by('-data_registro')[:5]
 
@@ -351,7 +340,8 @@ def diario_emocional_view(request):
     else:
         valores = []
 
-    while len(valores) < 7: valores.insert(0, 2)
+    while len(valores) < 7:
+        valores.insert(0, 2)  # valor neutro
 
     return render(request, 'diario_emocional.html', {
         'pets': pets,
@@ -360,3 +350,18 @@ def diario_emocional_view(request):
         'grafico_labels': json.dumps(labels),
         'grafico_valores': json.dumps(valores)
     })
+
+# class ContatoTutor(models.Model):
+#     id = models.AutoField(db_column='ID', primary_key=True)
+#     tutor = models.ForeignKey(Tutor, models.DO_NOTHING, db_column='ID_TUTOR')
+#     tipo_contato = models.CharField(db_column='TIPO_CONTATO', max_length=16, blank=True, null=True)
+#     ddd = models.CharField(db_column='DDD', max_length=2, blank=True, null=True)
+#     numero = models.CharField(db_column='NUMERO', max_length=9, blank=True, null=True)
+#     data_cadastro = models.DateTimeField(db_column='DATA_CADASTRO', blank=True, null=True)
+
+#     class Meta:
+#         managed = False
+#         db_table = 'contato_tutor'
+
+#     def __str__(self):
+#         return f"{self.tipo_contato} {self.ddd}{self.numero} - {self.tutor}"

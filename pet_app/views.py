@@ -5,6 +5,7 @@ from django.contrib.auth.hashers import make_password, check_password
 from django.db.models import Sum
 from datetime import date
 from . import models
+from django.contrib.auth import logout
 
 # ========================================================
 # PÁGINA INICIAL E AUTENTICAÇÃO
@@ -60,7 +61,7 @@ def login_view(request):
 
 
 def logout_view(request):
-    request.session.flush()
+    logout(request)
     return redirect('login')
 
 
@@ -275,6 +276,13 @@ def vet_dashboard_view(request):
         request.session.flush()
         return redirect('login')
 
+    # --- NOVO: BUSCAR NOTIFICAÇÕES DO BANCO ---
+    # Pegamos as 5 mais recentes
+    notificacoes = models.Notificacao.objects.filter(veterinario=veterinario).order_by('-data_criacao')[:5]
+    # Contamos quantas não foram lidas
+    notificacoes_nao_lidas_count = models.Notificacao.objects.filter(veterinario=veterinario, lida=False).count()
+    # ------------------------------------------
+
     consultas_hoje = models.Consulta.objects.filter(veterinario=veterinario, data_consulta=date.today()).count()
     faturamento = models.Consulta.objects.filter(veterinario=veterinario, data_consulta=date.today()).aggregate(
         Sum('valor_consulta')
@@ -286,7 +294,11 @@ def vet_dashboard_view(request):
         'consultas_hoje': consultas_hoje,
         'faturamento_dia': faturamento,
         'agenda_hoje': agenda,
-        'total_pacientes': models.Pet.objects.count()
+        'total_pacientes': models.Pet.objects.count(),
+        
+        # Enviando para o template:
+        'notificacoes': notificacoes,
+        'notificacoes_nao_lidas_count': notificacoes_nao_lidas_count,
     }
     return render(request, 'vet_dash.html', context)
 
@@ -315,3 +327,20 @@ def insert_tutor_ajax(request):
         return JsonResponse({"success": True})
 
     return JsonResponse({"success": False, "error": "Método inválido"})
+
+
+
+def lista_notificacoes(request):
+    if request.session.get('user_role') != 'vet':
+        return redirect('login')
+    
+    vet_id = request.session.get('user_id')
+    veterinario = models.Veterinario.objects.get(id=vet_id)
+    
+    # Busca todas
+    todas_notificacoes = models.Notificacao.objects.filter(veterinario=veterinario).order_by('-data_criacao')
+    
+    return render(request, 'notificacoes_completa.html', {
+        'veterinario': veterinario,
+        'notificacoes': todas_notificacoes
+    })

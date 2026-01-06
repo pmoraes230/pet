@@ -33,4 +33,5 @@ urlpatterns = [
     # ==================================================
     path("perfil-veterinario/", views.perfil_veterinario, name="perfil_veterinario"),
     path("editar-perfil-veterinario/", views.editar_perfil_veterinario, name="editar_perfil_veterinario"),
+    path('notificacoes/', views.lista_notificacoes, name='notificacoes_lista'),
 ]
