@@ -68,7 +68,7 @@ class Tutor(models.Model):
     status_conta = models.BooleanField(default=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'tutor'
 
     def __str__(self):
@@ -239,13 +239,15 @@ class Notificacao(models.Model):
 from django.db import models
 
 class Mensagem(models.Model):
-    # Quem envia pode ser o tutor ou o vet. Usamos IDs das suas tabelas.
-    tutor = models.ForeignKey('Tutor', on_delete=models.CASCADE)
-    veterinario = models.ForeignKey('Veterinario', on_delete=models.CASCADE)
-    conteudo = models.TextField()
-    data_envio = models.DateTimeField(auto_now_add=True)
-    enviado_por_tutor = models.BooleanField(default=True) # True se tutor enviou, False se vet enviou
+    tutor = models.ForeignKey('Tutor', on_delete=models.CASCADE, db_column='ID_TUTOR')
+    veterinario = models.ForeignKey('Veterinario', on_delete=models.CASCADE, db_column='ID_VETERINARIO')
+    
+    # Adicionando default='' evita o erro do terminal
+    CONTEUDO = models.TextField(db_column='CONTEUDO', default='') 
+    DATA_ENVIO = models.DateTimeField(auto_now_add=True, db_column='DATA_ENVIO')
+    ENVIADO_POR = models.CharField(max_length=15, db_column='ENVIADO_POR', default='TUTOR')
+    LIDA = models.BooleanField(default=False, db_column='LIDA')
 
     class Meta:
-        db_table = 'mensagens'
-        ordering = ['data_envio']        
+        db_table = 'mensagem'
+        ordering = ['DATA_ENVIO']

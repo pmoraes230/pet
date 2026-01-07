@@ -10,8 +10,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("SECRET_KEY")
+# Se ele não achar a chave no .env, usa a segunda string como reserva
+SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-chave-temporaria-para-evitar-erros")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -67,29 +67,57 @@ WSGI_APPLICATION = 'setup.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-if DEBUG != True:
+# if DEBUG != True:
+#     DATABASES = {
+#         'default': {
+#             'ENGINE': 'django.db.backends.postgreen',
+#             'NAME': os.getenv('db_name',),
+#             'USER': os.getenv('db_user'),
+#             'PASSWORD': os.getenv('db_password'),
+#             'HOST': os.getenv('db_host'),
+#             'PORT': os.getenv('db_port')
+#         }
+#     }
+# else:
+#     DATABASES = {
+#         'default': {
+#             'ENGINE': 'django.db.backends.mysql',
+#             'NAME': os.getenv('dbnameMysql',),
+#             'USER': os.getenv('usernameMysql'),
+#             'PASSWORD': os.getenv('passwordMysql'),
+#             'HOST': os.getenv('hostnameMysql'),
+#             'PORT': os.getenv('portMysql')
+#         }
+#     }
+
+if not DEBUG:
+    # Configuração PostgreSQL (Produção)
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgreen',
-            'NAME': os.getenv('db_name',),
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('db_name'),
             'USER': os.getenv('db_user'),
             'PASSWORD': os.getenv('db_password'),
             'HOST': os.getenv('db_host'),
-            'PORT': os.getenv('db_port')
+            'PORT': os.getenv('db_port'),
         }
     }
 else:
+    # Configuração MySQL
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
-            'NAME': os.getenv('dbnameMysql',),
-            'USER': os.getenv('usernameMysql'),
-            'PASSWORD': os.getenv('passwordMysql'),
-            'HOST': os.getenv('hostnameMysql'),
-            'PORT': os.getenv('portMysql')
+            'NAME': os.getenv('dbnameMysql', 'pet_patrick_db'),
+            'USER': os.getenv('usernameMysql', 'root'),
+            'PASSWORD': os.getenv('passwordMysql', ''), # Verifique se sua senha não é 'root' ou vazia
+            'HOST': os.getenv('hostnameMysql', '127.0.0.1'),
+            'PORT': os.getenv('portMysql', '3306'),
+            'OPTIONS': {
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+                'charset': 'utf8mb4',
+            },
         }
     }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -141,14 +169,14 @@ LOGGING = {
     'disable_existing_loggers': False,
     'handlers': {
         'console': {
-            'level': 'ERROR',
+            'level': 'DEBUG', # Mudamos de ERROR para DEBUG
             'class': 'logging.StreamHandler',
         },
     },
     'loggers': {
         'django': {
             'handlers': ['console'],
-            'level': 'ERROR',
+            'level': 'INFO', # Mudamos de ERROR para INFO
             'propagate': True,
         },
     },

@@ -97,8 +97,8 @@ def agenda_view(request):
         try:
             pet_obj = models.Pet.objects.get(id=pet_id)
             models.Consulta.objects.create(
-                id_veterinario=veterinario,
-                id_pet=pet_obj,
+                veterinario=veterinario,
+                pet=pet_obj,
                 data_consulta=data_sel,
                 horario_consulta=hora_sel,
                 tipo_de_consulta=tipo_sel,
@@ -144,10 +144,10 @@ def agenda_view(request):
     data_proxima = (data_foco + timedelta(days=7)).strftime('%Y-%m-%d')
 
     agenda_completa = models.Consulta.objects.filter(
-        id_veterinario=veterinario,
+        veterinario=veterinario,
         data_consulta=data_foco
     ).select_related(
-        'id_pet', 'id_pet__id_tutor'
+        'pet', 'pet__tutor'
     ).order_by('horario_consulta')
 
     pacientes = models.Pet.objects.all().order_by('nome')
@@ -215,7 +215,7 @@ def financeiro_view(request):
     hoje = date.today()
 
     consultas_mes = models.Consulta.objects.filter(
-        id_veterinario=veterinario,
+        veterinario=veterinario,
         data_consulta__month=hoje.month,
         data_consulta__year=hoje.year
     )
@@ -228,17 +228,17 @@ def financeiro_view(request):
     saldo_liquido = float(entradas_mes) - saidas_mock
 
     transacoes = models.Consulta.objects.filter(
-        id_veterinario=veterinario
+        veterinario=veterinario
     ).exclude(
         valor_consulta=0
     ).select_related(
-        'id_pet'
+        'pet'
     ).order_by(
         '-data_consulta', '-horario_consulta'
     )[:5]
 
     dados_grafico = models.Consulta.objects.filter(
-        id_veterinario=veterinario
+        veterinario=veterinario
     ).annotate(
         mes=ExtractMonth('data_consulta')
     ).values(

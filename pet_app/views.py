@@ -7,6 +7,8 @@ from django.db.models import Sum
 from datetime import date
 from . import models
 from django.contrib.auth import logout
+from django.urls import reverse
+from .utils import get_tutor_logado, get_veterinario_logado
 
 # ========================================================
 # PÁGINA INICIAL E AUTENTICAÇÃO
@@ -25,12 +27,16 @@ def login_view(request):
         email = request.POST.get('email', '').strip().lower()
         senha = request.POST.get('senha', '')
         role = request.POST.get('role')
+        try_both = False
+        if not role:
+            # fallback: se o campo role não foi enviado (JS desativado), tentamos ambos
+            try_both = True
 
         if not email or not senha:
             messages.error(request, "Email e senha são obrigatórios.")
             return render(request, 'login/login.html')
 
-        if role == "tutor":
+        if role == "tutor" or try_both:
             try:
                 user = models.Tutor.objects.get(email__iexact=email)
                 if check_password(senha, user.senha_tutor) or senha == user.senha_tutor:
@@ -42,16 +48,25 @@ def login_view(request):
                     messages.error(request, "Senha incorreta.")
             except models.Tutor.DoesNotExist:
                 messages.error(request, "Email de tutor não encontrado.")
+        elif role == "vet" or try_both:
+            try:
+                vet = models.Veterinario.objects.get(email__iexact=email)
+                if check_password(senha, vet.senha_veterinario) or senha == vet.senha_veterinario:
+                    request.session['user_id'] = vet.id
+                    request.session['user_role'] = 'vet'
+                    request.session['user_nome'] = vet.nome
+                    return redirect('vet_dashboard')
+                else:
+                    messages.error(request, "Senha incorreta.")
+            except models.Veterinario.DoesNotExist:
+                messages.error(request, "Email de veterinário não encontrado.")
 
-    if role == "tutor":
+    # Suporte a chamada via AJAX/JSON para tutor ou vet
+    if role == "tutor" or try_both:
         try:
             user = models.Tutor.objects.get(email__iexact=email)
-            if not models.Tutor.status_conta:
-                return JsonResponse({
-                    "success": False,
-                    "error": "Esta conta está desativada. Entre em contato com o suporte."
-                })
-            
+            if hasattr(models.Tutor, 'status_conta') and not models.Tutor.status_conta:
+                return JsonResponse({"success": False, "error": "Esta conta está desativada. Entre em contato com o suporte."})
             if check_password(senha, user.senha_tutor):
                 request.session['user_id'] = user.id
                 request.session['user_role'] = 'tutor'
@@ -61,6 +76,19 @@ def login_view(request):
             else:
                 return JsonResponse({"success": False, "error": "Senha incorreta"})
         except models.Tutor.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Email não encontrado"})
+    elif role == "vet" or try_both:
+        try:
+            vet = models.Veterinario.objects.get(email__iexact=email)
+            if check_password(senha, vet.senha_veterinario):
+                request.session['user_id'] = vet.id
+                request.session['user_role'] = 'vet'
+                request.session['user_email'] = vet.email
+                request.session['user_nome'] = vet.nome or "Veterinário"
+                return JsonResponse({"success": True, "redirect": "/vet_dash/"})
+            else:
+                return JsonResponse({"success": False, "error": "Senha incorreta"})
+        except models.Veterinario.DoesNotExist:
             return JsonResponse({"success": False, "error": "Email não encontrado"})
 
     return render(request, 'login/login.html')
@@ -360,65 +388,121 @@ from django.contrib.auth.decorators import login_required
 from . import models  # Certifique-se que o import está assim
 from django.contrib import messages # Para avisar erros na tela
 
-@login_required
-def mensagens(request):
-    # 1. Busca o tutor de forma segura
-    # Usamos filter().first() para não explodir um erro 404 na cara do usuário
-    tutor = models.Tutor.objects.filter(email=request.user.email).first()
-    
-    if not tutor:
-        # Se o tutor não existe no banco, mas o user está logado
-        # Isso acontece se você criou o user mas não o Tutor no SQL
-        messages.error(request, "Perfil de tutor não encontrado para este usuário.")
-        return redirect('tutor_dashboard') # Ou outra tela inicial
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from . import models 
+import logging
 
-    # 2. Lista de contatos
-    contatos = models.Veterinario.objects.all()
-    
-    vet_id = request.GET.get('vet_id')
-    mensagens_lista = []
-    vet_selecionado = None
-    
-    if vet_id:
-        # Aqui sim usamos get_object_or_404 pois o vet_id vem da URL
-        vet_selecionado = get_object_or_404(models.Veterinario, id=vet_id)
-        
-        # 3. Busca histórico
-        mensagens_lista = models.Mensagem.objects.filter(
-            tutor=tutor, 
-            veterinario=vet_selecionado
-        ).order_by('data_envio')
-        
-        # 4. Marcar como lida (Apenas as que o VET enviou)
-        mensagens_lista.filter(enviado_por='VETERINARIO', lida=False).update(lida=True)
+# Adicionei logs para você ver o erro no terminal do VS Code
+logger = logging.getLogger(__name__)
+def mensagens_view(request):
+    """Exibe chat para o Tutor."""
+    try:
+        tutor_data = get_tutor_logado(request)
+        if not tutor_data:
+            return redirect('login')
 
-    context = {
-        'tutor': tutor,
-        'contatos': contatos,
-        'mensagens': mensagens_lista,
-        'vet_selecionado': vet_selecionado,
-    }
-    
-    return render(request, 'mensagens.html', context)
+        tutor = models.Tutor.objects.get(id=tutor_data['id'])
+        contatos = models.Veterinario.objects.all()
+
+        vet_id = request.GET.get('vet_id')
+        mensagens = []
+        vet_selecionado = None
+
+        if vet_id:
+            vet_selecionado = get_object_or_404(models.Veterinario, id=vet_id)
+            mensagens = models.Mensagem.objects.filter(
+                tutor=tutor,
+                veterinario=vet_selecionado
+            ).order_by('DATA_ENVIO')
+
+        return render(request, 'mensagens.html', {
+            'tutor': tutor,
+            'contatos': contatos,
+            'mensagens': mensagens,
+            'vet_selecionado': vet_selecionado,
+        })
+    except Exception as e:
+        logger.exception("Erro em mensagens_view")
+        return render(request, 'erro.html', {'msg': str(e)})
 
 
-@login_required
 def enviar_mensagem(request):
-    if request.method == "POST":
-        tutor = models.Tutor.objects.filter(email=request.user.email).first()
+    if request.method == 'POST':
+        tutor_data = get_tutor_logado(request)
+        if not tutor_data:
+            return redirect('login')
+
+        tutor = get_object_or_404(models.Tutor, id=tutor_data['id'])
         vet_id = request.POST.get('vet_id')
-        conteudo = request.POST.get('mensagem')
-        
-        if conteudo and vet_id and tutor:
+        texto = request.POST.get('mensagem')
+
+        if texto and vet_id:
             vet = get_object_or_404(models.Veterinario, id=vet_id)
-            
             models.Mensagem.objects.create(
                 tutor=tutor,
                 veterinario=vet,
-                conteudo=conteudo,
-                enviado_por='TUTOR'
+                CONTEUDO=texto,
+                ENVIADO_POR='TUTOR'
             )
-            # Use o nome da URL em vez de path fixo se possível
-            return redirect(f'/mensagens/?vet_id={vet_id}')
-            
+            url = reverse('mensagens')
+            return redirect(f"{url}?vet_id={vet_id}")
+
     return redirect('mensagens')
+
+
+def mensagens_vet_view(request):
+    """Exibe chat para o Veterinário."""
+    try:
+        vet_data = get_veterinario_logado(request)
+        if not vet_data:
+            return redirect('login')
+
+        vet = models.Veterinario.objects.get(id=vet_data['id'])
+        contatos = models.Tutor.objects.all()
+
+        tutor_id = request.GET.get('tutor_id')
+        mensagens = []
+        tutor_selecionado = None
+
+        if tutor_id:
+            tutor_selecionado = get_object_or_404(models.Tutor, id=tutor_id)
+            mensagens = models.Mensagem.objects.filter(
+                tutor=tutor_selecionado,
+                veterinario=vet
+            ).order_by('DATA_ENVIO')
+
+        return render(request, 'mensagensvet.html', {
+            'contatos': contatos,
+            'tutor_selecionado': tutor_selecionado,
+            'mensagens': mensagens,
+            'veterinario': vet,
+        })
+    except Exception as e:
+        logger.exception("Erro em mensagens_vet_view")
+        return render(request, 'erro.html', {'msg': str(e)})
+
+
+def enviar_mensagem_vet(request):
+    if request.method == 'POST':
+        vet_data = get_veterinario_logado(request)
+        if not vet_data:
+            return redirect('login')
+
+        vet = get_object_or_404(models.Veterinario, id=vet_data['id'])
+        tutor_id = request.POST.get('tutor_id')
+        texto = request.POST.get('mensagem')
+
+        if texto and tutor_id:
+            tutor = get_object_or_404(models.Tutor, id=tutor_id)
+            models.Mensagem.objects.create(
+                tutor=tutor,
+                veterinario=vet,
+                CONTEUDO=texto,
+                ENVIADO_POR='VETERINARIO'
+            )
+            url = reverse('mensagens_vet')
+            return redirect(f"{url}?tutor_id={tutor_id}")
+
+    return redirect('mensagens_vet')
+    

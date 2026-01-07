@@ -22,6 +22,14 @@
             <span>Dashboard</span>
         </a>
 
+        <!-- MENSAGENS (Corrigido para o padrão Teal) -->
+        <a href="{% url 'mensagens_vet' %}" 
+           class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all
+           {% if request.resolver_match.url_name == 'mensagens_vet' %} bg-white/20 text-white shadow-sm {% else %} text-teal-100 hover:bg-white/5 hover:text-white {% endif %}">
+            <i data-lucide="message-circle" width="20" height="20"></i>
+            <span>Mensagens</span>
+        </a>
+
         <!-- Pacientes -->
         <a href="{% url 'pacientes_url' %}" 
            class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all
@@ -54,7 +62,7 @@
             <span>Financeiro</span>
         </a>
 
-        <!-- Perfil (Adicionado para facilitar a navegação) -->
+        <!-- Perfil -->
         <a href="{% url 'perfil_veterinario' %}" 
            class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all
            {% if request.resolver_match.url_name == 'perfil_veterinario' %} bg-white/20 text-white shadow-sm {% else %} text-teal-100 hover:bg-white/5 hover:text-white {% endif %}">
