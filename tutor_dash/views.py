@@ -60,7 +60,7 @@ def editar_perfil_tutor(request):
         return redirect('login')
 
     tutor = models.Tutor.objects.get(id=tutor_data['id'])
-    contatos = models.ContatoTutor.objects.filter(id_tutor=tutor).order_by('-data_cadastro')
+    # contatos = models.ContatoTutor.objects.filter(id_tutor=tutor).order_by('-data_cadastro')
 
     if request.method == "POST":
         # Atualiza dados do tutor
@@ -80,7 +80,7 @@ def editar_perfil_tutor(request):
         contato_ids = request.POST.getlist('contato_id')
 
         # Deleta todos e recria (simples e seguro)
-        models.ContatoTutor.objects.filter(id_tutor=tutor.id).delete()
+        # models.ContatoTutor.objects.filter(id_tutor=tutor.id).delete()
 
         for i in range(len(tipos)):
             if ddds[i].strip() and numeros[i].strip():
@@ -96,7 +96,7 @@ def editar_perfil_tutor(request):
 
     context = {
         'tutor': tutor,
-        'contatos': contatos,
+        # 'contatos': contatos,
     }
     return render(request, 'edit_tutor/editar_perfil.html', context)
 

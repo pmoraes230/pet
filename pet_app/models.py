@@ -107,7 +107,7 @@ class Pet(models.Model):
     peso = models.CharField(db_column='PESO', max_length=10, blank=True, null=True)
     descricao = models.TextField(db_column='DESCRICAO', blank=True, null=True)
     personalidade = models.TextField(db_column='PERSONALIDADE', blank=True, null=True)
-    imagem = models.ImageField(db_column='IMAGEM', upload_to='pets/', blank=True, null=True)
+    imagem = models.ImageField(upload_to="pets/")
     tutor = models.ForeignKey(Tutor, models.DO_NOTHING, db_column='ID_TUTOR')
 
     class Meta:
