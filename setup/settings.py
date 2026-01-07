@@ -69,53 +69,16 @@ TEMPLATES = [
 WSGI_APPLICATION = 'setup.wsgi.application'
 
 # Database
-if os.getenv('DATABASE_URL'):
-    DATABASES = {
-        'default': dj_database_url.config(
-            conn_max_age=600,
-            ssl_require=True 
-        )
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.getenv('dbnameMysql',),
+        'USER': os.getenv('usernameMysql'),
+        'PASSWORD': os.getenv('passwordMysql'),
+        'HOST': os.getenv('hostnameMysql'),
+        'PORT': os.getenv('portMysql')
     }
-else:
-    # Fallback local: aqui você pode escolher entre:
-    # Opção 1: Continuar usando seu MySQL local atual
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'db_pet',
-            'USER': 'root',
-            'PASSWORD': '',
-            'HOST': '127.0.0.1',
-            'PORT': '3306',
-            'OPTIONS': {
-                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-            },
-        }
-    }
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
-if DEBUG != True:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgreen',
-            'NAME': os.getenv('db_name',),
-            'USER': os.getenv('db_user'),
-            'PASSWORD': os.getenv('db_password'),
-            'HOST': os.getenv('db_host'),
-            'PORT': os.getenv('db_port')
-        }
-    }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': os.getenv('dbnameMysql',),
-            'USER': os.getenv('usernameMysql'),
-            'PASSWORD': os.getenv('passwordMysql'),
-            'HOST': os.getenv('hostnameMysql'),
-            'PORT': os.getenv('portMysql')
-        }
-    }
+}
 
 
 # Password validation

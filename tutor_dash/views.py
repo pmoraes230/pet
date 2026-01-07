@@ -47,9 +47,11 @@ def perfil_tutor(request):
         return redirect('login')
 
     tutor = models.Tutor.objects.get(id=tutor_data['id'])
+    pet = models.Pet.objects.filter(tutor=tutor)
 
     return render(request, 'edit_tutor/tutor_perfil.html', {
         'tutor': tutor,
+        'pet': pet
         # 'contatos': contatos,  # Descomente quando o modelo existir
     })
 

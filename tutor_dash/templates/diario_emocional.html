@@ -6,93 +6,94 @@
     <!-- Sidebar -->
     {% include "partials/aside/aside_tutor.html" %}
 
-    <main class="flex-1 overflow-y-auto p-6 md:p-10">
+    <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
         {% include "partials/header/header_tutor.html" %}
-        <!-- Header de contexto (Opcional, se não estiver no base) -->
-        <h2 class="text-3xl font-black text-gray-800">Diário Emocional</h2>
-        <p class="text-gray-500 mb-8">Acompanhe o humor e comportamento dos seus pets</p>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Gráfico (Tendência Semanal) -->
-            <div class="lg:col-span-2 bg-white p-8 rounded-[40px] shadow-sm border border-gray-100 flex flex-col">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="font-black text-gray-700">Tendência semanal</h3>
-                    <span class="bg-teal-400 text-white px-4 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider">
-                        {{ pet_selecionado.nome|default:"Seu Pet" }}
-                    </span>
-                </div>
-                <div class="flex-1 min-h-[250px] relative">
-                    <canvas id="moodChart"></canvas>
-                </div>
-                <div class="flex justify-between px-4 mt-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                    <span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span><span>Dom</span>
-                </div>
-            </div>
-
-            <!-- Card de Registro (FUNCIONAL) -->
-            <div class="bg-purple-600 p-8 rounded-[40px] text-white shadow-xl shadow-purple-200">
-                <form action="{% url 'diario_emocional' %}" method="POST" id="formDiario">
-                    {% csrf_token %}
-                    
-                    <!-- Seleção de Humor -->
-                    <div class="flex justify-around mb-8">
-                        <button type="button" onclick="setHumor(1, this)" class="humor-btn w-14 h-14 bg-white/10 rounded-full flex items-center justify-center text-3xl hover:bg-red-500 transition-all border-4 border-transparent" title="Triste">
-                            😢
-                        </button>
-                        <button type="button" onclick="setHumor(2, this)" class="humor-btn w-14 h-14 bg-white/10 rounded-full flex items-center justify-center text-3xl hover:bg-yellow-400 transition-all border-4 border-transparent" title="Normal">
-                            😐
-                        </button>
-                        <button type="button" onclick="setHumor(3, this)" class="humor-btn w-14 h-14 bg-white/10 rounded-full flex items-center justify-center text-3xl hover:bg-green-500 transition-all border-4 border-transparent" title="Feliz">
-                            😊
-                        </button>
-                    </div>
-
-                    <!-- Campo oculto que envia o valor (1, 2 ou 3) para o Django -->
-                    <input type="hidden" name="humor" id="inputHumor" required>
-                    
-                    <label class="block font-bold mb-2 text-xs uppercase opacity-80">Escolher Pet</label>
-                    <select name="pet_id" class="w-full bg-white/20 border-none rounded-xl p-3 text-white mb-4 focus:ring-2 focus:ring-white outline-none">
-                        {% for pet in pets %}
-                            <option value="{{ pet.id }}" class="text-gray-800">{{ pet.nome }}</option>
-                        {% endfor %}
-                    </select>
-
-                    <label class="block font-bold mb-2 text-xs uppercase opacity-80">Relato do dia</label>
-                    <textarea name="relato" placeholder="Como foi o dia dele?" class="w-full h-32 rounded-2xl p-4 text-gray-800 mb-4 focus:outline-none focus:ring-4 focus:ring-purple-400 transition-all" required></textarea>
-                    
-                    <button type="submit" class="w-full bg-white text-purple-600 py-4 rounded-2xl font-black uppercase text-sm hover:scale-[1.02] active:scale-95 transition-all shadow-lg">
-                        Novo registro completo
-                    </button>
-                </form>
-            </div>
-        </div>
-
-        <!-- Lista de Registros Recentes -->
-        <h3 class="text-xl font-black mt-12 mb-6 text-gray-800">Registros recentes</h3>
-        <div class="space-y-3 pb-20">
-            {% for r in recentes %}
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-5 hover:border-purple-200 transition-all">
-                <div class="w-12 h-12 rounded-full flex items-center justify-center text-2xl bg-gray-50 border border-gray-100 shadow-inner">
-                    {% if r.humor == 1 %}😢{% elif r.humor == 2 %}😐{% else %}😊{% endif %}
-                </div>
-                <div class="flex-1">
-                    <div class="flex items-center gap-2">
-                        <span class="font-black text-gray-800">{{ r.pet.nome }}</span>
-                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-100 px-2 py-0.5 rounded">
-                            {{ r.data_registro|date:"d/m • H:i" }}
+        <div class="flex-1 overflow-y-auto p-6 md:p-10 pb-32">
+            <!-- Header de contexto (Opcional, se não estiver no base) -->
+            <h2 class="text-3xl font-black text-gray-800">Diário Emocional</h2>
+            <p class="text-gray-500 mb-8">Acompanhe o humor e comportamento dos seus pets</p>
+    
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Gráfico (Tendência Semanal) -->
+                <div class="lg:col-span-2 bg-white p-8 rounded-[40px] shadow-sm border border-gray-100 flex flex-col">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-black text-gray-700">Tendência semanal</h3>
+                        <span class="bg-teal-400 text-white px-4 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider">
+                            {{ pet_selecionado.nome|default:"Seu Pet" }}
                         </span>
                     </div>
-                    <p class="text-sm text-gray-500 mt-1 font-medium">{{ r.relato }}</p>
+                    <div class="flex-1 min-h-[250px] relative">
+                        <canvas id="moodChart"></canvas>
+                    </div>
+                    <div class="flex justify-between px-4 mt-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        <span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span><span>Dom</span>
+                    </div>
+                </div>
+    
+                <!-- Card de Registro (FUNCIONAL) -->
+                <div class="bg-purple-600 p-8 rounded-[40px] text-white shadow-xl shadow-purple-200">
+                    <form action="{% url 'diario_emocional' %}" method="POST" id="formDiario">
+                        {% csrf_token %}
+                        
+                        <!-- Seleção de Humor -->
+                        <div class="flex justify-around mb-8">
+                            <button type="button" onclick="setHumor(1, this)" class="humor-btn w-14 h-14 bg-white/10 rounded-full flex items-center justify-center text-3xl hover:bg-red-500 transition-all border-4 border-transparent" title="Triste">
+                                😢
+                            </button>
+                            <button type="button" onclick="setHumor(2, this)" class="humor-btn w-14 h-14 bg-white/10 rounded-full flex items-center justify-center text-3xl hover:bg-yellow-400 transition-all border-4 border-transparent" title="Normal">
+                                😐
+                            </button>
+                            <button type="button" onclick="setHumor(3, this)" class="humor-btn w-14 h-14 bg-white/10 rounded-full flex items-center justify-center text-3xl hover:bg-green-500 transition-all border-4 border-transparent" title="Feliz">
+                                😊
+                            </button>
+                        </div>
+    
+                        <!-- Campo oculto que envia o valor (1, 2 ou 3) para o Django -->
+                        <input type="hidden" name="humor" id="inputHumor" required>
+                        
+                        <label class="block font-bold mb-2 text-xs uppercase opacity-80">Escolher Pet</label>
+                        <select name="pet_id" class="w-full bg-white/20 border-none rounded-xl p-3 text-white mb-4 focus:ring-2 focus:ring-white outline-none">
+                            {% for pet in pets %}
+                                <option value="{{ pet.id }}" class="text-gray-800">{{ pet.nome }}</option>
+                            {% endfor %}
+                        </select>
+    
+                        <label class="block font-bold mb-2 text-xs uppercase opacity-80">Relato do dia</label>
+                        <textarea name="relato" placeholder="Como foi o dia dele?" class="w-full h-32 rounded-2xl p-4 text-gray-800 mb-4 focus:outline-none focus:ring-4 focus:ring-purple-400 transition-all" required></textarea>
+                        
+                        <button type="submit" class="w-full bg-white text-purple-600 py-4 rounded-2xl font-black uppercase text-sm hover:scale-[1.02] active:scale-95 transition-all shadow-lg">
+                            Novo registro completo
+                        </button>
+                    </form>
                 </div>
             </div>
-            {% empty %}
-                <div class="text-center py-10 bg-white rounded-2xl border-2 border-dashed border-gray-200">
-                    <p class="text-gray-400 font-bold italic">Nenhum registro emocional ainda. Comece agora!</p>
+    
+            <!-- Lista de Registros Recentes -->
+            <h3 class="text-xl font-black mt-12 mb-6 text-gray-800">Registros recentes</h3>
+            <div class="space-y-3 pb-20">
+                {% for r in recentes %}
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-5 hover:border-purple-200 transition-all">
+                    <div class="w-12 h-12 rounded-full flex items-center justify-center text-2xl bg-gray-50 border border-gray-100 shadow-inner">
+                        {% if r.humor == 1 %}😢{% elif r.humor == 2 %}😐{% else %}😊{% endif %}
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2">
+                            <span class="font-black text-gray-800">{{ r.pet.nome }}</span>
+                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-100 px-2 py-0.5 rounded">
+                                {{ r.data_registro|date:"d/m • H:i" }}
+                            </span>
+                        </div>
+                        <p class="text-sm text-gray-500 mt-1 font-medium">{{ r.relato }}</p>
+                    </div>
                 </div>
-            {% endfor %}
+                {% empty %}
+                    <div class="text-center py-10 bg-white rounded-2xl border-2 border-dashed border-gray-200">
+                        <p class="text-gray-400 font-bold italic">Nenhum registro emocional ainda. Comece agora!</p>
+                    </div>
+                {% endfor %}
+            </div>
         </div>
     </main>
-</div>
 
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

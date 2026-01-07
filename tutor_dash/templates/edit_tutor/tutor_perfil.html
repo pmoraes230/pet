@@ -101,7 +101,7 @@
                             {% for pet in tutor.pet_set.all %}
                                 <div class="flex items-center gap-4">
                                     <div class="w-12 h-12 rounded-xl overflow-hidden">
-                                        <img src="{{ pet.foto.url|default:'https://via.placeholder.com/150' }}" alt="{{ pet.nome }}" class="w-full h-full object-cover">
+                                        <img src="{{ pet.imagem.url|default:'https://via.placeholder.com/150' }}" alt="{{ pet.nome }}" class="w-full h-full object-cover">
                                     </div>
                                     <div class="flex-1">
                                         <p class="font-semibold text-gray-900">{{ pet.nome }}</p>

@@ -242,16 +242,17 @@ CREATE TABLE diario_emocional (
 
 ALTER TABLE veterinario ADD COLUMN imagem_perfil_veterinario VARCHAR(255) NULL;
 
-CREATE TABLE IF NOT EXISTS `pet_app_notificacao` (
-    `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
-    `mensagem` LONGTEXT NOT NULL,
-    `data_criacao` DATETIME(6) NOT NULL,
-    `lida` TINYINT(1) NOT NULL,
-    `veterinario_id` BIGINT NOT NULL,
-    CONSTRAINT `fk_notif_vet` FOREIGN KEY (`veterinario_id`) 
-    REFERENCES `pet_app_veterinario` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
+CREATE TABLE pet_app_notificacao (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    mensagem LONGTEXT NOT NULL,
+    data_criacao DATETIME(6) NOT NULL,
+    lida TINYINT(1) NOT NULL DEFAULT 0,
+    veterinario_id INT NOT NULL,
+    CONSTRAINT fk_notificacao_veterinario 
+        FOREIGN KEY (veterinario_id) 
+        REFERENCES veterinario(ID) 
+        ON DELETE CASCADE
+);
 
 CREATE TABLE mensagem (
     ID INT AUTO_INCREMENT PRIMARY KEY,

@@ -8,8 +8,6 @@ class PessoaFisica(models.Model):
     genero = models.CharField(db_column='GENERO', max_length=45, blank=True, null=True)
 
     class Meta:
-        managed = True
-        db_table = 'consulta'
         managed = False
         db_table = 'pessoa_fisica'
 
@@ -25,9 +23,6 @@ class PessoaJuridica(models.Model):
     data_criacao = models.DateField(db_column='DATA_CRIACAO', blank=True, null=True)
 
     class Meta:
-        managed = True
-        db_table = 'contato_tutor'
-        unique_together = (('id_tutor', 'ddd', 'numero'),)
         managed = False
         db_table = 'pessoa_juridica'
 
@@ -40,7 +35,7 @@ class Feedback(models.Model):
     feedback_app = models.TextField(blank=True, null=True)
 
     class Meta:
-        managed = True
+        managed = False
         db_table = 'feedback'
 
     def __str__(self):
@@ -52,81 +47,27 @@ class FeedbackPet(models.Model):
     feedback_pet = models.TextField(blank=True, null=True)
 
     class Meta:
-        managed = True
+        managed = False
         db_table = 'feedback_pet'
 
-
-class PessoaFisica(models.Model):
-    id = models.IntegerField(db_column='ID', primary_key=True)  # Field name made lowercase.
-    cpf = models.IntegerField(db_column='CPF', unique=True)  # Field name made lowercase.
-    data_nascimento = models.DateField(db_column='DATA_NASCIMENTO')  # Field name made lowercase.
-    genero = models.CharField(db_column='GENERO', max_length=45)  # Field name made lowercase.
-
-    class Meta:
-        managed = True
-        db_table = 'pessoa fisica'
-
-
-class PessoaJuridica(models.Model):
-    id = models.IntegerField(db_column='ID', primary_key=True)  # Field name made lowercase.
-    cnpj = models.IntegerField(db_column='CNPJ', unique=True)  # Field name made lowercase.
-    nome_fantasia = models.CharField(db_column='NOME_FANTASIA', max_length=45)  # Field name made lowercase.
-    endereco = models.CharField(db_column='ENDERECO', max_length=45)  # Field name made lowercase.
-    data_criacao = models.DateField(db_column='DATA_CRIACAO')  # Field name made lowercase.
-
-    class Meta:
-        managed = True
-        db_table = 'pessoa juridica'
-
-
-class Pet(models.Model):
-    id = models.AutoField(db_column='ID', primary_key=True)  # Field name made lowercase.
-    nome = models.CharField(db_column='NOME', max_length=45)  # Field name made lowercase.
-    data_nascimento = models.DateField(db_column='DATA_NASCIMENTO')  # Field name made lowercase.
-    especie = models.CharField(db_column='ESPECIE', max_length=45)  # Field name made lowercase.
-    raca = models.CharField(max_length=45)
-    sexo = models.CharField(db_column='SEXO', max_length=5)  # Field name made lowercase.
-    pelagem = models.CharField(db_column='PELAGEM', max_length=45)  # Field name made lowercase.
-    castrado = models.CharField(db_column='CASTRADO', max_length=3)  # Field name made lowercase.
-    id_tutor = models.ForeignKey('Tutor', models.DO_NOTHING, db_column='ID_TUTOR')  # Field name made lowercase.
-    id_consulta = models.ForeignKey('ProntuarioPet', models.DO_NOTHING, db_column='ID_CONSULTA')  # Field name made lowercase.
-
-    class Meta:
-        managed = True
-        db_table = 'pet'
-
-
-class ProntuarioPet(models.Model):
-    id = models.AutoField(db_column='ID', primary_key=True)  # Field name made lowercase.
-    historico_veterinario = models.CharField(db_column='HISTORICO_VETERINARIO', unique=True, max_length=150)  # Field name made lowercase.
-    motivo_consulta = models.TextField(db_column='MOTIVO_CONSULTA')  # Field name made lowercase.
-    avaliacao_geral = models.TextField(db_column='AVALIACAO_GERAL')  # Field name made lowercase.
-    procedimentos = models.TextField(db_column='PROCEDIMENTOS')  # Field name made lowercase.
-    diagnostico_conslusivo = models.TextField(db_column='DIAGNOSTICO_CONSLUSIVO')  # Field name made lowercase.
-    observacao = models.TextField(db_column='OBSERVACAO')  # Field name made lowercase.
-
-    class Meta:
-        managed = True
-        db_table = 'prontuario_pet'
     def __str__(self):
         return f"Feedback Pet {self.id}"
 
 
 class Tutor(models.Model):
-    id = models.AutoField(db_column='ID', primary_key=True)  # Field name made lowercase.
-    nome_tutor = models.CharField(max_length=80, blank=True, null=True)
-    cpf = models.CharField(db_column='CPF', unique=True, max_length=14, blank=True, null=True)  # Field name made lowercase.
-    email = models.CharField(max_length=80, blank=True, null=True)
-    endereco = models.CharField(db_column='ENDERECO', max_length=100)  # Field name made lowercase.
-    data_nascimento = models.DateField(db_column='DATA_NASCIMENTO')  # Field name made lowercase.
-    id_feedback_sistema = models.ForeignKey(Feedback, models.DO_NOTHING, db_column='ID_FEEDBACK_SISTEMA', blank=True, null=True)  # Field name made lowercase.
-    id_feedback_pet = models.ForeignKey(FeedbackPet, models.DO_NOTHING, db_column='ID_FEEDBACK_PET', blank=True, null=True)  # Field name made lowercase.
-    senha_tutor = models.CharField(max_length=150)
-    imagem_perfil_tutor = models.ImageField(upload_to='tutor')
-    status_conta = models.BooleanField(default=True)
+    id = models.AutoField(db_column='ID', primary_key=True)
+    nome_tutor = models.CharField(db_column='nome_tutor', max_length=80, blank=True, null=True)
+    cpf = models.CharField(db_column='CPF', max_length=14, unique=True, blank=True, null=True)
+    email = models.CharField(db_column='EMAIL', max_length=80, unique=True, blank=True, null=True)
+    endereco = models.CharField(db_column='ENDERECO', max_length=100, blank=True, null=True)
+    data_nascimento = models.DateField(db_column='DATA_NASCIMENTO', blank=True, null=True)
+    senha_tutor = models.CharField(db_column='senha_tutor', max_length=150)
+    imagem_perfil_tutor = models.ImageField(db_column='imagem_perfil_tutor', upload_to='tutor/', blank=True, null=True)
+    id_feedback_sistema = models.ForeignKey(Feedback, models.DO_NOTHING, db_column='ID_FEEDBACK_SISTEMA', blank=True, null=True)
+    id_feedback_pet = models.ForeignKey(FeedbackPet, models.DO_NOTHING, db_column='ID_FEEDBACK_PET', blank=True, null=True)
 
     class Meta:
-        managed = True
+        managed = False
         db_table = 'tutor'
 
     def __str__(self):
@@ -146,7 +87,7 @@ class Veterinario(models.Model):
     pessoa_juridica = models.ForeignKey(PessoaJuridica, models.DO_NOTHING, db_column='pessoa_juridica_id', blank=True, null=True)
 
     class Meta:
-        managed = True
+        managed = False
         db_table = 'veterinario'
 
     def __str__(self):
@@ -165,7 +106,7 @@ class Pet(models.Model):
     peso = models.CharField(db_column='PESO', max_length=10, blank=True, null=True)
     descricao = models.TextField(db_column='DESCRICAO', blank=True, null=True)
     personalidade = models.TextField(db_column='PERSONALIDADE', blank=True, null=True)
-    imagem = models.ImageField(upload_to="pets/")
+    imagem = models.ImageField(db_column='IMAGEM', upload_to='pets/', blank=True, null=True)
     tutor = models.ForeignKey(Tutor, models.DO_NOTHING, db_column='ID_TUTOR')
 
     class Meta:
@@ -293,17 +234,3 @@ class Notificacao(models.Model):
 
     class Meta:
         ordering = ['-data_criacao']        
-
-from django.db import models
-
-class Mensagem(models.Model):
-    # Quem envia pode ser o tutor ou o vet. Usamos IDs das suas tabelas.
-    tutor = models.ForeignKey('Tutor', on_delete=models.CASCADE)
-    veterinario = models.ForeignKey('Veterinario', on_delete=models.CASCADE)
-    conteudo = models.TextField()
-    data_envio = models.DateTimeField(auto_now_add=True)
-    enviado_por_tutor = models.BooleanField(default=True) # True se tutor enviou, False se vet enviou
-
-    class Meta:
-        db_table = 'mensagens'
-        ordering = ['data_envio']        
