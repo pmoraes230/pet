@@ -414,5 +414,6 @@ def diario_emocional_view(request):
         'recentes': recentes,
         'pet_selecionado': pet_selecionado,
         'grafico_labels': json.dumps(labels),
-        'grafico_valores': json.dumps(valores)
+        'grafico_valores': json.dumps(valores),
+        'tutor': tutor,
     })
