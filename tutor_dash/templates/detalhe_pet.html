@@ -49,7 +49,7 @@
         
                         <div class="bg-[#8B5CF6] rounded-[2.5rem] p-8 text-white relative shadow-lg shadow-purple-100">
                             <p class="font-bold text-lg opacity-80">Próxima consulta</p>
-                            <h3 class="text-4xl font-black my-3">{{ proxima_consulta.data_consulta|date:"d \de M"|default:"---" }}</h3>
+                            <h3 class="text-4xl font-black my-3">{{ proxima_consulta.data_consulta|date:"d - M"|default:"---" }}</h3>
                             <p class="font-bold text-lg opacity-90">{{ proxima_consulta.tipo_de_consulta|default:"Sem agendamentos" }}</p>
                             <div class="absolute top-8 right-8 w-10 h-10 bg-white/20 rounded-xl"></div>
                         </div>

@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.hashers import make_password, check_password
@@ -177,7 +178,7 @@ def tutor_dashboard_view(request):
         'historico_recente': historico_recente,
         'total_pets': pets.count()
     }
-    return render(request, 'dash_tutor.html', context)
+    return render(request, 'dash_tutor/dash_tutor.html', context)
 
 
 def perfil_tutor(request):
@@ -352,3 +353,72 @@ def lista_notificacoes(request):
         'veterinario': veterinario,
         'notificacoes': todas_notificacoes
     })
+
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from . import models  # Certifique-se que o import está assim
+from django.contrib import messages # Para avisar erros na tela
+
+@login_required
+def mensagens(request):
+    # 1. Busca o tutor de forma segura
+    # Usamos filter().first() para não explodir um erro 404 na cara do usuário
+    tutor = models.Tutor.objects.filter(email=request.user.email).first()
+    
+    if not tutor:
+        # Se o tutor não existe no banco, mas o user está logado
+        # Isso acontece se você criou o user mas não o Tutor no SQL
+        messages.error(request, "Perfil de tutor não encontrado para este usuário.")
+        return redirect('tutor_dashboard') # Ou outra tela inicial
+
+    # 2. Lista de contatos
+    contatos = models.Veterinario.objects.all()
+    
+    vet_id = request.GET.get('vet_id')
+    mensagens_lista = []
+    vet_selecionado = None
+    
+    if vet_id:
+        # Aqui sim usamos get_object_or_404 pois o vet_id vem da URL
+        vet_selecionado = get_object_or_404(models.Veterinario, id=vet_id)
+        
+        # 3. Busca histórico
+        mensagens_lista = models.Mensagem.objects.filter(
+            tutor=tutor, 
+            veterinario=vet_selecionado
+        ).order_by('data_envio')
+        
+        # 4. Marcar como lida (Apenas as que o VET enviou)
+        mensagens_lista.filter(enviado_por='VETERINARIO', lida=False).update(lida=True)
+
+    context = {
+        'tutor': tutor,
+        'contatos': contatos,
+        'mensagens': mensagens_lista,
+        'vet_selecionado': vet_selecionado,
+    }
+    
+    return render(request, 'mensagens.html', context)
+
+
+@login_required
+def enviar_mensagem(request):
+    if request.method == "POST":
+        tutor = models.Tutor.objects.filter(email=request.user.email).first()
+        vet_id = request.POST.get('vet_id')
+        conteudo = request.POST.get('mensagem')
+        
+        if conteudo and vet_id and tutor:
+            vet = get_object_or_404(models.Veterinario, id=vet_id)
+            
+            models.Mensagem.objects.create(
+                tutor=tutor,
+                veterinario=vet,
+                conteudo=conteudo,
+                enviado_por='TUTOR'
+            )
+            # Use o nome da URL em vez de path fixo se possível
+            return redirect(f'/mensagens/?vet_id={vet_id}')
+            
+    return redirect('mensagens')

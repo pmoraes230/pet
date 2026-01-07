@@ -1,9 +1,5 @@
 {% load static %}
-
-<!-- Sidebar Tutor -->
 <aside class="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col z-20">
-    
-    <!-- LOGO E NOME (Branding Coração em Patas) -->
     <div class="p-6 flex items-center gap-3">
         <div class="bg-purple-600 p-2 rounded-lg text-white">
             <i data-lucide="paw-print" width="20" height="20"></i>
@@ -11,56 +7,43 @@
         <span class="font-black text-lg text-gray-800 tracking-tight">Coração em patas</span>
     </div>
 
-    <!-- Navegação -->
     <nav class="flex-1 px-4 space-y-2 mt-4">
-        
-        <!-- Visão Geral -->
-        <a href="{% url 'tutor_dashboard' %}" 
-           class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all
-           {% if request.resolver_match.url_name == 'tutor_dashboard' %} bg-purple-100 text-purple-700 {% else %} text-gray-600 hover:bg-gray-50 hover:text-gray-900 {% endif %}">
+        <a href="{% url 'tutor_dashboard' %}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all {% if request.resolver_match.url_name == 'tutor_dashboard' %} bg-purple-100 text-purple-700 {% else %} text-gray-600 hover:bg-gray-50 hover:text-gray-900 {% endif %}">
             <i data-lucide="layout-dashboard" width="20" height="20"></i>
             <span>Visão Geral</span>
         </a>
 
-        <!-- Meus Pets -->
-        <a href="{% url 'meus_pets' %}" 
-           class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all
-           {% if request.resolver_match.url_name == 'meus_pets' or request.resolver_match.url_name == 'detalhe_pet' %} bg-purple-100 text-purple-700 {% else %} text-gray-600 hover:bg-gray-50 hover:text-gray-900 {% endif %}">
+        <a href="{% url 'meus_pets' %}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all {% if 'pet' in request.path %} bg-purple-100 text-purple-700 {% else %} text-gray-600 hover:bg-gray-50 hover:text-gray-900 {% endif %}">
             <i data-lucide="cat" width="20" height="20"></i>
             <span>Meus Pets</span>
         </a>
 
-        <!-- Agendamentos -->
-        <a href="{% url 'agendamentos' %}" 
-           class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all
-           {% if request.resolver_match.url_name == 'agendamentos' %} bg-purple-100 text-purple-700 {% else %} text-gray-600 hover:bg-gray-50 hover:text-gray-900 {% endif %}">
+        <!-- NOVO: MENSAGENS -->
+        <a href="{% url 'mensagens' %}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all {% if request.resolver_match.url_name == 'mensagens' %} bg-purple-100 text-purple-700 {% else %} text-gray-600 hover:bg-gray-50 hover:text-gray-900 {% endif %}">
+            <i data-lucide="message-circle" width="20" height="20"></i>
+            <span>Mensagens</span>
+        </a>
+
+        <a href="{% url 'agendamentos' %}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all {% if request.resolver_match.url_name == 'agendamentos' %} bg-purple-100 text-purple-700 {% else %} text-gray-600 hover:bg-gray-50 hover:text-gray-900 {% endif %}">
             <i data-lucide="calendar" width="20" height="20"></i>
             <span>Agendamentos</span>
         </a>
 
-        <!-- Diário Emocional -->
-        <a href="{% url 'diario_emocional' %}" 
-           class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all
-           {% if request.resolver_match.url_name == 'diario_emocional' %} bg-purple-100 text-purple-700 {% else %} text-gray-600 hover:bg-gray-50 hover:text-gray-900 {% endif %}">
+        <a href="{% url 'diario_emocional' %}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all {% if request.resolver_match.url_name == 'diario_emocional' %} bg-purple-100 text-purple-700 {% else %} text-gray-600 hover:bg-gray-50 hover:text-gray-900 {% endif %}">
             <i data-lucide="heart-pulse" width="20" height="20"></i>
             <span>Diário Emocional</span>
         </a>
 
-        <!-- Medicamentos -->
-        <a href="{% url 'medicamentos' %}" 
-           class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all
-           {% if request.resolver_match.url_name == 'medicamentos' %} bg-purple-100 text-purple-700 {% else %} text-gray-600 hover:bg-gray-50 hover:text-gray-900 {% endif %}">
+        <a href="{% url 'medicamentos' %}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all {% if request.resolver_match.url_name == 'medicamentos' %} bg-purple-100 text-purple-700 {% else %} text-gray-600 hover:bg-gray-50 hover:text-gray-900 {% endif %}">
             <i data-lucide="pill" width="20" height="20"></i>
             <span>Medicamentos</span>
         </a>
     </nav>
 
-    <!-- Botão Sair -->
     <div class="p-4 border-t border-gray-100">
         <a href="{% url 'login' %}" class="flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl font-bold transition-colors">
             <i data-lucide="log-out" width="20" height="20"></i>
             <span>Sair</span>
         </a>
     </div>
-
 </aside>

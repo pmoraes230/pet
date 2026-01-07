@@ -22,6 +22,11 @@ urlpatterns = [
     # ==================================================
     path("perfil-tutor/", views.perfil_tutor, name="perfil_tutor"),
     path("editar-perfil-tutor/", views.editar_perfil_tutor, name="editar_perfil_tutor"),
+    path('mensagens/', views.mensagens, name='mensagens'),
+    # No seu urls.py
+    
+    # Rota para processar o envio da mensagem (POST)
+    path('mensagens/enviar/', views.enviar_mensagem, name='enviar_mensagem'),
 
     # Pets
     path("meus-pets/", views.meus_pets, name="meus_pets"),

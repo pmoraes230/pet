@@ -10,45 +10,30 @@ import json
 from datetime import date, timedelta, datetime
 
 # Create your views here.
-def dash_tutor(request):
-    if request.session.get('user_role') != 'tutor':
+def tutor_dashboard_view(request):
+    tutor_data = get_tutor_logado(request)
+    if not tutor_data:
         return redirect('login')
 
-    tutor_id = request.session['user_id']
-    
-    try:
-        tutor = models.Tutor.objects.get(id=tutor_id)
-    except models.Tutor.DoesNotExist:
-        return redirect('login')
+    tutor = models.Tutor.objects.get(id=tutor_data['id'])
+    pets = models.Pet.objects.filter(tutor=tutor)
 
-    # Pegamos os pets normalmente
-    pets_qs = models.Pet.objects.filter(id_tutor=tutor_id).order_by('nome')
+    proxima_consulta = models.Consulta.objects.filter(
+        pet__in=pets,
+        data_consulta__gte=date.today()
+    ).order_by('data_consulta', 'horario_consulta').first()
 
-    # Convertemos manualmente para dicionário SEM passar ImageField ou qualquer objeto não serializável
-    pets = []
-    for pet in pets_qs:
-        pets.append({
-            "id": pet.id,
-            "nome": pet.nome,
-            "especie": pet.especie,
-            "raca": pet.raca or "Não informada",
-            "sexo": pet.sexo,
-            "pelagem": pet.pelagem or "Não informada",
-            "castrado": pet.castrado == "Sim",
-            "data_nascimento": pet.data_nascimento.isoformat() if pet.data_nascimento else None,
-            "idade": pet.calcular_idade() if hasattr(pet, 'calcular_idade') else None,
-            # Foto gerada automaticamente (sem campo no banco!)
-            "foto": f"https://api.dicebear.com/7.x/avataaars/svg?seed=pet-{pet.id}&backgroundColor=ffdfbf,b6e3f4,c0a5ff,d1d4f9"
-        })
+    historico_recente = models.Consulta.objects.filter(
+        pet__in=pets
+    ).order_by('-data_consulta', '-horario_consulta')[:5]
 
     context = {
-        "tutor": {
-            "nome": tutor.nome_tutor or "Tutor",
-            "email": tutor.email,
-        },
-        "pets": pets,  # ← 100% serializável, sem ImageFieldFile!
+        'tutor': tutor,
+        'pets': pets,
+        'proxima_consulta': proxima_consulta,
+        'historico_recente': historico_recente,
+        'total_pets': pets.count()
     }
-
     return render(request, 'dash_tutor/dash_tutor.html', context)
 
 
@@ -63,12 +48,7 @@ def perfil_tutor(request):
 
     tutor = models.Tutor.objects.get(id=tutor_data['id'])
 
-    # ATENÇÃO: ContatoTutor NÃO existe nos models que você me mostrou
-    # Se esse modelo existe em outro app ou foi esquecido, adicione-o.
-    # Por enquanto, comento para não dar erro:
-    # contatos = ContatoTutor.objects.filter(tutor=tutor)  # <-- ERRO SE NÃO EXISTIR
-
-    return render(request, 'tutor_perfil.html', {
+    return render(request, 'edit_tutor/tutor_perfil.html', {
         'tutor': tutor,
         # 'contatos': contatos,  # Descomente quando o modelo existir
     })
@@ -196,6 +176,194 @@ def desativar_conta(request):
     return render(request, 'agendamentos.html', context)
     # Removido o return duplicado
 
+def meus_pets(request):
+    tutor_data = get_tutor_logado(request)
+    if not tutor_data:
+        return redirect('login')
+
+    tutor = models.Tutor.objects.get(id=tutor_data['id'])
+    pets = models.Pet.objects.filter(tutor=tutor)
+
+    return render(request, 'meus_pets.html', {
+        'tutor': tutor,
+        'pets': pets
+    })
+
+def adicionar_pet(request):
+    tutor_data = get_tutor_logado(request)
+    if not tutor_data:
+        return redirect('login')
+
+    tutor = models.Tutor.objects.filter(id=tutor_data['id']).first()
+    if not tutor:
+        messages.error(request, "Sessão expirada. Faça login novamente.")
+        return redirect('login')
+
+    if request.method == "POST":
+        models.Pet.objects.create(
+            nome=request.POST.get('nome'),
+            especie=request.POST.get('especie'),
+            raca=request.POST.get('raca'),
+            data_nascimento=request.POST.get('data_nascimento'),
+            sexo=request.POST.get('sexo'),
+            pelagem=request.POST.get('pelagem', 'Não informada'),
+            castrado=request.POST.get('castrado', 'Não'),
+            tutor=tutor
+        )
+
+        messages.success(request, "Pet cadastrado com sucesso!")
+        return redirect('meus_pets')
+
+    return render(request, 'form_pet.html', {'tutor': tutor})
+
+def excluir_pet(request, pet_id):
+    tutor_data = get_tutor_logado(request)
+    if not tutor_data:
+        return redirect('login')
+
+    tutor = models.Tutor.objects.get(id=tutor_data['id'])
+    pet = models.Pet.objects.filter(id=pet_id, tutor=tutor).first()
+
+    if pet:
+        pet.delete()
+        messages.success(request, "Pet removido com sucesso!")
+    else:
+        messages.error(request, "Pet não encontrado.")
+
+    return redirect('meus_pets')
+
+
+def detalhe_pet(request, pet_id):
+    pet = get_object_or_404(models.Pet, id=pet_id)
+
+    if request.method == "POST":
+        pet.nome = request.POST.get('nome')
+        pet.especie = request.POST.get('especie')
+        pet.raca = request.POST.get('raca')
+        pet.sexo = request.POST.get('sexo')
+        pet.pelagem = request.POST.get('pelagem')
+        pet.castrado = request.POST.get('castrado')
+        pet.peso = request.POST.get('peso')
+        pet.descricao = request.POST.get('descricao')
+        pet.personalidade = request.POST.get('personalidade')
+
+        if 'imagem' in request.FILES:
+            pet.imagem = request.FILES['imagem']
+
+        pet.save()
+        return redirect('detalhe_pet', pet_id=pet.id)
+
+    list_personalidades = pet.personalidade.split(',') if pet.personalidade else []
+
+    proxima_consulta = models.Consulta.objects.filter(
+        pet=pet, 
+        data_consulta__gte=date.today()
+    ).order_by('data_consulta').first()
+
+    # CORREÇÃO: Vacina já está importada no topo
+    vacinas = models.Vacina.objects.filter(pet=pet).order_by('-data_aplicacao')
+
+    context = {
+        'pet': pet,
+        'list_personalidades': list_personalidades,
+        'proxima_consulta': proxima_consulta,
+        'vacinas': vacinas,
+    }
+    return render(request, 'detalhe_pet.html', context)
+
+
+# ========================================================
+# MEDICAMENTOS / AGENDAMENTOS
+# ========================================================
+
+def medicamentos_view(request):
+    tutor_data = get_tutor_logado(request)
+    if not tutor_data:
+        return redirect('login')
+
+    tutor = models.Tutor.objects.get(id=tutor_data['id'])
+    pets = models.Pet.objects.filter(tutor=tutor)
+
+    hoje = date.today()
+    atendimentos_hoje = models.Consulta.objects.filter(
+        pet__in=pets,
+        data_consulta=hoje
+    ).exclude(tratamento__isnull=True).exclude(tratamento='')
+
+    meds_manha = [m for m in atendimentos_hoje if m.horario_consulta and m.horario_consulta.hour < 12]
+    meds_tarde = [m for m in atendimentos_hoje if m.horario_consulta and 12 <= m.horario_consulta.hour < 18]
+    meds_noite = [m for m in atendimentos_hoje if m.horario_consulta and m.horario_consulta.hour >= 18]
+
+    tratamentos_ativos = models.Consulta.objects.filter(
+        pet__in=pets,
+        data_consulta__gte=hoje
+    ).exclude(tratamento__isnull=True).exclude(tratamento='').order_by('data_consulta')
+
+    context = {
+        'tutor': tutor,
+        'meds_manha': meds_manha,
+        'meds_tarde': meds_tarde,
+        'meds_noite': meds_noite,
+        'tratamentos_ativos': tratamentos_ativos,
+    }
+    return render(request, 'medicamentos.html', context)
+
+
+def agendamentos_view(request):
+    tutor_data = get_tutor_logado(request)
+    if not tutor_data:
+        return redirect('login')
+
+    tutor = models.Tutor.objects.get(id=tutor_data['id'])
+    pets = models.Pet.objects.filter(tutor=tutor)
+
+    data_url = request.GET.get('data')
+    if data_url:
+        try:
+            hoje_referencia = datetime.strptime(data_url, '%Y-%m-%d').date()
+        except ValueError:
+            hoje_referencia = date.today()
+    else:
+        hoje_referencia = date.today()
+
+    segunda_da_semana = hoje_referencia - timedelta(days=hoje_referencia.weekday())
+    
+    data_semana_anterior = segunda_da_semana - timedelta(days=7)
+    data_semana_proxima = segunda_da_semana + timedelta(days=7)
+
+    dias_semana = []
+    nomes_curtos = ['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom']
+    hoje_real = date.today()
+    
+    for i in range(7):
+        dia_iterado = segunda_da_semana + timedelta(days=i)
+        dias_semana.append({
+            'nome': nomes_curtos[i],
+            'num': dia_iterado.day,
+            'hoje': dia_iterado == hoje_real,
+            'data_full': dia_iterado
+        })
+
+    fim_da_semana = segunda_da_semana + timedelta(days=6)
+    vacinas = models.Vacina.objects.filter(pet__in=pets, data_aplicacao__range=[segunda_da_semana, fim_da_semana])
+    consultas = models.Consulta.objects.filter(pet__in=pets, data_consulta__range=[segunda_da_semana, fim_da_semana])
+
+    meses = {1:'Janeiro', 2:'Fevereiro', 3:'Março', 4:'Abril', 5:'Maio', 6:'Junho',
+             7:'Julho', 8:'Agosto', 9:'Setembro', 10:'Outubro', 11:'Novembro', 12:'Dezembro'}
+
+    context = {
+        'tutor': tutor,
+        'dias_semana': dias_semana,
+        'vacinas': vacinas,
+        'consultas': consultas,
+        'mes_atual': meses[segunda_da_semana.month],
+        'ano_atual': segunda_da_semana.year,
+        'data_anterior': data_semana_anterior.strftime('%Y-%m-%d'),
+        'data_proxima': data_semana_proxima.strftime('%Y-%m-%d'),
+    }
+    return render(request, 'agendamentos.html', context)
+    # Removido o return duplicado
+
 
 def diario_emocional_view(request):
     tutor_data = get_tutor_logado(request)
@@ -246,18 +414,3 @@ def diario_emocional_view(request):
         'grafico_labels': json.dumps(labels),
         'grafico_valores': json.dumps(valores)
     })
-
-# class ContatoTutor(models.Model):
-#     id = models.AutoField(db_column='ID', primary_key=True)
-#     tutor = models.ForeignKey(Tutor, models.DO_NOTHING, db_column='ID_TUTOR')
-#     tipo_contato = models.CharField(db_column='TIPO_CONTATO', max_length=16, blank=True, null=True)
-#     ddd = models.CharField(db_column='DDD', max_length=2, blank=True, null=True)
-#     numero = models.CharField(db_column='NUMERO', max_length=9, blank=True, null=True)
-#     data_cadastro = models.DateTimeField(db_column='DATA_CADASTRO', blank=True, null=True)
-
-#     class Meta:
-#         managed = False
-#         db_table = 'contato_tutor'
-
-#     def __str__(self):
-#         return f"{self.tipo_contato} {self.ddd}{self.numero} - {self.tutor}"

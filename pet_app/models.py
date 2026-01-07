@@ -235,3 +235,17 @@ class Notificacao(models.Model):
 
     class Meta:
         ordering = ['-data_criacao']        
+
+from django.db import models
+
+class Mensagem(models.Model):
+    # Quem envia pode ser o tutor ou o vet. Usamos IDs das suas tabelas.
+    tutor = models.ForeignKey('Tutor', on_delete=models.CASCADE)
+    veterinario = models.ForeignKey('Veterinario', on_delete=models.CASCADE)
+    conteudo = models.TextField()
+    data_envio = models.DateTimeField(auto_now_add=True)
+    enviado_por_tutor = models.BooleanField(default=True) # True se tutor enviou, False se vet enviou
+
+    class Meta:
+        db_table = 'mensagens'
+        ordering = ['data_envio']        
