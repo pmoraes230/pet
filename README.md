@@ -45,8 +45,7 @@ Abra o terminal e execute o comando:
 
 Bash
 
-git clone [https://github.com/rayrodds/Reposit-rio-cora-o-em-patas-front.git](https://github.com/rayrodds/Reposit-rio-cora-o-em-patas-front.git)
-
+git clone (https://github.com/pmoraes230/pet.git).
 
 ## 2. Abrir no VS Code
 Acesse a pasta do projeto:
@@ -85,5 +84,5 @@ adicione um print ou um GIF aqui:
 Link para o deploy (opcional)
 
 
-Desenvolvido com ❤️ para ajudar nossos melhores amigos. 🐶🐱
+# Desenvolvido com ❤️ para ajudar nossos melhores amigos. 🐶🐱
 
