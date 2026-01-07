@@ -10,5 +10,6 @@ urlpatterns = [
     path('prontuarios/', views.prontuarios_view, name='prontuarios_url'), # Adicionado
     path('financeiro/', views.financeiro_view, name='financeiro_url'), # Adicionado
     path('pacientes/<int:pet_id>/', views.detalhe_pet_view, name='detalhes_pet'),
+    
 ]
 

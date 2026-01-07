@@ -4,11 +4,7 @@ from datetime import datetime, timedelta, date
 from django.db.models import Sum
 from django.db.models.functions import ExtractMonth
 import json
-
-# IMPORTAÇÃO CORRETA DOS MODELS DO APP PRINCIPAL
-from pet_app.models import (
-    Veterinario, Pet, Consulta, Vacina, Prontuariopet, ContatoVeterinario
-)
+from pet_app import models
 from pet_app.utils import get_veterinario_logado
 
 
@@ -20,31 +16,31 @@ def dash_veterinario(request):
     if not vet_data:
         return redirect('login_veterinario')
 
-    veterinario = Veterinario.objects.get(id=vet_data['id'])
+    veterinario = models.Veterinario.objects.get(id=vet_data['id'])
 
-    total_pacientes = Pet.objects.count()
+    total_pacientes = models.Pet.objects.count()
 
-    consultas_hoje = Consulta.objects.filter(
+    consultas_hoje = models.Consulta.objects.filter(
         veterinario=veterinario,
         data_consulta=date.today()
     ).count()
 
-    casos_criticos = Consulta.objects.filter(
+    casos_criticos = models.Consulta.objects.filter(
         veterinario=veterinario,
         tipo_de_consulta__icontains='Crítico'
     ).count()
 
-    faturamento_dia = Consulta.objects.filter(
+    faturamento_dia = models.Consulta.objects.filter(
         veterinario=veterinario,
         data_consulta=date.today()
     ).aggregate(total=Sum('valor_consulta'))['total'] or 0
 
-    agenda_hoje = Consulta.objects.filter(
+    agenda_hoje = models.Consulta.objects.filter(
         veterinario=veterinario,
         data_consulta=date.today()
     ).select_related('pet', 'pet__tutor').order_by('horario_consulta')
 
-    alertas = Consulta.objects.filter(
+    alertas = models.Consulta.objects.filter(
         veterinario=veterinario,
         tipo_de_consulta__icontains='Alerta'
     ).select_related('pet').order_by('-data_consulta')
@@ -69,8 +65,8 @@ def pacientes_view(request):
     if not vet_data:
         return redirect('login_veterinario')
 
-    veterinario = Veterinario.objects.get(id=vet_data['id'])
-    pacientes = Pet.objects.all().order_by('nome')
+    veterinario = models.Veterinario.objects.get(id=vet_data['id'])
+    pacientes = models.Pet.objects.all().order_by('nome')
 
     context = {
         'veterinario': veterinario,
@@ -87,7 +83,9 @@ def agenda_view(request):
     if not vet_data:
         return redirect('login_veterinario')
 
-    veterinario = Veterinario.objects.get(id=vet_data['id'])
+    veterinario = models.Veterinario.objects.get(id=vet_data['id'])
+
+    veterinario = models.Veterinario.objects.get(id=vet_data['id'])
 
     if request.method == "POST":
         pet_id = request.POST.get('pet')
@@ -97,21 +95,21 @@ def agenda_view(request):
         obs_sel = request.POST.get('obs')
 
         try:
-            pet_obj = Pet.objects.get(id=pet_id)
-            Consulta.objects.create(
-                veterinario=veterinario,
-                pet=pet_obj,
+            pet_obj = models.Pet.objects.get(id=pet_id)
+            models.Consulta.objects.create(
+                id_veterinario=veterinario,
+                id_pet=pet_obj,
                 data_consulta=data_sel,
                 horario_consulta=hora_sel,
                 tipo_de_consulta=tipo_sel,
                 observacoes=obs_sel,
                 status='Agendado'
             )
-            messages.success(
-                request, f"Consulta para {pet_obj.nome} agendada com sucesso!")
-        except Exception as e:
-            messages.error(
-                request, "Erro ao agendar consulta. Verifique os dados.")
+            messages.success(request, f"Consulta para {pet_obj.nome} agendada com sucesso!")
+        except Exception:
+            messages.error(request, "Erro ao agendar consulta. Verifique os dados.")
+
+        return redirect(f'/vet_dash/agenda/?data={data_sel}')
 
         return redirect(f'/vet_dash/agenda/?data={data_sel}')
 
@@ -145,12 +143,14 @@ def agenda_view(request):
     data_anterior = (data_foco - timedelta(days=7)).strftime('%Y-%m-%d')
     data_proxima = (data_foco + timedelta(days=7)).strftime('%Y-%m-%d')
 
-    agenda_completa = Consulta.objects.filter(
-        veterinario=veterinario,
+    agenda_completa = models.Consulta.objects.filter(
+        id_veterinario=veterinario,
         data_consulta=data_foco
-    ).select_related('pet', 'pet__tutor').order_by('horario_consulta')
+    ).select_related(
+        'id_pet', 'id_pet__id_tutor'
+    ).order_by('horario_consulta')
 
-    pacientes = Pet.objects.all().order_by('nome')
+    pacientes = models.Pet.objects.all().order_by('nome')
 
     context = {
         'veterinario': veterinario,
@@ -163,7 +163,9 @@ def agenda_view(request):
         'data_proxima': data_proxima,
         'data_foco': data_foco,
     }
+
     return render(request, 'agenda.html', context)
+
 
 
 # ------------------------
@@ -174,23 +176,23 @@ def prontuarios_view(request):
     if not vet_data:
         return redirect('login_veterinario')
 
-    veterinario = Veterinario.objects.get(id=vet_data['id'])
+    veterinario = models.Veterinario.objects.get(id=vet_data['id'])
     pet_id = request.GET.get('pet_id')
     pet_selecionado = None
 
     if pet_id:
-        pet_selecionado = Pet.objects.filter(id=pet_id).first()
+        pet_selecionado = models.Pet.objects.filter(id=pet_id).first()
 
     if request.method == "POST" and pet_id:
         observacoes = request.POST.get('anotacoes', '')
-        Prontuariopet.objects.create(
+        models.Prontuariopet.objects.create(
             observacao=observacoes or "Sem observações adicionais",
             avaliacao_geral="Registrado pelo veterinário via dashboard",
         )
         messages.success(request, "Prontuário salvo com sucesso!")
         return redirect(f'/vet_dash/prontuarios/?pet_id={pet_id}')
 
-    pacientes = Pet.objects.all().order_by('nome')
+    pacientes = models.Pet.objects.all().order_by('nome')
 
     context = {
         'veterinario': veterinario,
@@ -208,29 +210,42 @@ def financeiro_view(request):
     if not vet_data:
         return redirect('login_veterinario')
 
-    veterinario = Veterinario.objects.get(id=vet_data['id'])
+    veterinario = models.Veterinario.objects.get(id=vet_data['id'])
+
     hoje = date.today()
 
-    consultas_mes = Consulta.objects.filter(
-        veterinario=veterinario,
+    consultas_mes = models.Consulta.objects.filter(
+        id_veterinario=veterinario,
         data_consulta__month=hoje.month,
         data_consulta__year=hoje.year
     )
 
     entradas_mes = consultas_mes.aggregate(
-        total=Sum('valor_consulta'))['total'] or 0
+        total=Sum('valor_consulta')
+    )['total'] or 0
+
     saidas_mock = float(entradas_mes) * 0.3
     saldo_liquido = float(entradas_mes) - saidas_mock
 
-    transacoes = Consulta.objects.filter(
-        veterinario=veterinario
-    ).exclude(valor_consulta=0).select_related('pet').order_by('-data_consulta', '-horario_consulta')[:5]
+    transacoes = models.Consulta.objects.filter(
+        id_veterinario=veterinario
+    ).exclude(
+        valor_consulta=0
+    ).select_related(
+        'id_pet'
+    ).order_by(
+        '-data_consulta', '-horario_consulta'
+    )[:5]
 
-    dados_grafico = Consulta.objects.filter(veterinario=veterinario)\
-        .annotate(mes=ExtractMonth('data_consulta'))\
-        .values('mes')\
-        .annotate(total=Sum('valor_consulta'))\
-        .order_by('mes')
+    dados_grafico = models.Consulta.objects.filter(
+        id_veterinario=veterinario
+    ).annotate(
+        mes=ExtractMonth('data_consulta')
+    ).values(
+        'mes'
+    ).annotate(
+        total=Sum('valor_consulta')
+    ).order_by('mes')
 
     meses_nomes = ["Jan", "Fev", "Mar", "Abr", "Mai",
                    "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
@@ -240,7 +255,7 @@ def financeiro_view(request):
     for item in dados_grafico:
         if item['mes']:
             labels.append(meses_nomes[item['mes'] - 1])
-            valores.append(float(item['total'] or 0))
+            valores.append(float(item['total']))
 
     if not labels:
         labels, valores = ["Sem dados"], [0]
@@ -254,6 +269,7 @@ def financeiro_view(request):
         'labels_json': json.dumps(labels),
         'valores_json': json.dumps(valores),
     }
+
     return render(request, 'financeiro.html', context)
 
 
@@ -264,13 +280,14 @@ def perfil_veterinario(request):
     vet_data = get_veterinario_logado(request)
     if not vet_data:
         return redirect('login_veterinario')
-
-    veterinario = Veterinario.objects.get(id=vet_data['id'])
-    contatos = ContatoVeterinario.objects.filter(
-        veterinario=veterinario)  # Correção: campo é 'veterinario'
-
-    return render(request, 'veterinario_perfil.html', {
-        'veterinario': veterinario,
+    
+    veterinario = models.Veterinario.objects.get(id=vet_data['id'])
+    contatos = models.ContatoVeterinario.objects.filter(id_veterinario=veterinario)
+    
+    # MUDE AQUI: Verifique qual é o nome do seu arquivo HTML
+    # Se você criou como vet_perfil.html, mude para:
+    return render(request, 'vet_perfil.html', {
+        'veterinario': veterinario, 
         'contatos': contatos
     })
 
@@ -280,7 +297,7 @@ def editar_perfil_veterinario(request):
     if not vet_data:
         return redirect('login_veterinario')
 
-    veterinario = Veterinario.objects.get(id=vet_data['id'])
+    veterinario = models.Veterinario.objects.get(id=vet_data['id'])
 
     if request.method == "POST":
         veterinario.nome = request.POST.get('nome')
@@ -299,12 +316,12 @@ def editar_perfil_veterinario(request):
         ddds = request.POST.getlist('ddd')
         numeros = request.POST.getlist('numero')
 
-        ContatoVeterinario.objects.filter(
+        models.ContatoVeterinario.objects.filter(
             veterinario=veterinario).delete()  # Correção aqui também
 
         for i in range(len(tipos)):
             if ddds[i].strip() and numeros[i].strip():
-                ContatoVeterinario.objects.create(
+                models.ContatoVeterinario.objects.create(
                     veterinario=veterinario,
                     tipo_contato=tipos[i],
                     ddd=ddds[i],
@@ -314,7 +331,7 @@ def editar_perfil_veterinario(request):
         messages.success(request, "Perfil atualizado com sucesso!")
         return redirect('perfil_veterinario')
 
-    contatos = ContatoVeterinario.objects.filter(veterinario=veterinario)
+    contatos = models.ContatoVeterinario.objects.filter(veterinario=veterinario)
     return render(request, 'editar_perfil_veterinario.html', {
         'veterinario': veterinario,
         'contatos': contatos
@@ -329,8 +346,8 @@ def detalhe_pet_view(request, pet_id):
     if not vet_data:
         return redirect('login_veterinario')
 
-    veterinario = Veterinario.objects.get(id=vet_data['id'])
-    pet = get_object_or_404(Pet, id=pet_id)
+    veterinario = models.Veterinario.objects.get(id=vet_data['id'])
+    pet = get_object_or_404(models.Pet, id=pet_id)
 
     if request.method == "POST":
         pet.peso = request.POST.get('peso')
@@ -349,12 +366,12 @@ def detalhe_pet_view(request, pet_id):
             request, f"Dados de {pet.nome} atualizados com sucesso!")
         return redirect('detalhes_pet', pet_id=pet.id)
 
-    proxima_consulta = Consulta.objects.filter(
+    proxima_consulta = models.Consulta.objects.filter(
         pet=pet,
         data_consulta__gte=date.today()
     ).order_by('data_consulta').first()
 
-    vacinas = Vacina.objects.filter(pet=pet).order_by('-data_aplicacao')
+    vacinas = models.Vacina.objects.filter(pet=pet).order_by('-data_aplicacao')
 
     list_personalidades = pet.personalidade.split(
         ',') if pet.personalidade else []
