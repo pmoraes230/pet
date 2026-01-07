@@ -10,19 +10,16 @@
 
         <!-- Conteúdo rolável -->
         <div class="flex-1 overflow-y-auto p-6 md:p-10 pb-24">
-
             <div class="max-w-5xl mx-auto">
 
                 <!-- Cabeçalho do Perfil -->
                 <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 mb-8">
                     <div class="flex flex-col md:flex-row items-center md:items-start gap-8">
-                        <div
-                            class="w-32 h-32 rounded-full overflow-hidden border-4 border-brand-purple/20 flex-shrink-0">
+                        <div class="w-32 h-32 rounded-full overflow-hidden border-4 border-brand-purple/20 flex-shrink-0">
                             {% if tutor.imagem_perfil_tutor %}
-                            <img src="{{ tutor.imagem_perfil_tutor.url }}" alt="{{ tutor.nome }}">
+                                <img src="{{ tutor.imagem_perfil_tutor.url }}" alt="{{ tutor.nome_tutor }}" class="w-full h-full object-cover">
                             {% else %}
-                            <img src="{% static "icons/image_user_default.svg" %}" alt="Foto do tutor"
-                                class="w-full h-full object-cover">
+                                <img src="{% static 'icons/image_user_default.svg' %}" alt="Foto do tutor" class="w-full h-full object-cover">
                             {% endif %}
                         </div>
 
@@ -30,20 +27,18 @@
                             <h2 class="text-3xl font-bold text-gray-900">{{ tutor.nome_tutor }}</h2>
                             <p class="text-gray-500 mt-1">
                                 {% if tutor.date_joined %}
-                                Tutor cadastrado desde {{ tutor.date_joined|date:"d \\d\\e F \\d\\e Y" }}
+                                    Tutor cadastrado desde {{ tutor.date_joined|date:"d \\d\\e F \\d\\e Y" }}
                                 {% else %}
-                                Tutor ativo
+                                    Tutor ativo
                                 {% endif %}
                             </p>
 
                             <div class="flex flex-wrap gap-3 mt-5 justify-center md:justify-start">
-                                <span
-                                    class="px-4 py-2 bg-brand-purple/10 text-brand-purple rounded-full text-sm font-medium flex items-center gap-2">
+                                <span class="px-4 py-2 bg-brand-purple/10 text-brand-purple rounded-full text-sm font-medium flex items-center gap-2">
                                     <i data-lucide="mail" class="w-4 h-4"></i>
                                     {{ tutor.email }}
                                 </span>
-                                <span
-                                    class="px-4 py-2 bg-brand-teal/10 text-brand-teal rounded-full text-sm font-medium flex items-center gap-2">
+                                <span class="px-4 py-2 bg-brand-teal/10 text-brand-teal rounded-full text-sm font-medium flex items-center gap-2">
                                     <i data-lucide="phone" class="w-4 h-4"></i>
                                     {{ tutor.telefone|default:"Não informado" }}
                                 </span>
@@ -51,8 +46,7 @@
                         </div>
 
                         <div class="mt-4 md:mt-0">
-                            <a href="{% url "edicao_perfil_tutor" %}"
-                                class="inline-flex items-center gap-2 px-5 py-3 bg-brand-purple text-white rounded-xl hover:bg-brand-purple/90 transition-colors font-medium">
+                            <a href="#" class="inline-flex items-center gap-2 px-5 py-3 bg-brand-purple text-white rounded-xl hover:bg-brand-purple/90 transition-colors font-medium">
                                 <i data-lucide="edit-3" class="w-5 h-5"></i>
                                 Editar Perfil
                             </a>
@@ -65,56 +59,59 @@
 
                     <!-- Card Dados Pessoais -->
                     <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                        <h3 class="text-lg font-bold text-gray-800 mb-5 flex items-center gap-2">
+                        <div class="flex items-center gap-2 mb-5">
                             <i data-lucide="user" class="w-5 h-5 text-brand-purple"></i>
-                            Dados Pessoais
-                        </h3>
+                            <h3 class="text-lg font-bold text-gray-800">Dados Pessoais</h3>
+                        </div>
                         <div class="space-y-4 text-sm">
                             <div class="flex justify-between py-2 border-b border-gray-100">
                                 <span class="text-gray-500">CPF</span>
                                 <span class="font-medium text-gray-900">
                                     {% if tutor.cpf %}
-                                    {{ tutor.cpf }}
+                                        {{ tutor.cpf }}
                                     {% else %}
-                                    <span class="text-gray-400">Não informado</span>
+                                        <span class="text-gray-400">Não informado</span>
                                     {% endif %}
                                 </span>
                             </div>
                             <div class="flex justify-between py-2 border-b border-gray-100">
                                 <span class="text-gray-500">Data de Nascimento</span>
                                 <span class="font-medium text-gray-900">
-                                    {{ tutor.data_nascimento|date:"d/m/Y" }}
+                                    {% if tutor.data_nascimento %}
+                                        {{ tutor.data_nascimento|date:"d/m/Y" }}
+                                    {% else %}
+                                        <span class="text-gray-400">Não informado</span>
+                                    {% endif %}
                                 </span>
                             </div>
                             <div class="flex justify-between py-2 border-b border-gray-100">
                                 <span class="text-gray-500">Endereço</span>
-                                <span class="font-medium text-gray-900">{{ tutor.endereco }}</span>
+                                <span class="font-medium text-gray-900">{{ tutor.endereco|default:"Não informado" }}</span>
                             </div>
                         </div>
                     </div>
 
                     <!-- Card Meus Pets (resumo) -->
                     <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                        <h3 class="text-lg font-bold text-gray-800 mb-5 flex items-center gap-2">
+                        <div class="flex items-center gap-2 mb-5">
                             <i data-lucide="paw-print" class="w-5 h-5 text-brand-teal"></i>
-                            Meus Pets
-                        </h3>
+                            <h3 class="text-lg font-bold text-gray-800">Meus Pets</h3>
+                        </div>
                         <div class="space-y-4">
                             {% for pet in tutor.pet_set.all %}
-                            <div class="flex items-center gap-4">
-                                <div class="w-12 h-12 rounded-xl overflow-hidden">
-                                    <img src="{{ pet.foto.url|default:'https://via.placeholder.com/150' }}"
-                                        alt="{{ pet.nome }}" class="w-full h-full object-cover">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 rounded-xl overflow-hidden">
+                                        <img src="{{ pet.foto.url|default:'https://via.placeholder.com/150' }}" alt="{{ pet.nome }}" class="w-full h-full object-cover">
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="font-semibold text-gray-900">{{ pet.nome }}</p>
+                                        <p class="text-xs text-gray-500">
+                                            {{ pet.raca }} • {{ pet.idade }} ano{{ pet.idade|pluralize }}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div class="flex-1">
-                                    <p class="font-semibold text-gray-900">{{ pet.nome }}</p>
-                                    <p class="text-xs text-gray-500">
-                                        {{ pet.raca }} • {{ pet.idade }} ano{{ pet.idade|pluralize }}
-                                    </p>
-                                </div>
-                            </div>
                             {% empty %}
-                            <p class="text-gray-500 text-sm">Nenhum pet cadastrado ainda.</p>
+                                <p class="text-gray-500 text-sm">Nenhum pet cadastrado ainda.</p>
                             {% endfor %}
                         </div>
                         <a href="#" class="mt-5 inline-block text-brand-purple font-medium text-sm hover:underline">
@@ -126,10 +123,10 @@
 
                 <!-- Card Segurança -->
                 <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                    <h3 class="text-lg font-bold text-gray-800 mb-5 flex items-center gap-2">
+                    <div class="flex items-center gap-2 mb-5">
                         <i data-lucide="shield" class="w-5 h-5 text-brand-purple"></i>
-                        Segurança da Conta
-                    </h3>
+                        <h3 class="text-lg font-bold text-gray-800">Segurança da Conta</h3>
+                    </div>
                     <div class="flex flex-col sm:flex-row gap-4">
                         <a href="#"
                             class="flex-1 text-center px-6 py-4 border border-gray-200 rounded-xl hover:border-brand-purple hover:bg-brand-purple/5 transition-colors font-medium">

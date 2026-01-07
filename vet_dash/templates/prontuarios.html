@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="bg-gray-50 flex h-screen overflow-hidden">
+    <!-- Sidebar -->
+    {% include "partials/aside/aside_vet.html" %}
+
+    <main class="flex-1 flex flex-col overflow-hidden">
+        <!-- Header -->
+        {% include "partials/header/header_vet.html" %}
+
+        <div class="flex-1 p-6 md:p-10 overflow-y-auto">
+            
+            <form method="POST" class="max-w-7xl mx-auto">
+                {% csrf_token %}
+                
+                <!-- Cabeçalho do Prontuário -->
+                <div class="flex justify-between items-start mb-8">
+                    <div>
+                        <h2 class="text-3xl font-black text-gray-800 tracking-tight">Prontuário eletrônico</h2>
+                        
+                        <!-- Seletor de Paciente -->
+                        <div class="mt-4 flex items-center gap-3">
+                            <label class="font-bold text-gray-400">Consulta atual:</label>
+                            <select onchange="location = final_url(this.value);" class="bg-transparent border-none font-black text-gray-800 focus:ring-0 cursor-pointer text-lg p-0">
+                                <option value="">Selecione um paciente...</option>
+                                {% for p in pacientes %}
+                                    <option value="{{ p.id }}" {% if pet_selecionado.id == p.id %}selected{% endif %}>
+                                        {{ p.nome|lower }} ({{ p.raca|lower }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Botão Salvar (Lilás como na imagem) -->
+                    <button type="submit" class="bg-[#9F67FF] hover:bg-[#8b55e6] text-white px-10 py-4 rounded-2xl font-black transition-all shadow-lg shadow-purple-100">
+                        Salvar prontuário
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                    
+                    <!-- Coluna Principal: Anotações -->
+                    <div class="lg:col-span-2">
+                        <label class="block text-xl font-black text-gray-800 mb-4">Anotações</label>
+                        <div class="relative">
+                            <textarea 
+                                name="anotacoes"
+                                placeholder="Digite aqui as observações, sintomas, temperatura, peso e procedimento realizados durante a consulta..."
+                                class="w-full h-[600px] bg-[#E8E8E8] border-2 border-gray-300 rounded-[40px] p-10 font-bold text-gray-700 placeholder-gray-400 focus:ring-2 focus:ring-[#9F67FF] focus:bg-white outline-none transition-all resize-none shadow-inner"
+                            ></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Coluna Lateral: Histórico/Infos Rápidas -->
+                    <div class="space-y-6">
+                        <label class="block text-xl font-black text-gray-800 mb-4 opacity-0">Espaço</label>
+                        <div class="bg-white border-2 border-gray-200 rounded-[40px] h-[500px] p-8 shadow-sm">
+                            <h4 class="font-black text-gray-400 uppercase text-xs tracking-widest mb-6">Últimos registros</h4>
+                            
+                            <!-- Exemplo de item de histórico -->
+                            <div class="space-y-6">
+                                <p class="text-gray-300 font-bold italic text-center py-20">
+                                    Selecione um paciente para ver o histórico anterior...
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+
+<script>
+    lucide.createIcons();
+
+    // Função para mudar o pet na URL ao selecionar no dropdown
+    function final_url(id) {
+        if (!id) return "/vet_dash/prontuarios/";
+        return "?pet_id=" + id;
+    }
+</script>
+
+<style>
+    /* Estilo para a barra de rolagem do textarea para ficar elegante */
+    textarea::-webkit-scrollbar {
+        width: 10px;
+    }
+    textarea::-webkit-scrollbar-track {
+        background: transparent;
+        margin: 30px;
+    }
+    textarea::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 10px;
+    }
+</style>
+{% endblock %}
