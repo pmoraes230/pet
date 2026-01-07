@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block content %}
+<div class="bg-gray-50 flex h-screen overflow-hidden">
+    {% include "partials/aside/aside_tutor.html" %}
+
+    <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+        {% include "partials/header/header_tutor.html" %}
+
+        <div class="flex-1 overflow-y-auto p-6 md:p-10 pb-24">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="text-2xl font-bold text-gray-800 mb-8 flex items-center gap-3">
+                    <i data-lucide="settings" class="w-7 h-7 text-brand-purple"></i>
+                    Configurações da Conta
+                </h2>
+
+                <div class="space-y-6">
+
+                    <!-- Idioma -->
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-brand-purple/10 rounded-xl flex items-center justify-center">
+                                    <i data-lucide="globe" class="w-6 h-6 text-brand-purple"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-gray-900">Idioma</h3>
+                                    <p class="text-sm text-gray-500">Escolha o idioma da plataforma</p>
+                                </div>
+                            </div>
+                            <select onchange="mudarIdioma(this.value)"
+                                class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-purple focus:border-transparent">
+                                <option value="pt-br">
+                                    Português (Brasil)
+                                </option>
+                                <option value="en">
+                                    English
+                                </option>
+                                <option value="es">
+                                    Español
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Notificações -->
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                        <div class="flex items-center justify-between mb-5">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-brand-teal/10 rounded-xl flex items-center justify-center">
+                                    <i data-lucide="bell" class="w-6 h-6 text-brand-teal"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-gray-900">Notificações</h3>
+                                    <p class="text-sm text-gray-500">Gerencie como você recebe alertas</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <label class="flex items-center justify-between cursor-pointer">
+                                <span class="text-sm font-medium text-gray-700">Notificações por e-mail</span>
+                                <input type="checkbox" checked
+                                    class="w-5 h-5 text-brand-purple rounded focus:ring-brand-purple">
+                            </label>
+                            <label class="flex items-center justify-between cursor-pointer">
+                                <span class="text-sm font-medium text-gray-700">Lembretes de vacinas</span>
+                                <input type="checkbox" checked
+                                    class="w-5 h-5 text-brand-purple rounded focus:ring-brand-purple">
+                            </label>
+                            <label class="flex items-center justify-between cursor-pointer">
+                                <span class="text-sm font-medium text-gray-700">Dicas semanais de cuidados</span>
+                                <input type="checkbox"
+                                    class="w-5 h-5 text-brand-purple rounded focus:ring-brand-purple">
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Privacidade -->
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                        <div class="flex items-center gap-4 mb-5">
+                            <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
+                                <i data-lucide="shield" class="w-6 h-6 text-yellow-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-900">Privacidade e Segurança</h3>
+                                <p class="text-sm text-gray-500">Controle quem vê seus dados</p>
+                            </div>
+                        </div>
+                        <div class="space-y-3">
+                            <a href="#"
+                                class="block px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-between">
+                                <span class="font-medium">Alterar senha</span>
+                                <i data-lucide="chevron-right" class="w-5 h-5 text-gray-400"></i>
+                            </a>
+                            <a href="#"
+                                class="block px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-between">
+                                <span class="font-medium">Autenticação em duas etapas</span>
+                                <span class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full">Em breve</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Desativar Conta (perigoso → destaque vermelho) -->
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-red-200">
+                        <div class="flex items-start gap-4">
+                            <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <i data-lucide="alert-triangle" class="w-6 h-6 text-red-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="font-semibold text-gray-900">Desativar conta</h3>
+                                <p class="text-sm text-gray-600 mt-1">
+                                    Ao desativar sua conta, você perderá acesso permanente a todos os seus pets,
+                                    registros e histórico.
+                                    Essa ação <strong>não pode ser desfeita</strong>.
+                                </p>
+                    
+                                <button type="button" onclick="abrirModal()"
+                                    class="mt-4 px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium">
+                                    Desativar minha conta
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="modalDesativar" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
+                <div class="text-center mb-6">
+                    <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="alert-octagon" class="w-12 h-12 text-red-600"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900">Tem certeza absoluta?</h3>
+                    <p class="text-gray-600 mt-3 leading-relaxed">
+                        Sua conta será <strong>desativada permanentemente</strong>.<br>
+                        Todos os pets, vacinas, consultas e histórico serão perdidos.<br><br>
+                        <strong class="text-red-600">Essa ação não pode ser desfeita.</strong>
+                    </p>
+                </div>
+        
+                <div class="flex gap-4 justify-center mt-8">
+                    <button onclick="fecharModal()"
+                        class="px-8 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 transition font-medium text-gray-700">
+                        Cancelar
+                    </button>
+        
+                    <form method="post" action="{% url 'desativar_conta' %}" class="inline">
+                        {% csrf_token %}
+                        <button type="submit"
+                            class="px-8 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition font-medium">
+                            Sim, desativar conta
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script>
+    const modal = document.getElementById('modalDesativar');
+
+    function abrirModal() {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden'; // impede scroll da página
+    }
+
+    function fecharModal() {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+
+    // Fechar com ESC
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+            fecharModal();
+        }
+    });
+
+    // Fechar clicando fora do modal
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            fecharModal();
+        }
+    });
+
+    // Ícones Lucide (mantido)
+    document.addEventListener('DOMContentLoaded', () => {
+        lucide.createIcons();
+    });
+</script>
+{% endblock %}

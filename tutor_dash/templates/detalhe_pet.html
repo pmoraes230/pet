@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="bg-gray-50 flex h-screen overflow-hidden">
+    {% include "partials/aside/aside_tutor.html" %}
+    
+    <main class="flex-1 flex flex-col overflow-hidden relative">
+        {% include "partials/header/header_tutor.html" %}
+
+        <div class="flex-1 overflow-y-auto p-6 md:p-10">
+            <div class="max-w-7xl mx-auto">
+                <form method="POST" enctype="multipart/form-data" class="flex flex-col lg:flex-row gap-10">
+                    {% csrf_token %}
+        
+                    <div class="w-full lg:w-[380px] flex flex-col gap-6">
+                        
+                        <div class="bg-white rounded-[2.5rem] shadow-sm p-6 flex flex-col items-center border border-gray-100">
+                            <div class="w-full h-56 rounded-[2rem] overflow-hidden mb-4 relative group bg-gray-50">
+                                {% if pet.imagem %}
+                                    <img src="{{ pet.imagem.url }}" class="w-full h-full object-cover">
+                                {% else %}
+                                    <img src="{% static 'images/default-pet.png' %}" class="w-full h-full object-cover">
+                                {% endif %}
+                                <label class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                                    <span class="text-white font-bold">Alterar Foto</span>
+                                    <input type="file" name="imagem" class="hidden">
+                                </label>
+                            </div>
+        
+                            <h2 class="text-3xl font-black text-gray-800">{{ pet.nome|default:"Nome do Pet" }}</h2>
+                            <p class="text-gray-400 font-bold mb-6">{{ pet.raca|default:"Vira-lata" }}</p>
+        
+                            <div class="flex gap-4 w-full">
+                                <div class="bg-[#DCD0FF] rounded-2xl p-4 flex-1 text-center">
+                                    <p class="text-purple-900 text-xs font-bold uppercase mb-1">Peso</p>
+                                    <input type="text" name="peso" value="{{ pet.peso|default:'' }}" placeholder="12.5 kg" 
+                                           class="bg-transparent font-black text-xl w-full text-center focus:outline-none text-purple-950">
+                                </div>
+                                <div class="bg-[#BDEBFF] rounded-2xl p-4 flex-1 text-center">
+                                    <p class="text-blue-900 text-xs font-bold uppercase mb-1">Sexo</p>
+                                    <select name="sexo" class="bg-transparent font-black text-xl w-full text-center focus:outline-none text-blue-950 appearance-none cursor-pointer">
+                                        <option value="Macho" {% if pet.sexo == 'Macho' %}selected{% endif %}>Macho</option>
+                                        <option value="Femea" {% if pet.sexo == 'Femea' %}selected{% endif %}>Fêmea</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+        
+                        <div class="bg-[#8B5CF6] rounded-[2.5rem] p-8 text-white relative shadow-lg shadow-purple-100">
+                            <p class="font-bold text-lg opacity-80">Próxima consulta</p>
+                            <h3 class="text-4xl font-black my-3">{{ proxima_consulta.data_consulta|date:"d - M"|default:"---" }}</h3>
+                            <p class="font-bold text-lg opacity-90">{{ proxima_consulta.tipo_de_consulta|default:"Sem agendamentos" }}</p>
+                            <div class="absolute top-8 right-8 w-10 h-10 bg-white/20 rounded-xl"></div>
+                        </div>
+                    </div>
+        
+                    <div class="flex-1 bg-white rounded-[2.5rem] shadow-sm p-8 border border-gray-100 min-h-[600px] flex flex-col">
+                        
+                        <div class="flex bg-gray-100 rounded-full p-1.5 w-fit mb-10">
+                            <button type="button" onclick="switchTab('sobre')" id="btn-sobre" class="tab-btn active px-10 py-2.5 font-bold transition-all">Sobre</button>
+                            <button type="button" onclick="switchTab('saude')" id="btn-saude" class="tab-btn inactive px-10 py-2.5 font-bold transition-all">Saúde</button>
+                        </div>
+        
+                        <div id="tab-sobre" class="tab-content active flex-1">
+                            <div class="space-y-8">
+                                <div>
+                                    <h3 class="text-xl font-black mb-4 text-gray-800">Sobre o {{ pet.nome }}:</h3>
+                                    <textarea name="descricao" rows="5" 
+                                              class="w-full bg-gray-50 border-none rounded-2xl p-6 text-gray-700 font-medium focus:ring-2 focus:ring-purple-400 transition-all" 
+                                              placeholder="Conte um pouco sobre o seu pet...">{{ pet.descricao|default:'' }}</textarea>
+                                </div>
+        
+                                <div>
+                                    <div class="flex items-center justify-between mb-4">
+                                        <h3 class="text-xl font-black text-gray-800">Personalidade</h3>
+                                        <button type="button" onclick="openModal()" class="text-purple-600 font-bold text-sm hover:underline">+ Editar</button>
+                                    </div>
+                                    <div id="personality-container" class="flex flex-wrap gap-3">
+                                        {% if list_personalidades %}
+                                            {% for p in list_personalidades %}
+                                                <span class="bg-[#FEF3C7] text-yellow-800 px-6 py-2 rounded-full font-bold">{{ p }}</span>
+                                            {% endfor %}
+                                        {% else %}
+                                            <p class="text-gray-400 italic">Nenhuma característica selecionada.</p>
+                                        {% endif %}
+                                    </div>
+                                    <input type="hidden" name="personalidade" id="personalidades_input" value="{{ pet.personalidade|default:'' }}">
+                                </div>
+        
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="text-xs font-bold text-gray-400 uppercase">Espécie</label>
+                                        <input type="text" name="especie" value="{{ pet.especie }}" class="w-full bg-gray-50 p-4 rounded-xl border-none font-bold text-gray-700 mt-1">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-bold text-gray-400 uppercase">Raça</label>
+                                        <input type="text" name="raca" value="{{ pet.raca }}" class="w-full bg-gray-50 p-4 rounded-xl border-none font-bold text-gray-700 mt-1">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+        
+                        <div id="tab-saude" class="tab-content flex-1">
+                            <div class="flex items-center justify-between mb-8">
+                                <h3 class="text-xl font-black text-gray-800">Carteira de vacinação</h3>
+                                <button type="button" class="text-purple-600 font-bold hover:underline">+ Adicionar registro</button>
+                            </div>
+        
+                            <div class="space-y-4">
+                                {% for v in vacinas %}
+                                <div class="flex items-center justify-between p-6 border border-gray-100 rounded-[2rem] hover:bg-gray-50 transition-all">
+                                    <div class="flex items-center gap-5">
+                                        <div class="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center text-2xl shadow-inner">💉</div>
+                                        <div>
+                                            <h4 class="font-black text-gray-800 text-xl">{{ v.nome }}</h4>
+                                            <p class="text-gray-500 font-bold">Aplicada em: <span class="text-gray-800">{{ v.data_aplicacao|date:"d/m/Y" }}</span></p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Próxima dose</p>
+                                        <p class="text-purple-600 font-black text-xl">{{ v.proxima_dose|date:"d/m/Y" }}</p>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <div class="text-center py-20 border-2 border-dashed border-gray-100 rounded-[2rem]">
+                                    <p class="text-gray-400 font-bold italic">Nenhuma vacina registrada para este pet.</p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+        
+                        <div class="mt-auto pt-10 flex justify-end">
+                            <button type="submit" class="bg-purple-600 text-white font-black py-4 px-12 rounded-2xl hover:bg-purple-700 transition shadow-lg shadow-purple-100">
+                                Salvar alterações
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div id="modal-personalidade" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-[2.5rem] p-8 max-w-md w-full shadow-2xl">
+        <h3 class="text-2xl font-black mb-6 text-gray-800 text-center">Como é o seu pet?</h3>
+        
+        <div class="grid grid-cols-2 gap-3 mb-8">
+            <button type="button" onclick="toggleTrait(this)" class="trait-opt border-2 border-gray-100 rounded-full py-2.5 px-4 font-bold text-gray-500 hover:border-purple-200 transition-all">Brincalhão</button>
+            <button type="button" onclick="toggleTrait(this)" class="trait-opt border-2 border-gray-100 rounded-full py-2.5 px-4 font-bold text-gray-500 hover:border-purple-200 transition-all">Protetor</button>
+            <button type="button" onclick="toggleTrait(this)" class="trait-opt border-2 border-gray-100 rounded-full py-2.5 px-4 font-bold text-gray-500 hover:border-purple-200 transition-all">Guloso</button>
+            <button type="button" onclick="toggleTrait(this)" class="trait-opt border-2 border-gray-100 rounded-full py-2.5 px-4 font-bold text-gray-500 hover:border-purple-200 transition-all">Calmo</button>
+            <button type="button" onclick="toggleTrait(this)" class="trait-opt border-2 border-gray-100 rounded-full py-2.5 px-4 font-bold text-gray-500 hover:border-purple-200 transition-all">Agitado</button>
+            <button type="button" onclick="toggleTrait(this)" class="trait-opt border-2 border-gray-100 rounded-full py-2.5 px-4 font-bold text-gray-500 hover:border-purple-200 transition-all">Curioso</button>
+            <button type="button" onclick="toggleTrait(this)" class="trait-opt border-2 border-gray-100 rounded-full py-2.5 px-4 font-bold text-gray-500 hover:border-purple-200 transition-all">Dorminhoco</button>
+            <button type="button" onclick="toggleTrait(this)" class="trait-opt border-2 border-gray-100 rounded-full py-2.5 px-4 font-bold text-gray-500 hover:border-purple-200 transition-all">Sociável</button>
+        </div>
+
+        <div class="flex gap-4">
+            <button type="button" onclick="closeModal()" class="flex-1 bg-gray-100 text-gray-500 font-bold py-4 rounded-2xl hover:bg-gray-200 transition-all">Cancelar</button>
+            <button type="button" onclick="saveTraits()" class="flex-1 bg-purple-600 text-white font-bold py-4 rounded-2xl hover:bg-purple-700 transition-all">Confirmar</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .tab-btn.active { background-color: #7C3AED; color: white; border-radius: 9999px; }
+    .tab-btn.inactive { background-color: transparent; color: #6B7280; }
+</style>
+
+<script>
+function switchTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.replace('active', 'inactive');
+    });
+
+    document.getElementById('tab-' + tab).classList.add('active');
+    document.getElementById('btn-' + tab).classList.replace('inactive', 'active');
+}
+
+function openModal() { document.getElementById('modal-personalidade').classList.remove('hidden'); }
+function closeModal() { document.getElementById('modal-personalidade').classList.add('hidden'); }
+
+function toggleTrait(btn) {
+    btn.classList.toggle('is-selected');
+    btn.classList.toggle('bg-purple-50');
+    btn.classList.toggle('border-purple-400');
+    btn.classList.toggle('text-purple-700');
+}
+
+function saveTraits() {
+    const selected = document.querySelectorAll('.trait-opt.is-selected');
+    const container = document.getElementById('personality-container');
+    const inputOculto = document.getElementById('personalidades_input');
+    
+    container.innerHTML = '';
+    let traitsList = [];
+
+    selected.forEach(btn => {
+        traitsList.push(btn.innerText);
+        const span = document.createElement('span');
+        span.className = 'bg-[#FEF3C7] text-yellow-800 px-6 py-2 rounded-full font-bold';
+        span.innerText = btn.innerText;
+        container.appendChild(span);
+    });
+
+    inputOculto.value = traitsList.join(',');
+    closeModal();
+}
+</script>
+{% endblock %}

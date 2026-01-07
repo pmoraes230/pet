@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="bg-gray-50 flex h-screen overflow-hidden">
+    <!-- Sidebar do Veterinário -->
+    {% include "partials/aside/aside_vet.html" %}
+
+    <main class="flex-1 flex flex-col overflow-hidden">
+        <!-- Header fixo -->
+        {% include "partials/header/header_vet.html" %}
+
+        <div class="flex-1 p-6 md:p-10 overflow-y-auto">
+            
+            <!-- Header da Página -->
+            <div class="flex justify-between items-end mb-8">
+                <div>
+                    <h2 class="text-3xl font-black text-gray-800 tracking-tight">Agenda de Consultas</h2>
+                    <p class="text-gray-500 font-medium">Gerencie seus horários e procedimentos</p>
+                </div>
+                <!-- BOTÃO QUE ABRE O MODAL -->
+                <button onclick="toggleModal()" class="bg-[#26C2B9] hover:bg-[#1eb0a8] text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-sm">
+                    <i data-lucide="plus" width="20" height="20"></i>
+                    Agendar Consulta
+                </button>
+            </div>
+
+            <!-- Calendário Strip -->
+            <div class="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100 mb-10">
+                <div class="flex items-center gap-4 mb-6">
+                    <h3 class="text-xl font-black text-gray-800">{{ mes_atual }} {{ ano_atual }}</h3>
+                    <div class="flex gap-4">
+                        <a href="?data={{ data_anterior }}" class="p-1 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-[#26C2B9]">
+                            <i data-lucide="chevron-left" width="24" height="24"></i>
+                        </a>
+                        <a href="?data={{ data_proxima }}" class="p-1 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-[#26C2B9]">
+                            <i data-lucide="chevron-right" width="24" height="24"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-7 gap-4">
+                    {% for dia in dias_semana %}
+                    <a href="?data={{ dia.data_completa }}" class="p-4 rounded-3xl text-center border transition-all 
+                        {% if dia.selecionado %} 
+                            bg-[#26C2B9] text-white border-[#26C2B9] shadow-xl shadow-teal-100 scale-105
+                        {% elif dia.hoje %}
+                            bg-teal-50 text-[#26C2B9] border-[#26C2B9] border-dashed
+                        {% else %} 
+                            bg-gray-50 text-gray-400 border-gray-50 hover:border-teal-200
+                        {% endif %}">
+                        <span class="block text-xs font-black uppercase mb-1 tracking-widest">{{ dia.nome }}</span>
+                        <span class="text-2xl font-black">{{ dia.num }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <h3 class="text-xl font-black text-gray-800 mb-6">Compromissos</h3>
+
+            <div class="space-y-4 pb-20">
+                {% for c in agenda %}
+                <div class="bg-white p-6 rounded-[35px] shadow-sm flex items-center gap-8 border border-transparent hover:border-teal-200 transition-all group">
+                    
+                    <!-- Horário -->
+                    <div class="text-center border-r border-gray-100 pr-8 min-w-[100px]">
+                        <span class="block text-xs font-black text-gray-400 uppercase tracking-tighter">{{ c.data_consulta|date:"d M" }}</span>
+                        <span class="text-2xl font-black text-gray-800">{{ c.horario_consulta|time:"H:i" }}</span>
+                    </div>
+                    
+                    <!-- Informações da Consulta -->
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3">
+                            <h4 class="text-2xl font-black text-gray-800 group-hover:text-[#26C2B9] transition-colors">{{ c.tipo_de_consulta }}</h4>
+                            
+                            <!-- Status Badge -->
+                            <span class="text-[10px] px-2 py-0.5 rounded-md font-bold uppercase 
+                                {% if c.status == 'Confirmado' %} bg-green-100 text-green-600 
+                                {% elif c.status == 'Cancelado' %} bg-red-100 text-red-600 
+                                {% else %} bg-blue-100 text-blue-600 {% endif %}">
+                                {{ c.status }}
+                            </span>
+                        </div>
+                        
+                        <div class="flex items-center gap-4 mt-2 text-gray-500 font-bold text-sm">
+                            <span class="text-[#26C2B9] flex items-center gap-1">
+                                <i data-lucide="dog" width="14"></i> {{ c.pet.nome }}
+                            </span>
+                            <span class="flex items-center gap-1.5">
+                                <i data-lucide="user" width="14"></i> Tutor: {{ c.pet.tutor.nome_tutor }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Ações -->
+                    <div class="flex gap-2">
+                        <a href="#" class="bg-gray-50 text-gray-400 p-4 rounded-3xl hover:bg-[#26C2B9] hover:text-white transition-all shadow-sm">
+                            <i data-lucide="eye" size="24"></i>
+                        </a>
+                        <a href="#" class="bg-gray-50 text-gray-400 p-4 rounded-3xl hover:bg-blue-500 hover:text-white transition-all shadow-sm">
+                            <i data-lucide="edit-3" size="24"></i>
+                        </a>
+                    </div>
+                </div>
+                {% empty %}
+                <!-- Estado Vazio -->
+                <div class="text-center py-20 bg-white rounded-[40px] border-2 border-dashed border-gray-200">
+                    <i data-lucide="calendar-x" class="mx-auto text-gray-300 mb-4" size="48"></i>
+                    <p class="text-gray-400 font-bold italic">Nenhuma consulta agendada para este período.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- ============================================================== -->
+<!-- MODAL DE AGENDAMENTO (POP-UP) -->
+<!-- ============================================================== -->
+<div id="modalAgendamento" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    
+    <div class="bg-white w-full max-w-lg rounded-[40px] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+        
+        <!-- Header do Modal -->
+        <div class="p-8 border-b border-gray-100 flex justify-between items-center bg-white">
+            <div>
+                <h3 class="text-2xl font-black text-gray-800">Novo Agendamento</h3>
+                <p class="text-gray-500 font-medium text-sm">Preencha os detalhes da consulta</p>
+            </div>
+            <button onclick="toggleModal()" class="bg-gray-100 p-2 rounded-full text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors">
+                <i data-lucide="x" width="24" height="24"></i>
+            </button>
+        </div>
+
+        <!-- Formulário -->
+        <form action="#" method="POST" class="p-8 space-y-6">
+            {% csrf_token %}
+            
+            <!-- Selecionar Pet -->
+            <div>
+                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Paciente (Pet)</label>
+                <select name="pet" required class="w-full bg-gray-100 border-none rounded-2xl py-4 px-4 font-bold text-gray-700 focus:ring-2 focus:ring-[#26C2B9] transition-all outline-none">
+                    <option value="" disabled selected>Selecione o animal...</option>
+                    {% for p in pacientes %}
+                        <option value="{{ p.id }}">{{ p.nome }} ({{ p.tutor.nome_tutor }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <!-- Data -->
+                <div>
+                    <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Data</label>
+                    <input type="date" name="data" required class="w-full bg-gray-100 border-none rounded-2xl py-4 px-4 font-bold text-gray-700 focus:ring-2 focus:ring-[#26C2B9] outline-none">
+                </div>
+                <!-- Hora -->
+                <div>
+                    <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Horário</label>
+                    <input type="time" name="hora" required class="w-full bg-gray-100 border-none rounded-2xl py-4 px-4 font-bold text-gray-700 focus:ring-2 focus:ring-[#26C2B9] outline-none">
+                </div>
+            </div>
+
+            <!-- Tipo de Serviço -->
+            <div>
+                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Tipo de Serviço</label>
+                <select name="tipo" required class="w-full bg-gray-100 border-none rounded-2xl py-4 px-4 font-bold text-gray-700 focus:ring-2 focus:ring-[#26C2B9] outline-none">
+                    <option value="Consulta Geral">Consulta Geral</option>
+                    <option value="Vacinação">Vacinação</option>
+                    <option value="Cirurgia">Cirurgia</option>
+                    <option value="Retorno">Retorno</option>
+                    <option value="Exame de Sangue">Exame de Sangue</option>
+                </select>
+            </div>
+
+            <!-- Observações -->
+            <div>
+                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Observações</label>
+                <textarea name="obs" rows="3" placeholder="Sintomas ou notas extras..." class="w-full bg-gray-100 border-none rounded-[25px] py-4 px-4 font-bold text-gray-700 focus:ring-2 focus:ring-[#26C2B9] outline-none resize-none"></textarea>
+            </div>
+
+            <!-- Botões de Ação -->
+            <div class="flex gap-4 pt-2">
+                <button type="button" onclick="toggleModal()" class="flex-1 py-4 bg-gray-100 text-gray-500 rounded-2xl font-black hover:bg-gray-200 transition-colors">
+                    Cancelar
+                </button>
+                <button type="submit" class="flex-1 py-4 bg-[#26C2B9] text-white rounded-2xl font-black hover:bg-[#1eb0a8] shadow-lg shadow-teal-100 transition-all">
+                    Confirmar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    lucide.createIcons();
+
+    function toggleModal() {
+        const modal = document.getElementById('modalAgendamento');
+        modal.classList.toggle('hidden');
+    }
+
+    // Fecha o modal ao clicar no fundo escuro
+    window.onclick = function(event) {
+        const modal = document.getElementById('modalAgendamento');
+        if (event.target == modal) {
+            toggleModal();
+        }
+    }
+</script>
+
+{% endblock %}

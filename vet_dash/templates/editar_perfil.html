@@ -3,10 +3,10 @@
 
 {% block content %}
 <div class="bg-gray-50 flex h-screen overflow-hidden">
-    {% include "partials/aside/aside_tutor.html" %}
+    {% include "partials/aside/aside_veterinario.html" %}
     
     <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
-        {% include "partials/header/header_tutor.html" %}
+        {% include "partials/header/header_veterinario.html" %}
 
         <div class="flex-1 overflow-y-auto p-6 md:p-10 pb-24">
             <div class="max-w-4xl mx-auto">
@@ -15,13 +15,21 @@
                 <form method="post" class="space-y-8" enctype="multipart/form-data">
                     {% csrf_token %}
 
+                    <!-- Imagem de Perfil -->
                     <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                        <div class="gridgrid-cols-1 md:grid-cols-2 gap-6"> 
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6"> 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Imagem Perfil</label>
-                                <input type="file" name="image_tutor"
+                                <input type="file" name="image_veterinario"
                                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand-purple focus:border-transparent">
-                                <p class="text-brand-purple">Imagem de perfil: {% if tutor.imagem_perfil_tutor %}<img src="{{ tutor.imagem_perfil_tutor.url }}" alt="{{  tutor.nome_tutor }}" style="width: 80px; height: 80px;">{% else %} <img src="{% static "icons/image_user_default.svg" %}" alt="imagem default" style="width: 30px; height: 30px;"> {% endif %}</p>
+                                <p class="text-brand-purple">
+                                    Imagem de perfil: 
+                                    {% if veterinario.imagem_perfil_veterinario %}
+                                        <img src="{{ veterinario.imagem_perfil_veterinario.url }}" alt="{{  veterinario.nome }}" style="width: 80px; height: 80px;">
+                                    {% else %} 
+                                        <img src="{% static "icons/image_user_default.svg" %}" alt="imagem default" style="width: 30px; height: 30px;"> 
+                                    {% endif %}
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -35,29 +43,28 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Nome completo</label>
-                                <input type="text" name="nome_tutor" value="{{ tutor.nome_tutor }}" 
+                                <input type="text" name="nome" value="{{ veterinario.nome }}" 
                                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand-purple focus:border-transparent" required>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">CPF</label>
-                                <input type="text" name="cpf" value="{{ tutor.cpf|default:'' }}" maxlength="14"
-                                       placeholder="Apenas números" 
+                                <label class="block text-sm font-medium text-gray-700 mb-2">E-mail</label>
+                                <input type="email" name="email" value="{{ veterinario.email }}" 
                                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand-purple focus:border-transparent">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Data de Nascimento</label>
-                                <input type="date" name="data_nascimento" value="{{ tutor.data_nascimento|date:'Y-m-d' }}"
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand-purple focus:border-transparent" required>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">CRMV</label>
+                                <input type="text" name="crmv" value="{{ veterinario.crmv }}" 
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand-purple focus:border-transparent">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Endereço</label>
-                                <input type="text" name="endereco" value="{{ tutor.endereco }}"
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand-purple focus:border-transparent" required>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">UF do CRMV</label>
+                                <input type="text" name="uf_crmv" value="{{ veterinario.uf_crmv }}" 
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand-purple focus:border-transparent">
                             </div>
                         </div>
                     </div>
 
-                    <!-- Contatos do Tutor -->
+                    <!-- Contatos do Veterinário -->
                     <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                         <div class="flex justify-between items-center mb-6">
                             <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
@@ -94,7 +101,7 @@
                                            class="w-full px-4 py-2 border border-gray-300 rounded-lg" required>
                                 </div>
                                 <div class="flex items-end">
-                                    <button type="button" onclick="this.parentElement.parentElement.parentElement.remove()"
+                                    <button type="button" onclick="removerContato(this)"
                                             class="text-red-500 hover:bg-red-50 p-3 rounded-lg transition-colors">
                                         <i data-lucide="trash-2" class="w-5 h-5"></i>
                                     </button>
@@ -109,7 +116,7 @@
 
                     <!-- Botões -->
                     <div class="flex justify-end gap-4">
-                        <a href="{% url 'perfil_tutor' %}" class="px-6 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors font-medium">
+                        <a href="{% url 'perfil_veterinario' %}" class="px-6 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors font-medium">
                             Cancelar
                         </a>
                         <button type="submit" class="px-8 py-3 bg-brand-purple text-white rounded-xl hover:bg-brand-purple/90 transition-colors font-medium flex items-center gap-2">
@@ -147,7 +154,7 @@ function adicionarContato() {
                 <input type="text" name="numero" maxlength="9" class="w-full px-4 py-2 border border-gray-300 rounded-lg" required>
             </div>
             <div class="flex items-end">
-                <button type="button" onclick="this.parentElement.parentElement.parentElement.remove()"
+                <button type="button" onclick="removerContato(this)"
                         class="text-red-500 hover:bg-red-50 p-3 rounded-lg transition-colors">
                     <i data-lucide="trash-2" class="w-5 h-5"></i>
                 </button>
@@ -156,6 +163,10 @@ function adicionarContato() {
         </div>`;
     container.insertAdjacentHTML('beforeend', template);
     lucide.createIcons();
+}
+
+function removerContato(btn) {
+    btn.closest('.flex.flex-col.sm\\:flex-row').remove();
 }
 </script>
 {% endblock %}

@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="bg-gray-50 flex flex-col md:flex-row h-screen overflow-hidden">
+    
+    <!-- Sidebar -->
+    {% block aside %}
+        {% include "partials/aside/aside_tutor.html" %}
+    {% endblock %}
+
+    <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+        
+        <!-- Header -->
+        {% block header %}
+            {% include "partials/header/header_tutor.html" %}
+        {% endblock %}
+
+        <!-- Conteúdo Rolável -->
+        <div class="flex-1 overflow-y-auto p-6 md:p-10 pb-24 z-10">
+
+            <!-- Título e Botão -->
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h2 class="text-3xl font-black text-gray-800">Medicamentos</h2>
+                    <p class="text-gray-500 font-medium">Gestão de tratamentos e prevenção</p>
+                </div>
+                <button class="bg-purple-100 text-purple-700 px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-purple-600 hover:text-white transition-all shadow-sm">
+                    <i data-lucide="plus" width="20"></i>
+                    Adicionar medicamento
+                </button>
+            </div>
+
+            <!-- Seções Manhã, Tarde e Noite -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                
+                <!-- Manhã -->
+                <div class="bg-white p-8 rounded-[35px] shadow-sm border border-gray-100 min-h-[180px]">
+                    <div class="flex items-center gap-2 mb-6 text-gray-800 font-bold text-xl">
+                        <i data-lucide="clock" class="text-gray-400"></i> Manhã
+                    </div>
+                    {% for m in meds_manha %}
+                        <div class="mb-2">
+                            <h4 class="text-lg font-black text-gray-800">{{ m.tratamento|default:m.nome }}</h4>
+                            <p class="text-sm text-gray-400 font-bold">{{ m.pet.nome }} . {{ m.horario_consulta|time:"H:i" }}</p>
+                        </div>
+                    {% empty %}
+                        <p class="text-gray-400 text-sm font-bold">Nenhum medicamento agendado</p>
+                    {% endfor %}
+                </div>
+
+                <!-- Tarde -->
+                <div class="bg-white p-8 rounded-[35px] shadow-sm border border-gray-100 min-h-[180px]">
+                    <div class="flex items-center gap-2 mb-6 text-gray-800 font-bold text-xl">
+                        <i data-lucide="clock" class="text-gray-400"></i> Tarde
+                    </div>
+                    {% for t in meds_tarde %}
+                        <div class="mb-2">
+                            <h4 class="text-lg font-black text-gray-800">{{ t.tratamento|default:t.nome }}</h4>
+                            <p class="text-sm text-gray-400 font-bold">{{ t.pet.nome }} . {{ t.horario_consulta|time:"H:i" }}</p>
+                        </div>
+                    {% empty %}
+                        <p class="text-gray-400 text-sm font-bold">Nenhum medicamento agendado</p>
+                    {% endfor %}
+                </div>
+
+                <!-- Noite -->
+                <div class="bg-white p-8 rounded-[35px] shadow-sm border border-gray-100 min-h-[180px]">
+                    <div class="flex items-center gap-2 mb-6 text-purple-600 font-bold text-xl">
+                        <i data-lucide="clock" class="text-purple-400"></i> Noite
+                    </div>
+                    {% for n in meds_noite %}
+                        <div class="mb-4">
+                            <h4 class="text-2xl font-black text-gray-800">{{ n.tratamento|default:n.nome }}</h4>
+                            <p class="text-sm text-gray-400 font-bold">{{ n.pet.nome|lower }} . {{ n.horario_consulta|time:"H:i" }}</p>
+                        </div>
+                    {% empty %}
+                        <p class="text-gray-400 text-sm font-bold">Nenhum medicamento agendado</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Seção: Tratamentos Ativos -->
+            <h3 class="text-2xl font-black text-gray-800 mb-8">Tratamentos Ativos</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {% for t in tratamentos_ativos %}
+                <div class="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100 relative group hover:shadow-md transition-all">
+                    <div class="flex items-start gap-6">
+                        <!-- Ícone Circular -->
+                        <div class="w-16 h-16 rounded-full bg-purple-50 flex items-center justify-center border border-purple-100 shadow-sm">
+                            <i data-lucide="pill" class="text-purple-600 rotate-45" width="28" height="28"></i>
+                        </div>
+                        
+                        <div class="flex-1">
+                            <div class="flex justify-between items-start">
+                                <h4 class="text-2xl font-black text-gray-800">{{ t.tratamento|default:t.nome }}</h4>
+                                <span class="bg-gray-200 text-gray-800 px-3 py-1 rounded-full text-[10px] font-black uppercase">
+                                    {% if t.valor_consulta > 0 %}Mensal{% else %}Diário{% endif %}
+                                </span>
+                            </div>
+                            <p class="text-gray-400 font-bold text-sm mt-1">
+                                {% if t.observacoes %}{{ t.observacoes }}{% else %}Dose única{% endif %} . {{ t.pet.nome }}
+                            </p>
+
+                            <!-- Pills de status -->
+                            <div class="flex gap-3 mt-6">
+                                <span class="px-4 py-1.5 bg-purple-50 text-purple-600 rounded-full text-xs font-bold flex items-center gap-2">
+                                    <i data-lucide="clock" width="14"></i> próxima: Hoje, {{ t.horario_consulta|time:"H:i" }}
+                                </span>
+                                <span class="px-4 py-1.5 bg-orange-50 text-orange-600 rounded-full text-xs font-bold flex items-center gap-2 border border-orange-100">
+                                    <i data-lucide="alert-circle" width="14"></i> Restante 2
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-gray-400 font-bold italic">Nenhum tratamento ativo registrado.</p>
+                {% endfor %}
+            </div>
+
+        </div>
+
+        <!-- Footer Decorativo -->
+        <div class="absolute bottom-0 left-0 w-full overflow-hidden leading-none rotate-180 text-brand-teal pointer-events-none z-0 opacity-40">
+             <svg class="relative block w-[calc(100%+1.3px)] h-[60px] text-purple-100" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" fill="currentColor"></path>
+            </svg>
+        </div>
+    </main>
+</div>
+
+<script>
+    lucide.createIcons();
+</script>
+{% endblock %}

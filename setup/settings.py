@@ -92,6 +92,31 @@ else:
             },
         }
     }
+# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+
+if DEBUG != True:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgreen',
+            'NAME': os.getenv('db_name',),
+            'USER': os.getenv('db_user'),
+            'PASSWORD': os.getenv('db_password'),
+            'HOST': os.getenv('db_host'),
+            'PORT': os.getenv('db_port')
+        }
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.getenv('dbnameMysql',),
+            'USER': os.getenv('usernameMysql'),
+            'PASSWORD': os.getenv('passwordMysql'),
+            'HOST': os.getenv('hostnameMysql'),
+            'PORT': os.getenv('portMysql')
+        }
+    }
+
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -133,3 +158,7 @@ else:
     SECURE_SSL_REDIRECT = False
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
+# No final do arquivo settings.py
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+LOGIN_URL = '/login/'

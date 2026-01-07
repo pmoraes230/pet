@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="bg-gray-50 flex flex-col md:flex-row h-screen overflow-hidden">
+    
+    <!-- Sidebar -->
+    {% block aside %}
+        {% include "partials/aside/aside_tutor.html" %}
+    {% endblock %}
+
+    <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+        
+        <!-- Header -->
+        {% block header %}
+            {% include "partials/header/header_tutor.html" %}
+        {% endblock %}
+
+        <!-- Conteúdo Rolável -->
+        <div class="flex-1 overflow-y-auto p-6 md:p-10 pb-24 z-10">
+
+            <!-- Cards de Destaque -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                
+                <!-- Card 1: Próxima Consulta -->
+                <div class="bg-purple-600 text-white p-6 rounded-3xl shadow-lg relative overflow-hidden">
+                    <div class="relative z-10">
+                        <div class="text-purple-200 text-sm font-medium mb-1">Próximo Compromisso</div>
+                        {% if proxima_consulta %}
+                            <div class="text-2xl font-bold">{{ proxima_consulta.data_consulta|date:"d \d\e F" }}</div>
+                            <div class="text-sm mt-2 flex items-center gap-2">
+                                <i data-lucide="clock" width="14" height="14"></i> 
+                                {{ proxima_consulta.horario_consulta|date:"H:i" }} • {{ proxima_consulta.pet.nome }}
+                            </div>
+                            <div class="text-xs text-purple-200 mt-1 uppercase">
+                                {{ proxima_consulta.tipo_de_consulta }}
+                            </div>
+                        {% else %}
+                            <div class="text-xl font-bold mt-2">Sem agendamentos</div>
+                            <div class="text-sm mt-1 text-purple-200">Tudo tranquilo por enquanto.</div>
+                        {% endif %}
+                    </div>
+                    <i data-lucide="calendar" class="absolute -bottom-4 -right-4 text-white/20 w-32 h-32"></i>
+                </div>
+
+                <!-- Card 2: Status Geral -->
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                    <div>
+                        <div class="text-gray-500 text-sm font-medium mb-1">Meus Amigos</div>
+                        <div class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                            <i data-lucide="heart" class="text-red-500" width="24" height="24"></i> 
+                            {{ total_pets }} Pet{{ total_pets|pluralize }} ativo{{ total_pets|pluralize }}
+                        </div>
+                    </div>
+                    <div class="text-sm text-gray-500 mt-4">
+                        Tutor(a): <span class="font-bold text-gray-700">{{ tutor.nome_tutor }}</span>
+                    </div>
+                </div>
+
+                <!-- Card 3: Ação Rápida -->
+                <a href="{% url 'adicionar_pet' %}" class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-between group cursor-pointer hover:border-purple-500 transition-all hover:shadow-md">
+                    <div>
+                        <div class="text-gray-500 text-sm font-medium mb-1">Ação Rápida</div>
+                        <div class="text-lg font-bold text-gray-800 group-hover:text-purple-600 transition-colors">Adicionar Pet</div>
+                    </div>
+                    <div class="bg-purple-50 text-purple-600 p-3 rounded-full group-hover:bg-purple-600 group-hover:text-white transition-all transform group-hover:scale-110">
+                        <i data-lucide="plus" width="24" height="24"></i>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Seção: Meus Pets -->
+            <div class="flex items-center gap-2 mb-6">
+                <h3 class="text-lg font-bold text-gray-800">Meus Pets</h3>
+                <span class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs font-bold">{{ total_pets }}</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for pet in pets %}
+                <a href="{% url 'detalhe_pet' pet.id %}" class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex gap-6 hover:shadow-md hover:border-purple-200 transition-all group">
+                    <div class="w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0 bg-gray-100 border border-gray-50">
+                        {% if pet.imagem %}
+                            <img src="{{ pet.imagem.url }}" class="w-full h-full object-cover" alt="{{ pet.nome }}">
+                        {% else %}
+                            <div class="w-full h-full flex items-center justify-center text-gray-300">
+                                <i data-lucide="paw-print" width="32"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="text-xl font-black text-gray-900 group-hover:text-purple-600 transition-colors">{{ pet.nome }}</h4>
+                                <p class="text-sm text-gray-500 font-medium">{{ pet.raca|default:pet.especie }}</p>
+                            </div>
+                            <div class="text-gray-300 group-hover:text-purple-400">
+                                <i data-lucide="chevron-right" width="20" height="20"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex gap-2 flex-wrap">
+                            <span class="px-3 py-1 bg-purple-50 text-purple-600 rounded-lg text-[10px] font-black uppercase">{{ pet.sexo }}</span>
+                            <span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-black uppercase">{{ pet.especie }}</span>
+                        </div>
+                    </div>
+                </a>
+                {% empty %}
+                <a href="{% url 'adicionar_pet' %}" class="col-span-full text-center py-16 bg-white rounded-2xl border-2 border-dashed border-gray-200 hover:border-purple-300 transition-colors group">
+                    <div class="text-gray-400 group-hover:text-purple-500 mb-2">
+                        <i data-lucide="plus-circle" class="mx-auto" width="48" height="48"></i>
+                    </div>
+                    <p class="text-gray-500 font-bold">Você ainda não tem pets cadastrados. Clique aqui para começar!</p>
+                </a>
+                {% endfor %}
+            </div>
+
+            <!-- Seção: Atividades Recentes -->
+            <div class="flex items-center gap-2 mt-10 mb-6">
+                <h3 class="text-lg font-bold text-gray-800">Atividades Recentes</h3>
+            </div>
+            
+            <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+                <div class="relative border-l-2 border-purple-100 ml-3 space-y-8">
+                    {% for consulta in historico_recente %}
+                    <div class="relative pl-8">
+                        <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-purple-500 ring-4 ring-white"></div>
+                        <p class="text-xs text-gray-400 font-bold mb-1 uppercase tracking-wider">
+                            {{ consulta.data_consulta|date:"d/m/Y" }} • {{ consulta.horario_consulta|date:"H:i" }}
+                        </p>
+                        <h5 class="text-sm font-black text-gray-800">
+                            {{ consulta.tipo_de_consulta }} — <span class="text-purple-600">{{ consulta.pet.nome }}</span>
+                        </h5>
+                        <p class="text-sm text-gray-500 mt-1 font-medium">
+                            Status: <span class="text-gray-700 font-bold">{{ consulta.status|default:"Agendado" }}</span>
+                        </p>
+                    </div>
+                    {% empty %}
+                    <div class="pl-4 text-gray-400 text-sm font-medium italic">Nenhuma atividade recente registrada.</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer Decorativo -->
+        <div class="absolute bottom-0 left-0 w-full overflow-hidden leading-none rotate-180 text-brand-teal pointer-events-none z-0 opacity-50">
+             <svg class="relative block w-[calc(100%+1.3px)] h-[60px] text-purple-100" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" fill="currentColor"></path>
+            </svg>
+        </div>
+    </main>
+</div>
+
+<script>
+    lucide.createIcons();
+</script>
+{% endblock %}
