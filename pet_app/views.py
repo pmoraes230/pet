@@ -7,6 +7,12 @@ from django.db.models import Sum
 from datetime import date
 from . import models
 from django.contrib.auth import logout
+from django.core.mail import send_mail
+from django.conf import settings
+import random
+import logging
+
+logger = logging.getLogger(__name__)
 
 # ========================================================
 # PÁGINA INICIAL E AUTENTICAÇÃO
@@ -422,3 +428,141 @@ def enviar_mensagem(request):
             return redirect(f'/mensagens/?vet_id={vet_id}')
             
     return redirect('mensagens')
+
+import random
+from django.shortcuts import render, redirect
+from django.core.mail import send_mail
+from django.conf import settings
+from .models import Tutor, CodigoRecuperacao
+
+# --- FUNÇÃO AUXILIAR DE E-MAIL ---
+def disparar_email_codigo(email_destino, codigo):
+    assunto = 'Código de Segurança - Coração em Patas'
+    mensagem = f'Olá! Seu código de verificação para alterar a senha é: {codigo}'
+    remetente = settings.EMAIL_HOST_USER
+    try:
+        send_mail(assunto, mensagem, remetente, [email_destino], fail_silently=False)
+        print(f"E-mail enviado com sucesso para {email_destino}")
+    except Exception as e:
+        print(f"Erro ao enviar e-mail: {e}")
+
+# --- 1. SOLICITAR (VIA LOGIN/ESQUECI SENHA) ---
+def solicitar_troca_senha(request):
+    if request.method == "POST":
+        email_destino = request.POST.get('email', '').strip().lower()
+        
+        if not email_destino:
+            messages.error(request, "Email é obrigatório.")
+            return render(request, 'autenticacao/solicitar_troca.html')
+        
+        # Verifica se existe um Tutor ou Veterinário com este email
+        tutor_existe = models.Tutor.objects.filter(email__iexact=email_destino).exists()
+        vet_existe = models.Veterinario.objects.filter(email__iexact=email_destino).exists()
+        
+        if not tutor_existe and not vet_existe:
+            messages.error(request, "Email não encontrado no sistema.")
+            return render(request, 'autenticacao/solicitar_troca.html')
+        
+        codigo = str(random.randint(10000, 99999))
+        
+        # Salva no banco
+        CodigoRecuperacao.objects.create(email=email_destino, codigo=codigo)
+        
+        logger.info(f"Enviando código de recuperação para {email_destino}")
+        
+        # ENVIA O E-MAIL
+        try:
+            resultado = send_mail(
+                'Código de Segurança - Coração em Patas',
+                f'Seu código de recuperação de senha é: {codigo}\n\nEste código é válido por 24 horas.\n\nNão compartilhe com ninguém!',
+                settings.EMAIL_HOST_USER,
+                [email_destino],
+                fail_silently=False,
+            )
+            logger.info(f"Email enviado com sucesso para {email_destino} (resultado: {resultado})")
+            messages.success(request, f"Código enviado para {email_destino}. Verifique seu email.")
+        except Exception as e:
+            logger.error(f"Erro ao enviar email para {email_destino}: {str(e)}", exc_info=True)
+            messages.error(request, f"Erro ao enviar email: {str(e)}")
+            return render(request, 'autenticacao/solicitar_troca.html')
+        
+        request.session['email_recuperacao'] = email_destino
+        return redirect('inserir_codigo')
+    return render(request, 'autenticacao/solicitar_troca.html')
+
+# --- 2. SOLICITAR (VIA PERFIL/LOGADO) ---
+def alterar_senha_logado(request):
+    email_do_tutor = request.session.get('user_email') or request.session.get('tutor_email') or request.session.get('email')
+    
+    if not email_do_tutor and request.user.is_authenticated:
+        email_do_tutor = request.user.email
+
+    if not email_do_tutor:
+        messages.error(request, "Não foi possível identificar seu email.")
+        return redirect('login')
+
+    codigo = str(random.randint(10000, 99999))
+    CodigoRecuperacao.objects.create(email=email_do_tutor, codigo=codigo)
+    
+    try:
+        send_mail(
+            'Código de Segurança - Coração em Patas',
+            f'Seu código de recuperação de senha é: {codigo}\n\nEste código é válido por 24 horas.\n\nNão compartilhe com ninguém!',
+            settings.EMAIL_HOST_USER,
+            [email_do_tutor],
+            fail_silently=False,
+        )
+        messages.success(request, f"Código enviado para {email_do_tutor}. Verifique seu email.")
+    except Exception as e:
+        messages.error(request, f"Erro ao enviar email: {str(e)}")
+        print(f"ERRO ao enviar email: {e}")
+        return render(request, 'autenticacao/solicitar_troca.html')
+    
+    request.session['email_recuperacao'] = email_do_tutor
+    return redirect('inserir_codigo')
+
+# --- 3. TELA DE INSERIR O CÓDIGO (A QUE ESTAVA DANDO ERRO) ---
+def inserir_codigo(request):
+    if request.method == "POST":
+        # Pega os 5 dígitos dos inputs
+        codigo_enviado = ""
+        for i in range(1, 6):
+            digito = request.POST.get(f'digito_{i}', '')
+            codigo_enviado += digito
+            
+        email = request.session.get('email_recuperacao')
+        
+        # Verifica se o código existe no banco para esse email
+        valido = CodigoRecuperacao.objects.filter(email=email, codigo=codigo_enviado).exists()
+        
+        if valido:
+            return redirect('nova_senha')
+        else:
+            # Você pode adicionar uma mensagem de erro aqui depois
+            print("Código Inválido!")
+            
+    return render(request, 'autenticacao/inserir_codigo.html')
+
+# --- 4. TELA DE DEFINIR A NOVA SENHA ---
+def nova_senha(request):
+    if request.method == "POST":
+        senha = request.POST.get('senha')
+        confirmacao = request.POST.get('confirmacao')
+        email = request.session.get('email_recuperacao')
+        
+        if senha == confirmacao:
+            # Busca o tutor pelo email e atualiza a senha
+            try:
+                tutor = Tutor.objects.get(email=email)
+                tutor.senha_tutor = senha # Use make_password(senha) se estiver usando Auth do Django
+                tutor.save()
+                
+                # Limpa a sessão após o sucesso
+                if 'email_recuperacao' in request.session:
+                    del request.session['email_recuperacao']
+                
+                return redirect('login')
+            except Tutor.DoesNotExist:
+                print("Tutor não encontrado")
+                
+    return render(request, 'autenticacao/nova_senha.html')

@@ -414,3 +414,5 @@ def diario_emocional_view(request):
         'grafico_labels': json.dumps(labels),
         'grafico_valores': json.dumps(valores)
     })
+
+

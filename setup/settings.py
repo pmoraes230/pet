@@ -140,3 +140,21 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 LOGIN_URL = '/login/'
+# Configurações de E-mail Real para Coração em Patas
+# Tente SMTP (porta 587) - se não funcionar em 5s, mude para porta 465 (SSL)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+
+# Se porta 587 não funcionar, descomente isto:
+# EMAIL_PORT = 465
+# EMAIL_USE_TLS = False
+# EMAIL_USE_SSL = True
+
+EMAIL_HOST_USER = os.getenv('EMAIL_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_PASSWORD')
+# O nome que aparece como remetente no e-mail do usuário
+DEFAULT_FROM_EMAIL = f'Equipe Coração em Patas <{os.getenv("EMAIL_USER")}>'

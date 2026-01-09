@@ -249,3 +249,12 @@ class Mensagem(models.Model):
     class Meta:
         db_table = 'mensagens'
         ordering = ['data_envio']        
+
+# ... (suas outras classes: Tutor, Pet, etc)
+
+class CodigoRecuperacao(models.Model):
+    email = models.EmailField()
+    codigo = models.CharField(max_length=5)
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+# NÃO PODE TER NADA DE "def" OU "from .models" AQUI EMBAIXO
