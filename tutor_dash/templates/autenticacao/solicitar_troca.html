@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load static %} <!-- ADICIONE ESTA LINHA AQUI -->
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+    <div class="bg-white rounded-[3rem] shadow-sm border border-gray-100 p-12 w-full max-w-2xl relative">
+        
+        <a href="{% url 'perfil_tutor' %}" class="absolute top-8 left-8 flex items-center gap-2 text-gray-400 hover:text-brand-purple transition-colors font-medium">
+            <i data-lucide="chevron-left" class="w-5 h-5"></i>
+            Voltar
+        </a>
+
+        <div class="flex items-center gap-3 mb-10 mt-4">
+            <div class="bg-brand-purple p-2 rounded-2xl">
+                <!-- Agora o static vai funcionar -->
+                <img src="{% static 'icons/paw.svg' %}" class="w-6 h-6 invert">
+            </div>
+            <span class="font-bold text-gray-800">Coração em patas</span>
+        </div>
+
+        <h2 class="text-4xl font-bold text-gray-900 mb-2">Troque sua senha</h2>
+        <p class="text-gray-400 mb-8 font-medium">Preencha seus dados para continuar</p>
+        
+        <form method="POST" class="space-y-6">
+            {% csrf_token %}
+            <div>
+                <label class="block font-bold text-gray-900 mb-2 ml-1">Nome completo</label>
+                <input type="text" name="nome" placeholder="Seu nome" class="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-brand-purple outline-none shadow-sm">
+            </div>
+            <div>
+                <label class="block font-bold text-gray-900 mb-2 ml-1">Email</label>
+                <input type="email" name="email" placeholder="voce@email.com" class="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-brand-purple outline-none shadow-sm">
+            </div>
+            <button class="w-full bg-brand-purple text-white font-bold py-4 rounded-2xl hover:brightness-90 transition-all mt-4 shadow-lg shadow-purple-100">continuar</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

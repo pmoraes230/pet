@@ -8,7 +8,31 @@ from datetime import date
 from . import models
 from django.contrib.auth import logout
 from django.urls import reverse
-from .utils import get_tutor_logado, get_veterinario_logado
+from django.core.mail import send_mail
+from django.conf import settings
+from django.http import JsonResponse
+import random
+import logging
+
+logger = logging.getLogger(__name__)
+
+# Utils imports (se existir)
+try:
+    from .utils import get_tutor_logado, get_veterinario_logado
+except ImportError:
+    def get_tutor_logado(request):
+        user_id = request.session.get('user_id')
+        user_role = request.session.get('user_role')
+        if user_role == 'tutor' and user_id:
+            return {'id': user_id}
+        return None
+    
+    def get_veterinario_logado(request):
+        user_id = request.session.get('user_id')
+        user_role = request.session.get('user_role')
+        if user_role == 'vet' and user_id:
+            return {'id': user_id}
+        return None
 
 # ========================================================
 # PÁGINA INICIAL E AUTENTICAÇÃO
@@ -385,16 +409,12 @@ def lista_notificacoes(request):
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from . import models  # Certifique-se que o import está assim
-from django.contrib import messages # Para avisar erros na tela
-
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
 from . import models 
 import logging
 
 # Adicionei logs para você ver o erro no terminal do VS Code
 logger = logging.getLogger(__name__)
+
 def mensagens_view(request):
     """Exibe chat para o Tutor."""
     try:
@@ -445,64 +465,148 @@ def enviar_mensagem(request):
                 CONTEUDO=texto,
                 ENVIADO_POR='TUTOR'
             )
-            url = reverse('mensagens')
-            return redirect(f"{url}?vet_id={vet_id}")
-
+            # Use o nome da URL em vez de path fixo se possível
+            return redirect(f'/mensagens/?vet_id={vet_id}')
+            
     return redirect('mensagens')
 
+import random
+from django.shortcuts import render, redirect
+from .models import CodigoRecuperacao
 
-def mensagens_vet_view(request):
-    """Exibe chat para o Veterinário."""
-    try:
-        vet_data = get_veterinario_logado(request)
-        if not vet_data:
-            return redirect('login')
-
-        vet = models.Veterinario.objects.get(id=vet_data['id'])
-        contatos = models.Tutor.objects.all()
-
-        tutor_id = request.GET.get('tutor_id')
-        mensagens = []
-        tutor_selecionado = None
-
-        if tutor_id:
-            tutor_selecionado = get_object_or_404(models.Tutor, id=tutor_id)
-            mensagens = models.Mensagem.objects.filter(
-                tutor=tutor_selecionado,
-                veterinario=vet
-            ).order_by('DATA_ENVIO')
-
-        return render(request, 'mensagensvet.html', {
-            'contatos': contatos,
-            'tutor_selecionado': tutor_selecionado,
-            'mensagens': mensagens,
-            'veterinario': vet,
-        })
-    except Exception as e:
-        logger.exception("Erro em mensagens_vet_view")
-        return render(request, 'erro.html', {'msg': str(e)})
-
-
-def enviar_mensagem_vet(request):
-    if request.method == 'POST':
-        vet_data = get_veterinario_logado(request)
-        if not vet_data:
-            return redirect('login')
-
-        vet = get_object_or_404(models.Veterinario, id=vet_data['id'])
-        tutor_id = request.POST.get('tutor_id')
-        texto = request.POST.get('mensagem')
-
-        if texto and tutor_id:
-            tutor = get_object_or_404(models.Tutor, id=tutor_id)
-            models.Mensagem.objects.create(
-                tutor=tutor,
-                veterinario=vet,
-                CONTEUDO=texto,
-                ENVIADO_POR='VETERINARIO'
+# --- 1. SOLICITAR (VIA LOGIN/ESQUECI SENHA) ---
+def solicitar_troca_senha(request):
+    if request.method == "POST":
+        email_destino = request.POST.get('email', '').strip().lower()
+        
+        if not email_destino:
+            messages.error(request, "Email é obrigatório.")
+            return render(request, 'autenticacao/solicitar_troca.html')
+        
+        # Verifica se existe um Tutor ou Veterinário com este email
+        tutor_existe = models.Tutor.objects.filter(email__iexact=email_destino).exists()
+        vet_existe = models.Veterinario.objects.filter(email__iexact=email_destino).exists()
+        
+        if not tutor_existe and not vet_existe:
+            messages.error(request, "Email não encontrado no sistema.")
+            return render(request, 'autenticacao/solicitar_troca.html')
+        
+        codigo = str(random.randint(10000, 99999))
+        
+        # Salva no banco
+        CodigoRecuperacao.objects.create(email=email_destino, codigo=codigo)
+        
+        logger.info(f"Enviando código de recuperação para {email_destino}")
+        
+        # ENVIA O E-MAIL
+        try:
+            resultado = send_mail(
+                'Código de Segurança - Coração em Patas',
+                f'Seu código de recuperação de senha é: {codigo}\n\nEste código é válido por 24 horas.\n\nNão compartilhe com ninguém!',
+                settings.EMAIL_HOST_USER,
+                [email_destino],
+                fail_silently=False,
             )
-            url = reverse('mensagens_vet')
-            return redirect(f"{url}?tutor_id={tutor_id}")
+            logger.info(f"Email enviado com sucesso para {email_destino} (resultado: {resultado})")
+            messages.success(request, f"Código enviado para {email_destino}. Verifique seu email.")
+        except Exception as e:
+            logger.error(f"Erro ao enviar email para {email_destino}: {str(e)}", exc_info=True)
+            messages.error(request, f"Erro ao enviar email: {str(e)}")
+            return render(request, 'autenticacao/solicitar_troca.html')
+        
+        request.session['email_recuperacao'] = email_destino
+        return redirect('inserir_codigo')
+    return render(request, 'autenticacao/solicitar_troca.html')
 
-    return redirect('mensagens_vet')
+# --- 2. SOLICITAR (VIA PERFIL/LOGADO) ---
+def alterar_senha_logado(request):
+    email_do_tutor = request.session.get('user_email') or request.session.get('tutor_email') or request.session.get('email')
     
+    if not email_do_tutor and request.user.is_authenticated:
+        email_do_tutor = request.user.email
+
+    if not email_do_tutor:
+        messages.error(request, "Não foi possível identificar seu email.")
+        return redirect('login')
+
+    codigo = str(random.randint(10000, 99999))
+    CodigoRecuperacao.objects.create(email=email_do_tutor, codigo=codigo)
+    
+    try:
+        send_mail(
+            'Código de Segurança - Coração em Patas',
+            f'Seu código de recuperação de senha é: {codigo}\n\nEste código é válido por 24 horas.\n\nNão compartilhe com ninguém!',
+            settings.EMAIL_HOST_USER,
+            [email_do_tutor],
+            fail_silently=False,
+        )
+        messages.success(request, f"Código enviado para {email_do_tutor}. Verifique seu email.")
+    except Exception as e:
+        messages.error(request, f"Erro ao enviar email: {str(e)}")
+        print(f"ERRO ao enviar email: {e}")
+        return render(request, 'autenticacao/solicitar_troca.html')
+    
+    request.session['email_recuperacao'] = email_do_tutor
+    return redirect('inserir_codigo')
+
+# --- 3. TELA DE INSERIR O CÓDIGO (A QUE ESTAVA DANDO ERRO) ---
+def inserir_codigo(request):
+    if request.method == "POST":
+        # Pega os 5 dígitos dos inputs
+        codigo_enviado = ""
+        for i in range(1, 6):
+            digito = request.POST.get(f'digito_{i}', '')
+            codigo_enviado += digito
+            
+        email = request.session.get('email_recuperacao')
+        
+        # Verifica se o código existe no banco para esse email
+        valido = CodigoRecuperacao.objects.filter(email=email, codigo=codigo_enviado).exists()
+        
+        if valido:
+            return redirect('nova_senha')
+        else:
+            # Você pode adicionar uma mensagem de erro aqui depois
+            print("Código Inválido!")
+            
+    return render(request, 'autenticacao/inserir_codigo.html')
+
+def nova_senha(request):
+    if request.method == "POST":
+        senha = request.POST.get('senha')
+        confirmacao = request.POST.get('confirmacao')
+        email = request.session.get('email_recuperacao')
+        
+        if not email:
+            messages.error(request, "Erro: email de recuperação não encontrado.")
+            return redirect('solicitar_troca_senha')
+
+        if senha and senha == confirmacao:
+            # Tenta localizar um Tutor primeiro
+            tutor = models.Tutor.objects.filter(email__iexact=email).first()
+            if tutor:
+                tutor.senha_tutor = make_password(senha)
+                tutor.save()
+            else:
+                # Se não for tutor, tenta como Veterinário
+                vet = models.Veterinario.objects.filter(email__iexact=email).first()
+                if vet:
+                    vet.senha_veterinario = make_password(senha)
+                    vet.save()
+
+            # Se o usuário estava logado, redireciona para o perfil apropriado
+            user_role = request.session.get('user_role')
+            if user_role == 'tutor' and request.session.get('user_id'):
+                messages.success(request, "Senha alterada com sucesso.")
+                return redirect('perfil_tutor')
+            if user_role == 'vet' and request.session.get('user_id'):
+                messages.success(request, "Senha alterada com sucesso.")
+                return redirect('perfil_vet')
+
+            # Caso contrário, volta para o login
+            messages.success(request, "Senha alterada com sucesso. Faça login com a nova senha.")
+            return redirect('login')
+
+        messages.error(request, "As senhas não conferem.")
+
+    return render(request, 'autenticacao/nova_senha.html')

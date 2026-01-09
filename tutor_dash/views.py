@@ -61,7 +61,7 @@ def editar_perfil_tutor(request):
         return redirect('login')
 
     tutor = models.Tutor.objects.get(id=tutor_data['id'])
-    contatos = models.ContatoTutor.objects.filter(id_tutor=tutor).order_by('-data_cadastro')
+    # contatos = models.ContatoTutor.objects.filter(id_tutor=tutor).order_by('-data_cadastro')
 
     if request.method == "POST":
         # Atualiza dados do tutor
@@ -81,7 +81,7 @@ def editar_perfil_tutor(request):
         contato_ids = request.POST.getlist('contato_id')
 
         # Deleta todos e recria (simples e seguro)
-        models.ContatoTutor.objects.filter(id_tutor=tutor.id).delete()
+        # models.ContatoTutor.objects.filter(id_tutor=tutor.id).delete()
 
         for i in range(len(tipos)):
             if ddds[i].strip() and numeros[i].strip():
@@ -97,7 +97,7 @@ def editar_perfil_tutor(request):
 
     context = {
         'tutor': tutor,
-        'contatos': contatos,
+        # 'contatos': contatos,
     }
     return render(request, 'edit_tutor/editar_perfil.html', context)
 
@@ -415,136 +415,3 @@ def diario_emocional_view(request):
         'grafico_labels': json.dumps(labels),
         'grafico_valores': json.dumps(valores)
     })
-
-from django.shortcuts import render, redirect, get_object_or_404
-from pet_app import models
-
-# ==========================================
-# ÁREA DO VETERINÁRIO
-# ==========================================
-
-def mensagens_vet_view(request):
-    """ Exibe a lista de tutores e o chat para o veterinário """
-    try:
-        # 1. Identifica o Veterinário logado pela sessão (helper)
-        vet_data = get_veterinario_logado(request)
-        if not vet_data:
-            return redirect('login')
-
-        vet_logado = models.Veterinario.objects.get(id=vet_data['id'])
-
-        # 2. Busca todos os Tutores (Contatos)
-        contatos = models.Tutor.objects.all()
-        
-        # 3. Pega o Tutor selecionado na URL (?tutor_id=X)
-        tutor_id = request.GET.get('tutor_id')
-        tutor_selecionado = None
-        historico_msg = []
-
-        if tutor_id:
-            tutor_selecionado = get_object_or_404(models.Tutor, id=tutor_id)
-            
-            # 4. Busca as mensagens entre este Vet e este Tutor
-            # Nota: Usamos os nomes dos campos conforme seu banco/model
-            historico_msg = models.Mensagem.objects.filter(
-                tutor=tutor_selecionado, 
-                veterinario=vet_logado
-            ).order_by('DATA_ENVIO') # Se der erro em DATA_ENVIO, use data_envio
-
-        return render(request, 'mensagens_vet.html', {
-            'contatos': contatos,
-            'tutor_selecionado': tutor_selecionado,
-            'mensagens': historico_msg,
-            'veterinario': vet_logado
-        })
-
-    except Exception as e:
-        print(f"ERRO MENSAGENS VET: {e}")
-        return render(request, 'erro.html', {'msg': str(e)})
-
-
-def enviar_mensagem_vet(request):
-    if request.method == "POST":
-        vet_data = get_veterinario_logado(request)
-        if not vet_data:
-            return redirect('login')
-        vet_id = vet_data['id']
-        tutor_id = request.POST.get('tutor_id')
-        texto = request.POST.get('mensagem') # Pegando o texto do formulário
-        
-        if texto and tutor_id and vet_id:
-            vet = get_object_or_404(models.Veterinario, id=vet_id)
-            tutor = get_object_or_404(models.Tutor, id=tutor_id)
-            
-            # CRIANDO A MENSAGEM - Use MAIÚSCULAS nos nomes dos campos
-            models.Mensagem.objects.create(
-                tutor=tutor,
-                veterinario=vet,
-                CONTEUDO=texto,         # Campo do banco em MAIÚSCULO
-                ENVIADO_POR='VETERINARIO' # Campo do banco em MAIÚSCULO
-            )
-            url = reverse('mensagens_vet')
-            return redirect(f"{url}?tutor_id={tutor_id}")
-            
-    return redirect('mensagens_vet')
-
-
-# ==========================================
-# ÁREA DO TUTOR (Para manter a compatibilidade)
-# ==========================================
-
-def mensagens_view(request):
-    """ Exibe a lista de veterinários e o chat para o tutor """
-    try:
-        tutor_data = get_tutor_logado(request)
-        if not tutor_data:
-            return redirect('login')
-
-        tutor_logado = models.Tutor.objects.get(id=tutor_data['id'])
-        contatos = models.Veterinario.objects.all()
-        
-        vet_id = request.GET.get('vet_id')
-        vet_selecionado = None
-        historico_msg = []
-        
-        if vet_id:
-            vet_selecionado = get_object_or_404(models.Veterinario, id=vet_id)
-            historico_msg = models.Mensagem.objects.filter(
-                tutor=tutor_logado, 
-                veterinario=vet_selecionado
-            ).order_by('DATA_ENVIO')
-
-        return render(request, 'mensagens.html', {
-            'tutor': tutor_logado,
-            'contatos': contatos,
-            'mensagens': historico_msg,
-            'vet_selecionado': vet_selecionado,
-        })
-    except Exception as e:
-        return render(request, 'erro.html', {'msg': str(e)})
-
-
-def enviar_mensagem(request):
-    """ Processa o envio de mensagens do Tutor para o Veterinário """
-    if request.method == "POST":
-        tutor_data = get_tutor_logado(request)
-        if not tutor_data:
-            return redirect('login')
-        tutor_id = tutor_data['id']
-        vet_id = request.POST.get('vet_id')
-        conteudo = request.POST.get('mensagem')
-        
-        if conteudo and vet_id and tutor_id:
-            tutor = get_object_or_404(models.Tutor, id=tutor_id)
-            vet = get_object_or_404(models.Veterinario, id=vet_id)
-            
-            models.Mensagem.objects.create(
-                tutor=tutor,
-                veterinario=vet,
-                CONTEUDO=conteudo,
-                ENVIADO_POR='TUTOR'
-            )
-            url = reverse('mensagens')
-            return redirect(f"{url}?vet_id={vet_id}")
-            
-    return redirect('mensagens')
