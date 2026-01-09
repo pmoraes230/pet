@@ -14,11 +14,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Secret Key
 SECRET_KEY = os.getenv("SECRET_KEY", get_random_secret_key())
 
-# Debug - só True em desenvolvimento
-DEBUG = os.getenv("DEBUG", "True") == "True"  # Padrão True localmente
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
-# Hosts permitidos
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1,.vercel.app").split(",")
+# No Render, ele adiciona seu domínio automaticamente, mas adicione:
+if os.getenv('RENDER'):
+    ALLOWED_HOSTS += [os.getenv('RENDER_EXTERNAL_HOSTNAME')]
 
 # Application definition
 INSTALLED_APPS = [
@@ -28,10 +29,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
-    # Whitenoise só em dev para ajudar com static (não obrigatório em prod)
     'whitenoise.runserver_nostatic',
-
     'pet_app',
     'tutor_dash',
     'vet_dash',
@@ -69,16 +67,25 @@ TEMPLATES = [
 WSGI_APPLICATION = 'setup.wsgi.application'
 
 # Database
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('dbnameMysql',),
-        'USER': os.getenv('usernameMysql'),
-        'PASSWORD': os.getenv('passwordMysql'),
-        'HOST': os.getenv('hostnameMysql'),
-        'PORT': os.getenv('portMysql')
+if os.getenv('RENDER'):
+    # Produção: usa o PostgreSQL do Render
+    DATABASES = {
+        'default': dj_database_url.config(
+            conn_max_age=600,
+            ssl_require=True
+        )
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.getenv('dbnameMysql',),
+            'USER': os.getenv('usernameMysql'),
+            'PASSWORD': os.getenv('passwordMysql'),
+            'HOST': os.getenv('hostnameMysql'),
+            'PORT': os.getenv('portMysql')
+        }
+    }
 
 
 # Password validation
@@ -98,7 +105,7 @@ USE_TZ = True
 # Static files
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_DIRS = [BASE_DIR / 'static']  # Sempre ativa (útil em dev)
+STATICFILES_DIRS = [BASE_DIR / 'static']
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 

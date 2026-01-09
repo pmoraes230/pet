@@ -225,7 +225,7 @@ class DiarioEmocional(models.Model):
     def __str__(self):
         return f"Diário {self.pet} - {self.data_registro}"
 
-class Notificacao(models.Model):
+class pet_app_notificacao(models.Model):
     # Relaciona com o veterinário. Se for para tutor também, pode usar GenericForeignKey ou dois campos.
     veterinario = models.ForeignKey('Veterinario', on_delete=models.CASCADE, related_name='notificacoes', null=True, blank=True)
     mensagem = models.TextField()
