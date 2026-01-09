@@ -8,7 +8,7 @@ class PessoaFisica(models.Model):
     genero = models.CharField(db_column='GENERO', max_length=45, blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'pessoa_fisica'
 
     def __str__(self):
@@ -23,7 +23,7 @@ class PessoaJuridica(models.Model):
     data_criacao = models.DateField(db_column='DATA_CRIACAO', blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'pessoa_juridica'
 
     def __str__(self):
@@ -35,7 +35,7 @@ class Feedback(models.Model):
     feedback_app = models.TextField(blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'feedback'
 
     def __str__(self):
@@ -47,7 +47,7 @@ class FeedbackPet(models.Model):
     feedback_pet = models.TextField(blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'feedback_pet'
 
     def __str__(self):
@@ -67,7 +67,7 @@ class Tutor(models.Model):
     id_feedback_pet = models.ForeignKey(FeedbackPet, models.DO_NOTHING, db_column='ID_FEEDBACK_PET', blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'tutor'
 
     def __str__(self):
@@ -87,7 +87,7 @@ class Veterinario(models.Model):
     pessoa_juridica = models.ForeignKey(PessoaJuridica, models.DO_NOTHING, db_column='pessoa_juridica_id', blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'veterinario'
 
     def __str__(self):
@@ -110,7 +110,7 @@ class Pet(models.Model):
     tutor = models.ForeignKey(Tutor, models.DO_NOTHING, db_column='ID_TUTOR')
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'pet'
 
     def __str__(self):
@@ -127,7 +127,7 @@ class Prontuariopet(models.Model):
     observacao = models.TextField(db_column='OBSERVACAO', blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'prontuariopet'
 
     def __str__(self):
@@ -156,7 +156,7 @@ class Consulta(models.Model):
     veterinario = models.ForeignKey(Veterinario, models.DO_NOTHING, db_column='ID_VETERINARIO', blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'consulta'
 
     def __str__(self):
@@ -171,7 +171,7 @@ class Vacina(models.Model):
     pet = models.ForeignKey(Pet, models.DO_NOTHING, db_column='ID_PET', blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'vacina'
 
     def __str__(self):
@@ -188,7 +188,7 @@ class Medicamento(models.Model):
     pet = models.ForeignKey(Pet, models.DO_NOTHING, db_column='ID_PET', blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'medicamento'
 
     def __str__(self):
@@ -204,7 +204,7 @@ class ContatoVeterinario(models.Model):
     data_cadastro = models.DateTimeField(db_column='DATA_CADASTRO', blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'contato_veterinario'
 
     def __str__(self):
@@ -219,7 +219,7 @@ class DiarioEmocional(models.Model):
     data_registro = models.DateTimeField(db_column='DATA_REGISTRO', blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'diario_emocional'
 
     def __str__(self):
@@ -230,7 +230,7 @@ class pet_app_notificacao(models.Model):
     veterinario = models.ForeignKey('Veterinario', on_delete=models.CASCADE, related_name='notificacoes', null=True, blank=True)
     mensagem = models.TextField()
     data_criacao = models.DateTimeField(auto_now_add=True)
-    lida = models.BooleanField(default=False)
+    lida = models.BooleanField(default=True)
 
     class Meta:
         ordering = ['-data_criacao']        

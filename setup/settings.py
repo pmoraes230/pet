@@ -67,14 +67,13 @@ TEMPLATES = [
 WSGI_APPLICATION = 'setup.wsgi.application'
 
 # Database
-if os.getenv('RENDER'):
-    # Produção: usa o PostgreSQL do Render
-    DATABASES = {
-        'default': dj_database_url.config(
-            conn_max_age=600,
-            ssl_require=True
-        )
-    }
+# Prioridade: DATABASE_URL (Render injeta automaticamente ou .env carrega)
+DATABASES = {}
+if os.getenv('RENDER') or os.getenv('DATABASE_URL'):
+    DATABASES['default'] = dj_database_url.config(
+        conn_max_age=600,       # Mantém conexões vivas
+        ssl_require=True        # Segurança obrigatória
+    )
 else:
     DATABASES = {
         'default': {
@@ -132,3 +131,62 @@ else:
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 LOGIN_URL = '/login/'
+
+# Logging configurado para produção
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        # Opcional: envia erros críticos por e-mail (configura depois)
+        # 'mail_admins': {
+        #     'level': 'ERROR',
+        #     'class': 'django.utils.log.AdminEmailHandler',
+        # },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'ERROR',  # Erros 500 vão aparecer aqui
+            'propagate': False,
+        },
+        # Seu app (para ver logs personalizados)
+        'pet_app': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'tutor_dash': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'vet_dash': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
+}
