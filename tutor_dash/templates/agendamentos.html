@@ -6,163 +6,189 @@
     <!-- Sidebar -->
     {% include "partials/aside/aside_tutor.html" %}
 
-    <main class="flex-1 flex flex-col p-6 md:p-10 overflow-y-auto">
-        
-        <!-- Header da Página -->
-        <div class="flex justify-between items-end mb-8">
-            <div>
-                <h2 class="text-3xl font-black text-gray-800 tracking-tight">Agendamentos</h2>
-                <p class="text-gray-500 font-medium">Próximos compromissos e histórico</p>
+    <main class="flex-1 flex flex-col h-screen overflow-hidden relative p-px">
+        {% block header %}
+        {% include "partials/header/header_tutor.html" %}
+        {% endblock %}
+        <div class="flex-1 overflow-y-auto p-1 md:p-10 pb-24 z-10">
+            <!-- Header da Página -->
+            <div class="flex justify-between items-end mb-8">
+                <div>
+                    <h2 class="text-3xl font-black text-gray-800 tracking-tight">Agendamentos</h2>
+                    <p class="text-gray-500 font-medium">Próximos compromissos e histórico</p>
+                </div>
+                <!-- O BOTÃO FOI REMOVIDO DAQUI -->
             </div>
-            <!-- O BOTÃO FOI REMOVIDO DAQUI -->
-        </div>
 
-        <!-- Calendário Strip (Dinâmico) -->
-        <div class="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100 mb-10">
-            <div class="flex items-center gap-4 mb-6">
-                <h3 class="text-xl font-black text-gray-800">{{ mes_atual }} {{ ano_atual }}</h3>
-                <div class="flex gap-4">
-                    <!-- SETA ESQUERDA -->
-                    <a href="?data={{ data_anterior }}" class="p-1 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-purple-600">
-                        <i data-lucide="chevron-left" width="24" height="24"></i>
-                    </a>
-                    
-                    <!-- SETA DIREITA -->
-                    <a href="?data={{ data_proxima }}" class="p-1 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-purple-600">
-                        <i data-lucide="chevron-right" width="24" height="24"></i>
-                    </a>
+            <!-- Calendário Strip (Dinâmico) -->
+            <div class="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100 mb-10">
+                <div class="flex items-center gap-4 mb-6">
+                    <h3 class="text-xl font-black text-gray-800">{{ mes_atual }} {{ ano_atual }}</h3>
+                    <div class="flex gap-4">
+                        <!-- SETA ESQUERDA -->
+                        <a href="?data={{ data_anterior }}"
+                            class="p-1 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-purple-600">
+                            <i data-lucide="chevron-left" width="24" height="24"></i>
+                        </a>
+
+                        <!-- SETA DIREITA -->
+                        <a href="?data={{ data_proxima }}"
+                            class="p-1 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-purple-600">
+                            <i data-lucide="chevron-right" width="24" height="24"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-7 gap-4">
+                    {% for dia in dias_semana %}
+                    <div class="p-4 rounded-3xl text-center border transition-all 
+                        {% if dia.hoje %} 
+                            bg-purple-600 text-white border-purple-600 shadow-xl shadow-purple-100 scale-105
+                        {% else %} 
+                            bg-gray-50 text-gray-400 border-gray-50 hover:border-purple-200
+                        {% endif %}">
+                        <span class="block text-xs font-black uppercase mb-1 tracking-widest">{{ dia.nome }}</span>
+                        <span class="text-2xl font-black">{{ dia.num }}</span>
+                    </div>
+                    {% endfor %}
                 </div>
             </div>
-            
-            <div class="grid grid-cols-7 gap-4">
-                {% for dia in dias_semana %}
-                <div class="p-4 rounded-3xl text-center border transition-all 
-                    {% if dia.hoje %} 
-                        bg-purple-600 text-white border-purple-600 shadow-xl shadow-purple-100 scale-105
-                    {% else %} 
-                        bg-gray-50 text-gray-400 border-gray-50 hover:border-purple-200
-                    {% endif %}">
-                    <span class="block text-xs font-black uppercase mb-1 tracking-widest">{{ dia.nome }}</span>
-                    <span class="text-2xl font-black">{{ dia.num }}</span>
+
+            <h3 class="text-xl font-black text-gray-800 mb-6">Esta semana</h3>
+
+            <div class="space-y-4 pb-20">
+                <!-- Loop de Consultas -->
+                {% for c in consultas %}
+                <div
+                    class="bg-white p-6 rounded-[35px] shadow-sm flex items-center gap-8 border border-transparent hover:border-purple-200 transition-all group relative">
+                    <div class="text-center border-r border-gray-100 pr-8 min-w-[100px]">
+                        <span class="block text-xs font-black text-gray-400 uppercase tracking-tighter">{{ c.data_consulta|date:"d M" }}</span>
+                        <span class="text-2xl font-black text-gray-800">{{ c.horario_consulta|time:"H:i" }}</span>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-2xl font-black text-gray-800 group-hover:text-purple-600 transition-colors">{{ c.tipo_de_consulta }}</h4>
+                        <div class="flex items-center gap-4 mt-2 text-gray-500 font-bold text-sm">
+                            <span class="text-purple-600">@{{ c.pet.nome }}</span>
+                            <span class="flex items-center gap-1.5"><i data-lucide="map-pin" width="14"></i> {{ c.veterinario.nome|default:"Clínica Vet Care" }}</span>
+                        </div>
+                    </div>
+                    <div
+                        class="bg-blue-50 text-blue-500 p-6 rounded-3xl group-hover:bg-blue-500 group-hover:text-white transition-all">
+                        <i data-lucide="calendar" size="32"></i>
+                    </div>
+                    <div class="absolute top-6 right-6">
+                        <button onclick="toggleMenu('consulta-{{ c.id }}')"
+                            class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur-sm text-gray-500 hover:text-purple-600 shadow-sm transition-all">&#x22EE;</button>
+                        <div id="menu-consulta-{{ c.id }}"
+                            class="hidden absolute right-0 mt-2 bg-white shadow-2xl border border-gray-50 rounded-2xl py-2 w-40 z-20">
+                            <button onclick="openDeleteModal({{ c.id }}, 'Consulta', 'consulta')"
+                                class="w-full text-left px-6 py-3 text-red-500 font-bold hover:bg-red-50 transition-colors text-sm">🗑️
+                                Excluir</button>
+                        </div>
+                    </div>
                 </div>
                 {% endfor %}
-            </div>
-        </div>
 
-        <h3 class="text-xl font-black text-gray-800 mb-6">Esta semana</h3>
-
-        <div class="space-y-4 pb-20">
-            <!-- Loop de Consultas -->
-            {% for c in consultas %}
-            <div class="bg-white p-6 rounded-[35px] shadow-sm flex items-center gap-8 border border-transparent hover:border-purple-200 transition-all group relative">
-                <div class="text-center border-r border-gray-100 pr-8 min-w-[100px]">
-                    <span class="block text-xs font-black text-gray-400 uppercase tracking-tighter">{{ c.data_consulta|date:"d M" }}</span>
-                    <span class="text-2xl font-black text-gray-800">{{ c.horario_consulta|time:"H:i" }}</span>
-                </div>
-                <div class="flex-1">
-                    <h4 class="text-2xl font-black text-gray-800 group-hover:text-purple-600 transition-colors">{{ c.tipo_de_consulta }}</h4>
-                    <div class="flex items-center gap-4 mt-2 text-gray-500 font-bold text-sm">
-                        <span class="text-purple-600">@{{ c.pet.nome }}</span>
-                        <span class="flex items-center gap-1.5"><i data-lucide="map-pin" width="14"></i> {{ c.veterinario.nome|default:"Clínica Vet Care" }}</span>
+                <!-- Loop de Vacinas -->
+                {% for v in vacinas %}
+                <div
+                    class="bg-white p-6 rounded-[35px] shadow-sm flex items-center gap-8 border border-transparent hover:border-purple-200 transition-all group relative">
+                    <div class="text-center border-r border-gray-100 pr-8 min-w-[100px]">
+                        <span class="block text-xs font-black text-gray-400 uppercase tracking-tighter">{{
+                            v.data_aplicacao|date:"d M" }}</span>
+                        <span class="text-2xl font-black text-gray-800">08:00</span>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-2xl font-black text-gray-800 group-hover:text-purple-600 transition-colors">{{
+                            v.nome }}</h4>
+                        <div class="flex items-center gap-4 mt-2 text-gray-500 font-bold text-sm">
+                            <span class="text-purple-600">@{{ v.pet.nome }}</span>
+                            <span class="flex items-center gap-1.5"><i data-lucide="map-pin" width="14"></i> Posto de
+                                Vacinação</span>
+                        </div>
+                    </div>
+                    <div
+                        class="bg-red-50 text-red-400 p-6 rounded-3xl group-hover:bg-red-400 group-hover:text-white transition-all">
+                        <i data-lucide="syringe" size="32"></i>
+                    </div>
+                    <div class="absolute top-6 right-6">
+                        <button onclick="toggleMenu('vacina-{{ v.id }}')"
+                            class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur-sm text-gray-500 hover:text-purple-600 shadow-sm transition-all">&#x22EE;</button>
+                        <div id="menu-vacina-{{ v.id }}"
+                            class="hidden absolute right-0 mt-2 bg-white shadow-2xl border border-gray-50 rounded-2xl py-2 w-40 z-20">
+                            <button onclick="openDeleteModal({{ v.id }}, 'Vacinação', 'vacina')"
+                                class="w-full text-left px-6 py-3 text-red-500 font-bold hover:bg-red-50 transition-colors text-sm">🗑️
+                                Excluir</button>
+                        </div>
                     </div>
                 </div>
-                <div class="bg-blue-50 text-blue-500 p-6 rounded-3xl group-hover:bg-blue-500 group-hover:text-white transition-all">
-                    <i data-lucide="calendar" size="32"></i>
-                </div>
-                <div class="absolute top-6 right-6">
-                    <button onclick="toggleMenu('consulta-{{ c.id }}')" class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur-sm text-gray-500 hover:text-purple-600 shadow-sm transition-all">&#x22EE;</button>
-                    <div id="menu-consulta-{{ c.id }}" class="hidden absolute right-0 mt-2 bg-white shadow-2xl border border-gray-50 rounded-2xl py-2 w-40 z-20">
-                        <button onclick="openDeleteModal({{ c.id }}, 'Consulta', 'consulta')" class="w-full text-left px-6 py-3 text-red-500 font-bold hover:bg-red-50 transition-colors text-sm">🗑️ Excluir</button>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
+                {% endfor %}
 
-            <!-- Loop de Vacinas -->
-            {% for v in vacinas %}
-            <div class="bg-white p-6 rounded-[35px] shadow-sm flex items-center gap-8 border border-transparent hover:border-purple-200 transition-all group relative">
-                <div class="text-center border-r border-gray-100 pr-8 min-w-[100px]">
-                    <span class="block text-xs font-black text-gray-400 uppercase tracking-tighter">{{ v.data_aplicacao|date:"d M" }}</span>
-                    <span class="text-2xl font-black text-gray-800">08:00</span>
+                {% if not vacinas and not consultas %}
+                <div class="text-center py-20 bg-white rounded-[40px] border-2 border-dashed border-gray-200">
+                    <i data-lucide="calendar-x" class="mx-auto text-gray-300 mb-4" size="48"></i>
+                    <p class="text-gray-400 font-bold italic">Nenhum agendamento para esta semana.</p>
                 </div>
-                <div class="flex-1">
-                    <h4 class="text-2xl font-black text-gray-800 group-hover:text-purple-600 transition-colors">{{ v.nome }}</h4>
-                    <div class="flex items-center gap-4 mt-2 text-gray-500 font-bold text-sm">
-                        <span class="text-purple-600">@{{ v.pet.nome }}</span>
-                        <span class="flex items-center gap-1.5"><i data-lucide="map-pin" width="14"></i> Posto de Vacinação</span>
-                    </div>
-                </div>
-                <div class="bg-red-50 text-red-400 p-6 rounded-3xl group-hover:bg-red-400 group-hover:text-white transition-all">
-                    <i data-lucide="syringe" size="32"></i>
-                </div>
-                <div class="absolute top-6 right-6">
-                    <button onclick="toggleMenu('vacina-{{ v.id }}')" class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur-sm text-gray-500 hover:text-purple-600 shadow-sm transition-all">&#x22EE;</button>
-                    <div id="menu-vacina-{{ v.id }}" class="hidden absolute right-0 mt-2 bg-white shadow-2xl border border-gray-50 rounded-2xl py-2 w-40 z-20">
-                        <button onclick="openDeleteModal({{ v.id }}, 'Vacinação', 'vacina')" class="w-full text-left px-6 py-3 text-red-500 font-bold hover:bg-red-50 transition-colors text-sm">🗑️ Excluir</button>
-                    </div>
-                </div>
+                {% endif %}
             </div>
-            {% endfor %}
-
-            {% if not vacinas and not consultas %}
-            <div class="text-center py-20 bg-white rounded-[40px] border-2 border-dashed border-gray-200">
-                <i data-lucide="calendar-x" class="mx-auto text-gray-300 mb-4" size="48"></i>
-                <p class="text-gray-400 font-bold italic">Nenhum agendamento para esta semana.</p>
-            </div>
-            {% endif %}
-        </div>
     </main>
+</div>
 </div>
 
 <!-- MODAL DE EXCLUSÃO -->
-<div id="deleteModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+<div id="deleteModal"
+    class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
     <div class="bg-white rounded-[2.5rem] p-10 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200">
         <h2 class="text-2xl font-black text-gray-800 mb-4 text-center">Confirmar exclusão</h2>
-        <p id="modalMessage" class="text-gray-500 font-medium mb-8 text-center">Tem certeza que deseja excluir este agendamento? Esta ação não pode ser desfeita.</p>
+        <p id="modalMessage" class="text-gray-500 font-medium mb-8 text-center">Tem certeza que deseja excluir este
+            agendamento? Esta ação não pode ser desfeita.</p>
         <div class="flex gap-4">
-            <button onclick="closeDeleteModal()" class="flex-1 px-4 py-4 rounded-2xl bg-gray-100 text-gray-600 font-black hover:bg-gray-200 transition-colors">Cancelar</button>
-            <a id="confirmDeleteBtn" href="#" class="flex-1 px-4 py-4 rounded-2xl bg-red-600 text-white font-black text-center hover:bg-red-700 transition-colors">Sim, excluir</a>
+            <button onclick="closeDeleteModal()"
+                class="flex-1 px-4 py-4 rounded-2xl bg-gray-100 text-gray-600 font-black hover:bg-gray-200 transition-colors">Cancelar</button>
+            <a id="confirmDeleteBtn" href="#"
+                class="flex-1 px-4 py-4 rounded-2xl bg-red-600 text-white font-black text-center hover:bg-red-700 transition-colors">Sim,
+                excluir</a>
         </div>
     </div>
 </div>
 
 <script>
-function toggleMenu(menuId) {
-    const menu = document.getElementById(`menu-${menuId}`);
-    document.querySelectorAll('[id^="menu-"]').forEach(m => {
-        if(m.id !== `menu-${menuId}`) m.classList.add('hidden');
-    });
-    menu.classList.toggle('hidden');
-}
-
-function openDeleteModal(id, type, category) {
-    const modal = document.getElementById('deleteModal');
-    const confirmBtn = document.getElementById('confirmDeleteBtn');
-    const message = document.getElementById('modalMessage');
-
-    message.textContent = `Tem certeza que deseja excluir este registro de ${type}? Esta ação não pode ser desfeita.`;
-    
-    if(category === 'consulta') {
-        confirmBtn.href = "{% url 'excluir_consulta' 0 %}".replace('0', id);
-    } else {
-        confirmBtn.href = "{% url 'excluir_vacina' 0 %}".replace('0', id);
-    }
-
-    modal.classList.remove('hidden');
-}
-
-function closeDeleteModal() {
-    document.getElementById('deleteModal').classList.add('hidden');
-}
-
-document.addEventListener('click', function(event) {
-    if (!event.target.closest('button')) {
-        document.querySelectorAll('[id^="menu-"]').forEach(menu => {
-            menu.classList.add('hidden');
+    function toggleMenu(menuId) {
+        const menu = document.getElementById(`menu-${menuId}`);
+        document.querySelectorAll('[id^="menu-"]').forEach(m => {
+            if (m.id !== `menu-${menuId}`) m.classList.add('hidden');
         });
+        menu.classList.toggle('hidden');
     }
-});
 
-lucide.createIcons();
+    function openDeleteModal(id, type, category) {
+        const modal = document.getElementById('deleteModal');
+        const confirmBtn = document.getElementById('confirmDeleteBtn');
+        const message = document.getElementById('modalMessage');
+
+        message.textContent = `Tem certeza que deseja excluir este registro de ${type}? Esta ação não pode ser desfeita.`;
+
+        if (category === 'consulta') {
+            confirmBtn.href = "{% url 'excluir_consulta' 0 %}".replace('0', id);
+        } else {
+            confirmBtn.href = "{% url 'excluir_vacina' 0 %}".replace('0', id);
+        }
+
+        modal.classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.add('hidden');
+    }
+
+    document.addEventListener('click', function (event) {
+        if (!event.target.closest('button')) {
+            document.querySelectorAll('[id^="menu-"]').forEach(menu => {
+                menu.classList.add('hidden');
+            });
+        }
+    });
+
+    lucide.createIcons();
 </script>
 {% endblock %}
