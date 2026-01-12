@@ -23,9 +23,11 @@ urlpatterns = [
     path("perfil-tutor/", views.perfil_tutor, name="perfil_tutor"),
     path("editar-perfil-tutor/", views.editar_perfil_tutor, name="editar_perfil_tutor"),
     path('mensagens/', views.mensagens_view, name='mensagens'),
-    # Rota para processar o envio da mensagem (POST)
     path('mensagens/enviar/', views.enviar_mensagem, name='enviar_mensagem'),
-
+    path('esqueci-senha/', views.solicitar_troca_senha, name='solicitar_troca_senha'),
+    path('perfil/alterar-senha/', views.alterar_senha_logado, name='alterar_senha_logado'),
+    path('recuperar-senha/codigo/', views.inserir_codigo, name='inserir_codigo'),
+    path('recuperar-senha/nova/', views.nova_senha, name='nova_senha'),
 
     # Pets
     path("meus-pets/", views.meus_pets, name="meus_pets"),
@@ -38,8 +40,4 @@ urlpatterns = [
     path("perfil-veterinario/", views.perfil_veterinario, name="perfil_vet"),
     path("editar-perfil-veterinario/", views.editar_perfil_veterinario, name="editar_perfil_veterinario"),
     path('notificacoes/', views.lista_notificacoes, name='notificacoes_lista'),
-    path('vet/mensagens/', views.mensagens_vet_view, name='mensagens_vet'),
-    
-    # E possivelmente a url de enviar mensagem que usamos no formulário:
-    path('enviar-mensagem-vet/', views.enviar_mensagem_vet, name='enviar_mensagem_vet'),
 ]

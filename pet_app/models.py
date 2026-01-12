@@ -107,7 +107,7 @@ class Pet(models.Model):
     peso = models.CharField(db_column='PESO', max_length=10, blank=True, null=True)
     descricao = models.TextField(db_column='DESCRICAO', blank=True, null=True)
     personalidade = models.TextField(db_column='PERSONALIDADE', blank=True, null=True)
-    imagem = models.ImageField(db_column='IMAGEM', upload_to='pets/', blank=True, null=True)
+    imagem = models.ImageField(upload_to="pets/")
     tutor = models.ForeignKey(Tutor, models.DO_NOTHING, db_column='ID_TUTOR')
 
     class Meta:
@@ -242,12 +242,17 @@ class Mensagem(models.Model):
     tutor = models.ForeignKey('Tutor', on_delete=models.CASCADE, db_column='ID_TUTOR')
     veterinario = models.ForeignKey('Veterinario', on_delete=models.CASCADE, db_column='ID_VETERINARIO')
     
-    # Adicionando default='' evita o erro do terminal
     CONTEUDO = models.TextField(db_column='CONTEUDO', default='') 
     DATA_ENVIO = models.DateTimeField(auto_now_add=True, db_column='DATA_ENVIO')
     ENVIADO_POR = models.CharField(max_length=15, db_column='ENVIADO_POR', default='TUTOR')
     LIDA = models.BooleanField(default=False, db_column='LIDA')
 
     class Meta:
-        db_table = 'mensagem'
+        db_table = 'mensagens'
         ordering = ['DATA_ENVIO']
+
+
+class CodigoRecuperacao(models.Model):
+    email = models.EmailField()
+    codigo = models.CharField(max_length=5)
+    criado_em = models.DateTimeField(auto_now_add=True)

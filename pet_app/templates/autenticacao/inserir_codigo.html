@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 flex items-center justify-center p-6 text-center">
+    <div class="bg-white rounded-[3rem] shadow-sm border border-gray-100 p-12 w-full max-w-2xl relative">
+        
+        <!-- Botão Voltar Inteligente -->
+        {% if user.is_authenticated or request.session.tutor_id %} 
+            <!-- Se estiver logado, volta para o Perfil -->
+            <a href="{% url 'perfil_tutor' %}" class="absolute top-8 left-8 flex items-center gap-2 text-gray-400 hover:text-brand-purple transition-colors font-medium">
+                <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                Voltar ao Perfil
+            </a>
+        {% else %}
+            <!-- Se não estiver logado, volta para a tela de e-mail -->
+            <a href="{% url 'solicitar_troca_senha' %}" class="absolute top-8 left-8 flex items-center gap-2 text-gray-400 hover:text-brand-purple transition-colors font-medium">
+                <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                Voltar
+            </a>
+        {% endif %}
+
+        <h2 class="text-4xl font-bold text-gray-900 mb-2 mt-6">Insira o código</h2>
+        <p class="text-gray-400 mb-10 px-10 font-medium">Enviamos um código para o seu e-mail, insira-o para continuar</p>
+        
+        <form method="POST" class="space-y-10">
+            {% csrf_token %}
+            <div class="flex justify-center gap-4" id="otp-inputs">
+                {% for i in "12345" %}
+                <input type="text" 
+                       name="digito_{{forloop.counter}}" 
+                       maxlength="1" 
+                       inputmode="numeric"
+                       pattern="[0-9]*"
+                       class="w-16 h-20 text-center text-3xl font-bold bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-brand-purple outline-none shadow-sm transition-all"
+                       required>
+                {% endfor %}
+            </div>
+
+            <button type="button" class="text-gray-400 font-bold hover:text-brand-purple transition-colors block mx-auto">
+                Reenviar código
+            </button>
+
+            <button type="submit" class="w-full bg-brand-purple text-white font-bold py-4 rounded-2xl shadow-lg shadow-purple-100 hover:brightness-95 transition-all">
+                Enviar
+            </button>
+
+            <p class="text-gray-300 text-sm mt-6">
+                Caso não encontre o e-mail na sua caixa de entrada, verifique a pasta de spam!
+            </p>
+        </form>
+    </div>
+</div>
+
+<script>
+    const inputs = document.querySelectorAll('#otp-inputs input');
+    
+    inputs.forEach((input, index) => {
+        input.addEventListener('input', (e) => {
+            if (e.target.value && index < inputs.length - 1) {
+                inputs[index + 1].focus();
+            }
+        });
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                inputs[index - 1].focus();
+            }
+        });
+    });
+</script>
+{% endblock %}

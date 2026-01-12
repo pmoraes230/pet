@@ -282,7 +282,7 @@ def perfil_veterinario(request):
         return redirect('login_veterinario')
     
     veterinario = models.Veterinario.objects.get(id=vet_data['id'])
-    contatos = models.ContatoVeterinario.objects.filter(id_veterinario=veterinario)
+    contatos = models.ContatoVeterinario.objects.filter(veterinario_id=veterinario.id)
     
     # MUDE AQUI: Verifique qual é o nome do seu arquivo HTML
     # Se você criou como vet_perfil.html, mude para:
