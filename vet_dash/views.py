@@ -6,6 +6,8 @@ from django.db.models.functions import ExtractMonth
 import json
 from pet_app import models
 from pet_app.utils import get_veterinario_logado
+from pet_app.models import Pet, Vacina, Consulta
+from django.utils import timezone
 
 
 # ------------------------
@@ -179,17 +181,27 @@ def prontuarios_view(request):
     veterinario = models.Veterinario.objects.get(id=vet_data['id'])
     pet_id = request.GET.get('pet_id')
     pet_selecionado = None
+    ultimos_prontuarios = []
 
     if pet_id:
         pet_selecionado = models.Pet.objects.filter(id=pet_id).first()
+        ultimos_prontuarios = models.Prontuariopet.objects.filter(pet_id=pet_id).order_by('-id')[:5]
 
     if request.method == "POST" and pet_id:
+        pet = models.Pet.objects.filter(id=pet_id).first()
         observacoes = request.POST.get('anotacoes', '')
-        models.Prontuariopet.objects.create(
-            observacao=observacoes or "Sem observações adicionais",
-            avaliacao_geral="Registrado pelo veterinário via dashboard",
-        )
-        messages.success(request, "Prontuário salvo com sucesso!")
+        
+        if pet:
+            models.Prontuariopet.objects.create(
+                pet=pet,
+                veterinario=veterinario,
+                observacao=observacoes or "Sem observações adicionais",
+                avaliacao_geral="Registrado pelo veterinário via dashboard",
+            )
+            messages.success(request, "Prontuário salvo com sucesso!")
+        else:
+            messages.error(request, "Pet não encontrado.")
+        
         return redirect(f'/vet_dash/prontuarios/?pet_id={pet_id}')
 
     pacientes = models.Pet.objects.all().order_by('nome')
@@ -198,6 +210,7 @@ def prontuarios_view(request):
         'veterinario': veterinario,
         'pacientes': pacientes,
         'pet_selecionado': pet_selecionado,
+        'ultimos_prontuarios': ultimos_prontuarios,
     }
     return render(request, 'prontuarios.html', context)
 
@@ -384,3 +397,167 @@ def detalhe_pet_view(request, pet_id):
         'list_personalidades': list_personalidades,
     }
     return render(request, 'detalhes_pet.html', context)
+
+
+# ========================================================
+# MENSAGENS
+# ========================================================
+
+def mensagens_vet(request):
+    vet_data = get_veterinario_logado(request)
+    if not vet_data:
+        return redirect('login_veterinario')
+
+    veterinario = models.Veterinario.objects.get(id=vet_data['id'])
+    
+    # Pega todos os tutores para exibir na lista de contatos
+    contatos = models.Tutor.objects.all().order_by('nome_tutor')
+    
+    # Pega o tutor selecionado se houver
+    tutor_selecionado = None
+    mensagens = []
+    
+    tutor_id = request.GET.get('tutor_id')
+    if tutor_id:
+        try:
+            tutor_selecionado = models.Tutor.objects.get(id=tutor_id)
+            mensagens = models.Mensagem.objects.filter(
+                veterinario=veterinario,
+                tutor=tutor_selecionado
+            ).order_by('DATA_ENVIO')
+        except models.Tutor.DoesNotExist:
+            pass
+
+    context = {
+        'veterinario': veterinario,
+        'contatos': contatos,
+        'tutor_selecionado': tutor_selecionado,
+        'mensagens': mensagens,
+    }
+    return render(request, 'mensagensvet.html', context)
+
+
+def enviar_mensagem_vet(request):
+    if request.method == "POST":
+        vet_data = get_veterinario_logado(request)
+        if not vet_data:
+            return redirect('login_veterinario')
+
+        veterinario = models.Veterinario.objects.get(id=vet_data['id'])
+        tutor_id = request.POST.get('tutor_id')
+        conteudo = request.POST.get('mensagem')
+
+        try:
+            tutor = models.Tutor.objects.get(id=tutor_id)
+            models.Mensagem.objects.create(
+                veterinario=veterinario,
+                tutor=tutor,
+                CONTEUDO=conteudo,
+                ENVIADO_POR='VETERINARIO'
+            )
+        except models.Tutor.DoesNotExist:
+            pass
+
+        return redirect('mensagens_vet', tutor_id=tutor_id)
+
+    return redirect('mensagens_vet')
+
+
+
+
+
+
+
+def perfil_pet_vet(request, pet_id):
+    """Exibe e permite editar perfil do pet para o veterinário"""
+    pet = get_object_or_404(Pet, id=pet_id)
+    
+    if request.method == "POST":
+        # Se veio nome_vacina, salva vacina
+        if request.POST.get('nome_vacina'):
+            Vacina.objects.create(
+                nome=request.POST.get('nome_vacina'),
+                data_aplicacao=request.POST.get('data_aplicacao'),
+                proxima_dose=request.POST.get('proxima_dose') or None,
+                pet=pet
+            )
+        else:
+            # Salva os dados do Pet
+            pet.nome = request.POST.get('nome') or pet.nome
+            pet.peso = request.POST.get('peso') or pet.peso
+            pet.sexo = request.POST.get('sexo') or pet.sexo
+            pet.descricao = request.POST.get('descricao') or pet.descricao
+            pet.especie = request.POST.get('especie') or pet.especie
+            pet.raca = request.POST.get('raca') or pet.raca
+            pet.pelagem = request.POST.get('pelagem') or pet.pelagem
+            pet.personalidade = request.POST.get('personalidade') or pet.personalidade
+
+            if request.FILES.get('imagem'):
+                pet.imagem = request.FILES.get('imagem')
+            
+            pet.save()
+        
+        return redirect('perfil_pet_vet', pet_id=pet.id)
+
+    # GET: Busca as vacinas atualizadas
+    vacinas = Vacina.objects.filter(pet_id=pet.id).order_by('-data_aplicacao')
+    proxima_consulta = Consulta.objects.filter(
+        pet_id=pet.id, 
+        data_consulta__gte=timezone.now().date()
+    ).order_by('data_consulta').first()
+
+    list_personalidades = []
+    if pet.personalidade:
+        list_personalidades = [p.strip() for p in pet.personalidade.split(',') if p.strip()]
+
+    context = {
+        'pet': pet,
+        'vacinas': vacinas,
+        'proxima_consulta': proxima_consulta,
+        'list_personalidades': list_personalidades,
+    }
+    return render(request, 'detalhes_pet.html', context)
+
+
+# ========================================================
+# EXCLUSÃO DE AGENDAMENTOS (CONSULTAS E VACINAS)
+# ========================================================
+
+def excluir_consulta_vet(request, consulta_id):
+    vet_data = get_veterinario_logado(request)
+    if not vet_data:
+        return redirect('login_veterinario')
+
+    veterinario = models.Veterinario.objects.get(id=vet_data['id'])
+    consulta = models.Consulta.objects.filter(
+        id=consulta_id,
+        pet__veterinario=veterinario
+    ).first()
+
+    if consulta:
+        consulta.delete()
+        messages.success(request, "Consulta removida com sucesso!")
+    else:
+        messages.error(request, "Consulta não encontrada.")
+
+    return redirect('agenda_vet')
+
+
+def excluir_vacina_vet(request, vacina_id):
+    vet_data = get_veterinario_logado(request)
+    if not vet_data:
+        return redirect('login_veterinario')
+
+    veterinario = models.Veterinario.objects.get(id=vet_data['id'])
+    vacina = models.Vacina.objects.filter(
+        id=vacina_id,
+        pet__veterinario=veterinario
+    ).first()
+
+    if vacina:
+        vacina.delete()
+        messages.success(request, "Registro de vacinação removido com sucesso!")
+    else:
+        messages.error(request, "Registro não encontrado.")
+
+    return redirect('agenda_vet')

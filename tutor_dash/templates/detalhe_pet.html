@@ -10,25 +10,27 @@
 
         <div class="flex-1 overflow-y-auto p-6 md:p-10">
             <div class="max-w-7xl mx-auto">
-                <form method="POST" enctype="multipart/form-data" class="flex flex-col lg:flex-row gap-10">
+                <form method="POST" enctype="multipart/form-data" action="{% url 'detalhe_pet' pet.id %}" class="flex flex-col lg:flex-row gap-10">
                     {% csrf_token %}
+        
+                    <!-- INPUTS ESCONDIDOS PARA SALVAMENTO DE VACINA -->
+                    <input type="hidden" name="nome_vacina" id="hidden_nome_vacina">
+                    <input type="hidden" name="data_aplicacao" id="hidden_data_aplicacao">
+                    <input type="hidden" name="proxima_dose" id="hidden_proxima_dose">
         
                     <div class="w-full lg:w-[380px] flex flex-col gap-6">
                         
                         <div class="bg-white rounded-[2.5rem] shadow-sm p-6 flex flex-col items-center border border-gray-100">
                             <div class="w-full h-56 rounded-[2rem] overflow-hidden mb-4 relative group bg-gray-50">
-                                {% if pet.imagem %}
-                                    <img src="{{ pet.imagem.url }}" class="w-full h-full object-cover">
-                                {% else %}
-                                    <img src="{% static 'images/default-pet.png' %}" class="w-full h-full object-cover">
-                                {% endif %}
+                                <img id="preview-img" src="{% if pet.imagem %}{{ pet.imagem.url }}{% else %}{% static 'images/default-pet.png' %}{% endif %}" class="w-full h-full object-cover">
                                 <label class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
                                     <span class="text-white font-bold">Alterar Foto</span>
-                                    <input type="file" name="imagem" class="hidden">
+                                    <input type="file" name="imagem" class="hidden" accept="image/*" onchange="previewImage(this)">
                                 </label>
                             </div>
         
-                            <h2 class="text-3xl font-black text-gray-800">{{ pet.nome|default:"Nome do Pet" }}</h2>
+                            <input type="text" name="nome" value="{{ pet.nome }}" 
+                                   class="text-3xl font-black text-gray-800 text-center border-none focus:ring-0 w-full bg-transparent">
                             <p class="text-gray-400 font-bold mb-6">{{ pet.raca|default:"Vira-lata" }}</p>
         
                             <div class="flex gap-4 w-full">
@@ -104,7 +106,7 @@
                         <div id="tab-saude" class="tab-content flex-1">
                             <div class="flex items-center justify-between mb-8">
                                 <h3 class="text-xl font-black text-gray-800">Carteira de vacinação</h3>
-                                <button type="button" class="text-purple-600 font-bold hover:underline">+ Adicionar registro</button>
+                                <button type="button" onclick="openVaccineModal()" class="bg-purple-600 text-white px-6 py-2 rounded-full font-black text-xs uppercase hover:bg-purple-700 transition-all shadow-md">+ Novo Registro</button>
                             </div>
         
                             <div class="space-y-4">
@@ -164,6 +166,28 @@
     </div>
 </div>
 
+<!-- MODAL VACINA -->
+<div id="modal-vacina" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+    <div class="bg-white rounded-[3rem] p-10 max-w-md w-full shadow-2xl">
+        <div class="text-center mb-8">
+            <div class="w-16 h-16 bg-purple-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <span class="text-3xl">💉</span>
+            </div>
+            <h3 class="text-2xl font-black text-gray-800">Novo Registro</h3>
+            <p class="text-gray-400 font-bold text-sm">Insira os dados da vacinação abaixo.</p>
+        </div>
+        <div class="space-y-4 mb-8">
+            <input type="text" id="input_nome_vacina" class="w-full bg-gray-50 rounded-2xl p-4 font-bold outline-none border-2 border-transparent focus:border-purple-500" placeholder="Nome da Vacina">
+            <input type="date" id="input_data_aplicacao" class="w-full bg-gray-50 rounded-2xl p-4 font-bold outline-none border-2 border-transparent focus:border-purple-500">
+            <input type="date" id="input_proxima_dose" class="w-full bg-gray-50 rounded-2xl p-4 font-bold outline-none border-2 border-transparent focus:border-purple-500">
+        </div>
+        <div class="flex gap-4">
+            <button type="button" onclick="closeVaccineModal()" class="flex-1 bg-gray-100 font-black py-4 rounded-2xl uppercase text-xs">Cancelar</button>
+            <button type="button" onclick="submitVaccine()" class="flex-1 bg-purple-600 text-white font-black py-4 rounded-2xl uppercase text-xs shadow-lg">Salvar Registro</button>
+        </div>
+    </div>
+</div>
+
 <style>
     .tab-content { display: none; }
     .tab-content.active { display: block; }
@@ -184,6 +208,9 @@ function switchTab(tab) {
 
 function openModal() { document.getElementById('modal-personalidade').classList.remove('hidden'); }
 function closeModal() { document.getElementById('modal-personalidade').classList.add('hidden'); }
+
+function openVaccineModal() { document.getElementById('modal-vacina').classList.remove('hidden'); }
+function closeVaccineModal() { document.getElementById('modal-vacina').classList.add('hidden'); }
 
 function toggleTrait(btn) {
     btn.classList.toggle('is-selected');
@@ -210,6 +237,38 @@ function saveTraits() {
 
     inputOculto.value = traitsList.join(',');
     closeModal();
+}
+
+function submitVaccine() {
+    const nome = document.getElementById('input_nome_vacina').value;
+    const data = document.getElementById('input_data_aplicacao').value;
+    const prox = document.getElementById('input_proxima_dose').value;
+
+    if (!nome || !data) {
+        alert("Nome e Data são obrigatórios!");
+        return;
+    }
+
+    document.getElementById('hidden_nome_vacina').value = nome;
+    document.getElementById('hidden_data_aplicacao').value = data;
+    document.getElementById('hidden_proxima_dose').value = prox;
+
+    const form = document.querySelector('form');
+    const currentAction = form.action.split('?')[0];
+    form.action = currentAction + "?tab=saude";
+    
+    closeVaccineModal();
+    form.submit();
+}
+
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('preview-img').src = e.target.result;
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
 }
 </script>
 {% endblock %}

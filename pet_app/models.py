@@ -120,19 +120,22 @@ class Pet(models.Model):
 
 class Prontuariopet(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
+    pet = models.ForeignKey('Pet', models.DO_NOTHING, null=True, blank=True, db_column='ID_PET')
+    veterinario = models.ForeignKey('Veterinario', models.DO_NOTHING, null=True, blank=True, db_column='ID_VETERINARIO')
     historico_veterinario = models.CharField(db_column='HISTORICO_VETERINARIO', max_length=255, blank=True, null=True)
     motivo_consulta = models.TextField(db_column='MOTIVO_CONSULTA', blank=True, null=True)
     avaliacao_geral = models.TextField(db_column='AVALIACAO_GERAL', blank=True, null=True)
     procedimentos = models.TextField(db_column='PROCEDIMENTOS', blank=True, null=True)
     diagnostico_conslusivo = models.TextField(db_column='DIAGNOSTICO_CONSLUSIVO', blank=True, null=True)
     observacao = models.TextField(db_column='OBSERVACAO', blank=True, null=True)
+    data_criacao = models.DateTimeField(db_column='DATA_CRIACAO', auto_now_add=True, null=True, blank=True)
 
     class Meta:
         managed = False
         db_table = 'prontuariopet'
 
     def __str__(self):
-        return f"Prontuário {self.id}"
+        return f"Prontuário {self.id} - {self.pet.nome if self.pet else 'Sem Pet'}"
 
 
 class Consulta(models.Model):
@@ -248,7 +251,7 @@ class Mensagem(models.Model):
     LIDA = models.BooleanField(default=False, db_column='LIDA')
 
     class Meta:
-        db_table = 'mensagens'
+        db_table = 'mensagem'
         ordering = ['DATA_ENVIO']
 
 

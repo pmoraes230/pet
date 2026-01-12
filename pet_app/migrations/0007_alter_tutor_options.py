@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pet_app', '0006_diarioemocional_medicamento_vacina_mensagem_and_more'),
+        ('pet_app', '0006_diarioemocional_medicamento_vacina_codigorecuperacao_and_more'),
     ]
 
     operations = [

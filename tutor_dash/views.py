@@ -238,20 +238,31 @@ def detalhe_pet(request, pet_id):
     pet = get_object_or_404(models.Pet, id=pet_id)
 
     if request.method == "POST":
-        pet.nome = request.POST.get('nome')
-        pet.especie = request.POST.get('especie')
-        pet.raca = request.POST.get('raca')
-        pet.sexo = request.POST.get('sexo')
-        pet.pelagem = request.POST.get('pelagem')
-        pet.castrado = request.POST.get('castrado')
-        pet.peso = request.POST.get('peso')
-        pet.descricao = request.POST.get('descricao')
-        pet.personalidade = request.POST.get('personalidade')
+        # Verificar se é para adicionar vacina
+        if request.POST.get('nome_vacina'):
+            models.Vacina.objects.create(
+                nome=request.POST.get('nome_vacina'),
+                data_aplicacao=request.POST.get('data_aplicacao'),
+                proxima_dose=request.POST.get('proxima_dose') or None,
+                pet=pet
+            )
+        else:
+            # Atualizar dados do pet
+            pet.nome = request.POST.get('nome')
+            pet.especie = request.POST.get('especie')
+            pet.raca = request.POST.get('raca')
+            pet.sexo = request.POST.get('sexo')
+            pet.pelagem = request.POST.get('pelagem')
+            pet.castrado = request.POST.get('castrado')
+            pet.peso = request.POST.get('peso')
+            pet.descricao = request.POST.get('descricao')
+            pet.personalidade = request.POST.get('personalidade')
 
-        if 'imagem' in request.FILES:
-            pet.imagem = request.FILES['imagem']
+            if 'imagem' in request.FILES:
+                pet.imagem = request.FILES['imagem']
 
-        pet.save()
+            pet.save()
+        
         return redirect('detalhe_pet', pet_id=pet.id)
 
     list_personalidades = pet.personalidade.split(',') if pet.personalidade else []
@@ -415,3 +426,94 @@ def diario_emocional_view(request):
         'grafico_labels': json.dumps(labels),
         'grafico_valores': json.dumps(valores)
     })
+
+
+from django.shortcuts import render, get_object_or_404, redirect
+from pet_app.models import Pet, Vacina, Consulta # Import correto agora
+from django.utils import timezone
+
+from django.shortcuts import render, get_object_or_404, redirect
+from pet_app.models import Pet, Vacina, Consulta # Importando do app correto
+from django.utils import timezone
+
+def perfil_pet(request, pet_id):
+    # 1. Busca o pet
+    pet = get_object_or_404(Pet, id=pet_id)
+    
+    # 2. Se for POST, salva as alterações
+    if request.method == "POST":
+        # Usamos 'or pet.campo' para que se o campo vier vazio, ele não salve como None
+        pet.nome = request.POST.get('nome') or pet.nome
+        pet.peso = request.POST.get('peso') or pet.peso
+        pet.sexo = request.POST.get('sexo') or pet.sexo
+        pet.descricao = request.POST.get('descricao') or pet.descricao
+        pet.especie = request.POST.get('especie') or pet.especie
+        pet.raca = request.POST.get('raca') or pet.raca
+        pet.personalidade = request.POST.get('personalidade') or pet.personalidade
+
+        # Tratamento de imagem
+        if request.FILES.get('imagem'):
+            pet.imagem = request.FILES.get('imagem')
+
+        pet.save()
+        # Após salvar, redireciona para a mesma página para limpar o POST
+        return redirect('perfil_pet', pet_id=pet.id)
+
+    # 3. Dados para exibição (fora do IF POST para carregar sempre)
+    vacinas = Vacina.objects.filter(id_pet=pet.id)
+    proxima_consulta = Consulta.objects.filter(
+        id_pet=pet.id, 
+        data_consulta__gte=timezone.now().date()
+    ).order_by('data_consulta').first()
+
+    # Transforma a string de personalidade em lista para as tags
+    list_personalidades = []
+    if pet.personalidade:
+        list_personalidades = [p.strip() for p in pet.personalidade.split(',') if p.strip()]
+
+    context = {
+        'pet': pet,
+        'vacinas': vacinas,
+        'proxima_consulta': proxima_consulta,
+        'list_personalidades': list_personalidades,
+    }
+    
+    return render(request, 'perfil_pet.html', context)
+
+
+# ========================================================
+# EXCLUSÃO DE AGENDAMENTOS (CONSULTAS E VACINAS)
+# ========================================================
+
+def excluir_consulta(request, consulta_id):
+    tutor_data = get_tutor_logado(request)
+    if not tutor_data:
+        return redirect('login')
+
+    tutor = models.Tutor.objects.get(id=tutor_data['id'])
+    consulta = models.Consulta.objects.filter(id=consulta_id, pet__tutor=tutor).first()
+
+    if consulta:
+        consulta.delete()
+        messages.success(request, "Agendamento removido com sucesso!")
+    else:
+        messages.error(request, "Agendamento não encontrado.")
+
+    return redirect('agendamentos')
+
+
+def excluir_vacina(request, vacina_id):
+    tutor_data = get_tutor_logado(request)
+    if not tutor_data:
+        return redirect('login')
+
+    tutor = models.Tutor.objects.get(id=tutor_data['id'])
+    vacina = models.Vacina.objects.filter(id=vacina_id, pet__tutor=tutor).first()
+
+    if vacina:
+        vacina.delete()
+        messages.success(request, "Registro de vacinação removido com sucesso!")
+    else:
+        messages.error(request, "Registro não encontrado.")
+
+    return redirect('agendamentos')

@@ -60,7 +60,7 @@
 
             <div class="space-y-4 pb-20">
                 {% for c in agenda %}
-                <div class="bg-white p-6 rounded-[35px] shadow-sm flex items-center gap-8 border border-transparent hover:border-teal-200 transition-all group">
+                <div class="bg-white p-6 rounded-[35px] shadow-sm flex items-center gap-8 border border-transparent hover:border-teal-200 transition-all group relative">
                     
                     <!-- Horário -->
                     <div class="text-center border-r border-gray-100 pr-8 min-w-[100px]">
@@ -100,6 +100,14 @@
                         <a href="#" class="bg-gray-50 text-gray-400 p-4 rounded-3xl hover:bg-blue-500 hover:text-white transition-all shadow-sm">
                             <i data-lucide="edit-3" size="24"></i>
                         </a>
+                    </div>
+
+                    <!-- Menu de 3 pontinhos -->
+                    <div class="absolute top-6 right-6">
+                        <button onclick="toggleMenu('consulta-vet-{{ c.id }}')" class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur-sm text-gray-500 hover:text-[#26C2B9] shadow-sm transition-all">&#x22EE;</button>
+                        <div id="menu-consulta-vet-{{ c.id }}" class="hidden absolute right-0 mt-2 bg-white shadow-2xl border border-gray-50 rounded-2xl py-2 w-40 z-20">
+                            <button onclick="openDeleteModal({{ c.id }}, 'Consulta', 'consulta')" class="w-full text-left px-6 py-3 text-red-500 font-bold hover:bg-red-50 transition-colors text-sm">🗑️ Excluir</button>
+                        </div>
                     </div>
                 </div>
                 {% empty %}
@@ -206,6 +214,55 @@
             toggleModal();
         }
     }
+
+    // Funções para menu de exclusão
+    function toggleMenu(menuId) {
+        const menu = document.getElementById(`menu-${menuId}`);
+        document.querySelectorAll('[id^="menu-"]').forEach(m => {
+            if(m.id !== `menu-${menuId}`) m.classList.add('hidden');
+        });
+        menu.classList.toggle('hidden');
+    }
+
+    function openDeleteModal(id, type, category) {
+        const modal = document.getElementById('deleteModal');
+        const confirmBtn = document.getElementById('confirmDeleteBtn');
+        const message = document.getElementById('modalMessage');
+
+        message.textContent = `Tem certeza que deseja excluir este registro de ${type}? Esta ação não pode ser desfeita.`;
+        
+        if(category === 'consulta') {
+            confirmBtn.href = "{% url 'excluir_consulta_vet' 0 %}".replace('0', id);
+        } else {
+            confirmBtn.href = "{% url 'excluir_vacina_vet' 0 %}".replace('0', id);
+        }
+
+        modal.classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.add('hidden');
+    }
+
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('button')) {
+            document.querySelectorAll('[id^="menu-"]').forEach(menu => {
+                menu.classList.add('hidden');
+            });
+        }
+    });
 </script>
+
+<!-- MODAL DE EXCLUSÃO -->
+<div id="deleteModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-[2.5rem] p-10 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200">
+        <h2 class="text-2xl font-black text-gray-800 mb-4 text-center">Confirmar exclusão</h2>
+        <p id="modalMessage" class="text-gray-500 font-medium mb-8 text-center">Tem certeza que deseja excluir este agendamento? Esta ação não pode ser desfeita.</p>
+        <div class="flex gap-4">
+            <button onclick="closeDeleteModal()" class="flex-1 px-4 py-4 rounded-2xl bg-gray-100 text-gray-600 font-black hover:bg-gray-200 transition-colors">Cancelar</button>
+            <a id="confirmDeleteBtn" href="#" class="flex-1 px-4 py-4 rounded-2xl bg-red-600 text-white font-black text-center hover:bg-red-700 transition-colors">Sim, excluir</a>
+        </div>
+    </div>
+</div>
 
 {% endblock %}
