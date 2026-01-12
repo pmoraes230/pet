@@ -18,4 +18,5 @@ urlpatterns = [
     path('excluir-consulta/<int:consulta_id>/', views.excluir_consulta, name='excluir_consulta'),
     path('excluir-vacina/<int:vacina_id>/', views.excluir_vacina, name='excluir_vacina'),
     path('diario-emocional/', views.diario_emocional_view, name='diario_emocional'),
+    
 ]

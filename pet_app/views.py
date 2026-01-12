@@ -13,6 +13,11 @@ from django.conf import settings
 from django.http import JsonResponse
 import random
 import logging
+# pet_app/views.py
+
+from django.shortcuts import render, redirect
+# ADICIONE ESTA LINHA ABAIXO:
+from .models import Notificacao, Consulta, Pet # E outros modelos que você usar
 
 logger = logging.getLogger(__name__)
 
@@ -594,3 +599,30 @@ def nova_senha(request):
         messages.error(request, "As senhas não conferem.")
 
     return render(request, 'autenticacao/nova_senha.html')
+
+
+def historico_notificacao(request):
+    # 1. Pega os dados da sessão
+    user_id = request.session.get('user_id')
+    user_tipo = request.session.get('user_tipo')
+
+    # 2. Segurança: Se não tiver sessão, volta pro login imediatamente
+    if not user_id or not user_tipo:
+        return redirect('login') 
+
+    # 3. Busca as notificações do usuário logado
+    if user_tipo == 'tutor':
+        notificacoes = Notificacao.objects.filter(tutor_id=user_id).order_by('-data_criacao')
+    else:
+        # Aqui garantimos que se não for tutor, filtramos por veterinário
+        notificacoes = Notificacao.objects.filter(veterinario_id=user_id).order_by('-data_criacao')
+    
+    # Marca as notificações como lidas
+    notificacoes.filter(lida=False).update(lida=True)
+    
+    # 4. RENDERIZANDO COM O USER_TIPO EXPLÍCITO (Isso mata o bug)
+    return render(request, 'notificacoes/notificacoes_history.html', {
+        'notificacoes': notificacoes,
+        'user_tipo': user_tipo # Envia o tipo exato para o HTML
+    })
+
