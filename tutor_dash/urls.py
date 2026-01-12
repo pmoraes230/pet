@@ -6,7 +6,7 @@ urlpatterns = [
     path("edicao_perfil_tutor/", views.editar_perfil_tutor, name="edicao_perfil_tutor"),
     path('config_tutor/', views.config_tutor, name="config_tutor"),
     path("desativar_conta/", views.desativar_conta, name="desativar_conta"),
-    path('', views.tutor_dashboard_view, name='tutor_dash'),
+    path('dash_tutor/', views.tutor_dashboard_view, name='tutor_dash'),
     path('meus-pets/', views.meus_pets, name='meus_pets'),
     # path('edicao_perfil_tutor/'),
     path('adicionar-pet/', views.adicionar_pet, name='adicionar_pet'),

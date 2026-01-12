@@ -3,12 +3,11 @@
 <!-- Sidebar Veterinário -->
 <aside class="w-64 bg-[#064e4b] border-r border-teal-800 hidden md:flex flex-col z-10 text-white">
     
-    <!-- LOGO E NOME (Identidade Coração em patas) -->
     <div class="p-6 flex items-center gap-3">
-        <div class="bg-[#26C2B9] p-2 rounded-lg text-white shadow-sm">
-            <i data-lucide="paw-print" width="20" height="20"></i>
+        <div class="bg-brand-yellow p-2 rounded-full text-white group-hover:scale-110 transition-transform">
+            <img src="{% static 'icons/pet.svg' %}" style="width: 30px; height: 30px;" alt="">
         </div>
-        <span class="font-black text-lg tracking-tight">Coração em patas</span>
+        <span id="logo-text" class="text-lx font-bold text-white transition-colors duration-300">Corações em Patas</span>
     </div>
 
     <!-- Navegação com Lógica de Link Ativo -->
@@ -23,7 +22,7 @@
         </a>
 
         <!-- MENSAGENS (Corrigido para o padrão Teal) -->
-        <a href="{% url 'mensagens_vet' %}" 
+        <a href="#" 
            class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all
            {% if request.resolver_match.url_name == 'mensagens_vet' %} bg-white/20 text-white shadow-sm {% else %} text-teal-100 hover:bg-white/5 hover:text-white {% endif %}">
             <i data-lucide="message-circle" width="20" height="20"></i>
@@ -61,16 +60,10 @@
             <i data-lucide="dollar-sign" width="20" height="20"></i>
             <span>Financeiro</span>
         </a>
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> 1ee837e870e273d6b31d1c5b10958891d5578213
     </nav>
-
-    <!-- Rodapé da Sidebar (Botão Sair) -->
-    <div class="p-4 border-t border-teal-800">
-        <a href="{% url 'logout' %}" class="flex items-center gap-3 px-4 py-3 text-red-300 hover:bg-red-500/10 hover:text-red-100 rounded-xl font-bold transition-all">
-            <i data-lucide="log-out" width="20" height="20"></i>
-            <span>Sair da conta</span>
-        </a>
-    </div>
-
 </aside>
