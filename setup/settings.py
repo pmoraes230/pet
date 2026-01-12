@@ -10,8 +10,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("SECRET_KEY")
+# Se ele não achar a chave no .env, usa a segunda string como reserva
+SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-chave-temporaria-para-evitar-erros")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'False'
@@ -79,14 +79,19 @@ if DEBUG == False:
         }
     }
 else:
+    # Configuração MySQL
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
-            'NAME': os.getenv('dbnameMysql',),
-            'USER': os.getenv('usernameMysql'),
-            'PASSWORD': os.getenv('passwordMysql'),
-            'HOST': os.getenv('hostnameMysql'),
-            'PORT': os.getenv('portMysql')
+            'NAME': os.getenv('dbnameMysql', 'pet_patrick_db'),
+            'USER': os.getenv('usernameMysql', 'root'),
+            'PASSWORD': os.getenv('passwordMysql', ''), # Verifique se sua senha não é 'root' ou vazia
+            'HOST': os.getenv('hostnameMysql', '127.0.0.1'),
+            'PORT': os.getenv('portMysql', '3306'),
+            'OPTIONS': {
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+                'charset': 'utf8mb4',
+            },
         }
     }
 
@@ -135,7 +140,44 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# No final do arquivo settings.py
+# Configuração de Logging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
+
+# Configurações de Media
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Configurações de Login
 LOGIN_URL = '/login/'
+
+# Configurações de E-mail
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+
+# Se porta 587 não funcionar, descomente isto:
+# EMAIL_PORT = 465
+# EMAIL_USE_TLS = False
+# EMAIL_USE_SSL = True
+
+EMAIL_HOST_USER = os.getenv('EMAIL_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_PASSWORD')
+DEFAULT_FROM_EMAIL = f'Equipe Coração em Patas <{os.getenv("EMAIL_USER")}>'

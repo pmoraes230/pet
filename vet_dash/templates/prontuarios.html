@@ -2,12 +2,21 @@
 {% load static %}
 
 {% block content %}
+<style>
+    /* Estilização da barra de rolagem do histórico */
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #dbdbdb; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #9F67FF; }
+
+    /* Efeito de hover no card de histórico */
+    .history-card:hover .history-icon { background-color: #9F67FF; color: white; transform: scale(1.1); }
+</style>
+
 <div class="bg-gray-50 flex h-screen overflow-hidden">
-    <!-- Sidebar -->
     {% include "partials/aside/aside_vet.html" %}
 
     <main class="flex-1 flex flex-col overflow-hidden">
-        <!-- Header -->
         {% include "partials/header/header_vet.html" %}
 
         <div class="flex-1 p-6 md:p-10 overflow-y-auto">
@@ -15,57 +24,101 @@
             <form method="POST" class="max-w-7xl mx-auto">
                 {% csrf_token %}
                 
-                <!-- Cabeçalho do Prontuário -->
-                <div class="flex justify-between items-start mb-8">
+                <!-- Cabeçalho -->
+                <div class="flex flex-col md:flex-row justify-between items-center gap-6 mb-10">
                     <div>
-                        <h2 class="text-3xl font-black text-gray-800 tracking-tight">Prontuário eletrônico</h2>
-                        
-                        <!-- Seletor de Paciente -->
-                        <div class="mt-4 flex items-center gap-3">
-                            <label class="font-bold text-gray-400">Consulta atual:</label>
-                            <select onchange="location = final_url(this.value);" class="bg-transparent border-none font-black text-gray-800 focus:ring-0 cursor-pointer text-lg p-0">
+                        <h2 class="text-4xl font-black text-gray-800 tracking-tight">Prontuário eletrônico</h2>
+                        <div class="mt-2 flex items-center gap-3 bg-white px-4 py-2 rounded-full border border-gray-100 shadow-sm w-fit">
+                            <span class="text-xs font-black text-gray-400 uppercase tracking-widest">Paciente:</span>
+                            <select onchange="location = final_url(this.value);" class="bg-transparent border-none font-black text-[#26C2B9] focus:ring-0 cursor-pointer text-base p-0">
                                 <option value="">Selecione um paciente...</option>
                                 {% for p in pacientes %}
                                     <option value="{{ p.id }}" {% if pet_selecionado.id == p.id %}selected{% endif %}>
-                                        {{ p.nome|lower }} ({{ p.raca|lower }})
+                                        {{ p.nome|upper }} • {{ p.raca }}
                                     </option>
                                 {% endfor %}
                             </select>
                         </div>
                     </div>
 
-                    <!-- Botão Salvar (Lilás como na imagem) -->
-                    <button type="submit" class="bg-[#9F67FF] hover:bg-[#8b55e6] text-white px-10 py-4 rounded-2xl font-black transition-all shadow-lg shadow-purple-100">
+                    <button type="submit" class="w-full md:w-auto bg-[#9F67FF] hover:bg-[#8b55e6] text-white px-12 py-5 rounded-[2rem] font-black transition-all shadow-xl shadow-purple-100 flex items-center justify-center gap-3">
+                        <i data-lucide="save" width="20"></i>
                         Salvar prontuário
                     </button>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
                     
-                    <!-- Coluna Principal: Anotações -->
+                    <!-- Coluna Principal: Editor -->
                     <div class="lg:col-span-2">
-                        <label class="block text-xl font-black text-gray-800 mb-4">Anotações</label>
-                        <div class="relative">
+                        <div class="flex items-center justify-between mb-4 px-4">
+                            <label class="text-xl font-black text-gray-800 flex items-center gap-2">
+                                <i data-lucide="pencil-line" class="text-purple-500"></i> Evolução Clínica
+                            </label>
+                            <span class="text-xs font-bold text-gray-400">Pressione Salvar após as anotações</span>
+                        </div>
+                        <div class="relative bg-white rounded-[3rem] shadow-sm border-2 border-gray-100 overflow-hidden">
                             <textarea 
+                                id="anotacoes-textarea"
                                 name="anotacoes"
-                                placeholder="Digite aqui as observações, sintomas, temperatura, peso e procedimento realizados durante a consulta..."
-                                class="w-full h-[600px] bg-[#E8E8E8] border-2 border-gray-300 rounded-[40px] p-10 font-bold text-gray-700 placeholder-gray-400 focus:ring-2 focus:ring-[#9F67FF] focus:bg-white outline-none transition-all resize-none shadow-inner"
+                                placeholder="Descreva aqui os sintomas, temperatura, peso, conduta clínica e procedimentos realizados..."
+                                class="w-full h-[600px] p-12 font-bold text-gray-700 placeholder-gray-300 focus:ring-0 border-none outline-none transition-all resize-none text-lg leading-relaxed"
                             ></textarea>
                         </div>
                     </div>
 
-                    <!-- Coluna Lateral: Histórico/Infos Rápidas -->
-                    <div class="space-y-6">
-                        <label class="block text-xl font-black text-gray-800 mb-4 opacity-0">Espaço</label>
-                        <div class="bg-white border-2 border-gray-200 rounded-[40px] h-[500px] p-8 shadow-sm">
-                            <h4 class="font-black text-gray-400 uppercase text-xs tracking-widest mb-6">Últimos registros</h4>
-                            
-                            <!-- Exemplo de item de histórico -->
-                            <div class="space-y-6">
-                                <p class="text-gray-300 font-bold italic text-center py-20">
-                                    Selecione um paciente para ver o histórico anterior...
-                                </p>
+                    <!-- Coluna Lateral: Histórico -->
+                    <div class="flex flex-col">
+                        <label class="text-xl font-black text-gray-800 mb-4 px-4 flex items-center gap-2">
+                            <i data-lucide="history" class="text-gray-400"></i> Histórico
+                        </label>
+                        
+                        <div class="bg-white border-2 border-gray-100 rounded-[3rem] flex-1 min-h-[500px] p-6 shadow-sm flex flex-col">
+                            <div class="custom-scrollbar overflow-y-auto flex-1 pr-2 space-y-4">
+                                {% if ultimos_prontuarios %}
+                                    {% for prontuario in ultimos_prontuarios %}
+                                    <!-- Card de Registro Individual -->
+                                    <div onclick="carregarProntuario('{{ prontuario.data_criacao|date:"d/m/Y H:i" }}', `{{ prontuario.observacao|escapejs }}`)"
+                                         class="history-card group cursor-pointer bg-gray-50 hover:bg-white hover:shadow-md border border-transparent hover:border-purple-100 p-5 rounded-[2rem] transition-all duration-300">
+                                        <div class="flex items-start gap-4">
+                                            <div class="history-icon w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-gray-400 shadow-sm transition-all duration-300">
+                                                <i data-lucide="file-text" width="20"></i>
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-[10px] font-black text-purple-500 uppercase tracking-tighter mb-1">Registro Clínico</p>
+                                                <h5 class="text-sm font-black text-gray-800">{{ prontuario.data_criacao|date:"d M, Y" }}</h5>
+                                                <p class="text-[11px] font-bold text-gray-400">{{ prontuario.data_criacao|date:"H:i" }}</p>
+                                                <!-- Preview sutil sem poluir -->
+                                                <p class="text-xs font-medium text-gray-500 mt-2 truncate italic opacity-60">
+                                                    Clique para ver detalhes
+                                                </p>
+                                            </div>
+                                            <i data-lucide="chevron-right" class="text-gray-200 group-hover:text-purple-300 transition-colors" width="16"></i>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <!-- Estado Vazio -->
+                                    <div class="flex flex-col items-center justify-center h-full text-center py-20">
+                                        <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                                            <i data-lucide="folder-search" class="text-gray-200" width="32"></i>
+                                        </div>
+                                        <p class="text-gray-400 font-bold text-sm px-6">Nenhum registro anterior encontrado para este pet.</p>
+                                    </div>
+                                {% endif %}
                             </div>
+
+                            <!-- Informativo de Tutor -->
+                            {% if pet_selecionado %}
+                            <div class="mt-6 pt-6 border-t border-gray-100">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 bg-teal-50 text-teal-500 rounded-full flex items-center justify-center">
+                                        <i data-lucide="user" width="14"></i>
+                                    </div>
+                                    <p class="text-xs font-bold text-gray-500">Tutor: <span class="text-gray-800">{{ pet_selecionado.id_tutor.nome_tutor }}</span></p>
+                                </div>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
 
@@ -78,25 +131,18 @@
 <script>
     lucide.createIcons();
 
-    // Função para mudar o pet na URL ao selecionar no dropdown
     function final_url(id) {
-        if (!id) return "/vet_dash/prontuarios/";
+        if (!id) return "{% url 'prontuarios_url' %}";
         return "?pet_id=" + id;
     }
-</script>
 
-<style>
-    /* Estilo para a barra de rolagem do textarea para ficar elegante */
-    textarea::-webkit-scrollbar {
-        width: 10px;
+    function carregarProntuario(data, observacao) {
+        const textarea = document.getElementById('anotacoes-textarea');
+        // Adiciona um cabeçalho visual no texto ao carregar
+        textarea.value = `--- REGISTRO CARREGADO (${data}) ---\n\n${observacao}`;
+        textarea.classList.add('bg-purple-50/20');
+        setTimeout(() => textarea.classList.remove('bg-purple-50/20'), 500);
+        textarea.focus();
     }
-    textarea::-webkit-scrollbar-track {
-        background: transparent;
-        margin: 30px;
-    }
-    textarea::-webkit-scrollbar-thumb {
-        background: #ccc;
-        border-radius: 10px;
-    }
-</style>
+</script>
 {% endblock %}

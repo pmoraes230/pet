@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+    <div class="bg-white rounded-[3rem] shadow-sm border border-gray-100 p-12 w-full max-w-2xl relative">
+        
+        <!-- Seta de Voltar Inteligente -->
+        {% if user.is_authenticated or request.session.tutor_id %}
+            <!-- Se estiver logado, volta para o perfil -->
+            <a href="{% url 'perfil_tutor' %}" class="absolute top-8 left-8 flex items-center gap-2 text-gray-400 hover:text-brand-purple transition-colors font-medium">
+                <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                Voltar ao Perfil
+            </a>
+        {% else %}
+            <!-- Se for anônimo, volta para o início da recuperação (pedir email) -->
+            <a href="{% url 'solicitar_troca_senha' %}" class="absolute top-8 left-8 flex items-center gap-2 text-gray-400 hover:text-brand-purple transition-colors font-medium">
+                <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                Voltar
+            </a>
+        {% endif %}
+
+        <h2 class="text-4xl font-bold text-gray-900 mb-2 mt-6">Troque sua senha</h2>
+        <p class="text-gray-400 mb-8 font-medium">Preencha seus dados para continuar</p>
+        
+        <form method="POST" class="space-y-6">
+            {% csrf_token %}
+            <div>
+                <label class="block font-bold text-gray-900 mb-2 ml-1">Nova senha</label>
+                <input type="password" 
+                       name="senha" 
+                       placeholder="Informe a sua nova senha" 
+                       class="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-brand-purple outline-none shadow-sm"
+                       required>
+            </div>
+            <div>
+                <label class="block font-bold text-gray-900 mb-2 ml-1">Confirmar nova senha</label>
+                <input type="password" 
+                       name="confirmacao" 
+                       placeholder="Confirme a sua nova senha" 
+                       class="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-brand-purple outline-none shadow-sm"
+                       required>
+            </div>
+            
+            <button type="submit" class="w-full bg-brand-purple text-white font-bold py-4 rounded-2xl shadow-lg shadow-purple-100 hover:brightness-95 transition-all mt-4">
+                alterar senha
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
