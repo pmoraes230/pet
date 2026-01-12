@@ -67,6 +67,7 @@ def login_view(request):
                         request.session['user_id'] = user.id
                         request.session['user_role'] = 'tutor'
                         request.session['user_nome'] = user.nome_tutor or ""
+                        request.session['user_email'] = user.email
                         response_data["success"] = True
                         response_data["redirect"] = "/tutor_dash/dash_tutor/"
                     else:

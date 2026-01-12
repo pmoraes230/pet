@@ -22,7 +22,7 @@
         </a>
 
         <!-- MENSAGENS (Corrigido para o padrão Teal) -->
-        <a href="#" 
+        <a href="{% url "mensagens_vet" %}" 
            class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all
            {% if request.resolver_match.url_name == 'mensagens_vet' %} bg-white/20 text-white shadow-sm {% else %} text-teal-100 hover:bg-white/5 hover:text-white {% endif %}">
             <i data-lucide="message-circle" width="20" height="20"></i>
@@ -60,10 +60,5 @@
             <i data-lucide="dollar-sign" width="20" height="20"></i>
             <span>Financeiro</span>
         </a>
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 1ee837e870e273d6b31d1c5b10958891d5578213
     </nav>
 </aside>
