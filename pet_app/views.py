@@ -68,7 +68,7 @@ def login_view(request):
                         request.session['user_role'] = 'tutor'
                         request.session['user_nome'] = user.nome_tutor or ""
                         response_data["success"] = True
-                        response_data["redirect"] = "/tutor_dash//dash_tutor/"
+                        response_data["redirect"] = "/tutor_dash/dash_tutor/"
                     else:
                         response_data["error"] = "Senha incorreta."
                 except models.Tutor.DoesNotExist:
