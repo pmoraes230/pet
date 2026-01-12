@@ -8,6 +8,9 @@ from django.urls import reverse
 import json
 from datetime import date, timedelta, datetime
 from django.views import View
+from django.shortcuts import render, get_object_or_404, redirect
+from django.utils import timezone
+
 
 # Create your views here.
 def tutor_dashboard_view(request):
@@ -238,7 +241,7 @@ class PetDetailView(View):
 
     def get(self, request, pet_id):
         pet = self._get_pet(pet_id)
-        context = self._prepare_context(pet)
+        context = self._prepare_context(pet, request)
         return render(request, self.template_name, context)
 
     def post(self, request, pet_id):
@@ -262,7 +265,7 @@ class PetDetailView(View):
     def _get_pet(self, pet_id):
         return get_object_or_404(models.Pet, id=pet_id)
 
-    def _prepare_context(self, pet):
+    def _prepare_context(self, pet, request):
         list_personalidades = pet.personalidade.split(',') if pet.personalidade else []
         proxima_consulta = models.Consulta.objects.filter(
             pet=pet,
@@ -276,6 +279,7 @@ class PetDetailView(View):
             'list_personalidades': list_personalidades,
             'proxima_consulta': proxima_consulta,
             'vacinas': vacinas,
+            'tutor': get_tutor_logado(request)
         }
 
     def _add_vacina(self, pet, post_data):
@@ -464,18 +468,9 @@ def diario_emocional_view(request):
         'grafico_valores': json.dumps(valores)
     })
 
-
-from django.shortcuts import render, get_object_or_404, redirect
-from pet_app.models import Pet, Vacina, Consulta # Import correto agora
-from django.utils import timezone
-
-from django.shortcuts import render, get_object_or_404, redirect
-from pet_app.models import Pet, Vacina, Consulta # Importando do app correto
-from django.utils import timezone
-
 def perfil_pet(request, pet_id):
     # 1. Busca o pet
-    pet = get_object_or_404(Pet, id=pet_id)
+    pet = get_object_or_404(models.Pet, id=pet_id)
     
     # 2. Se for POST, salva as alterações
     if request.method == "POST":
@@ -497,8 +492,8 @@ def perfil_pet(request, pet_id):
         return redirect('perfil_pet', pet_id=pet.id)
 
     # 3. Dados para exibição (fora do IF POST para carregar sempre)
-    vacinas = Vacina.objects.filter(id_pet=pet.id)
-    proxima_consulta = Consulta.objects.filter(
+    vacinas = models.Vacina.objects.filter(id_pet=pet.id)
+    proxima_consulta = models.Consulta.objects.filter(
         id_pet=pet.id, 
         data_consulta__gte=timezone.now().date()
     ).order_by('data_consulta').first()
