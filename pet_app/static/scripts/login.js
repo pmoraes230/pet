@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-  
+
   // Ativa ícones Lucide
   if (typeof lucide !== 'undefined') {
     lucide.createIcons();
@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // ================= ESTADO =================
   let currentRole = "tutor"; // tutor | vet
   let currentMode = "login"; // login | register
+  let isSubmitting = false;
 
   // ================= ELEMENTOS =================
   const authForm = document.getElementById("auth-form");
@@ -16,112 +17,80 @@ document.addEventListener("DOMContentLoaded", function () {
   const roleBadge = document.getElementById("role-badge");
   const heroTitle = document.getElementById("hero-title");
   const heroDesc = document.getElementById("hero-desc");
-  
-  // Abas
+
   const tabTutor = document.getElementById("tab-tutor");
   const tabVet = document.getElementById("tab-vet");
 
-  // Campos Containers
   const registerNameField = document.getElementById("register-name-field");
   const dateField = document.getElementById("date-field");
   const cpfCnpjField = document.getElementById("cpf-cnpj-field");
   const crmField = document.getElementById("crmv-field");
-  const enderecoField = document.getElementById("endereco-field"); // Adicionei caso tenha endereço
 
-  // Inputs Reais (Para desabilitar quando oculto)
-  // Certifique-se que seus inputs no HTML tenham esses IDs ou ajuste aqui
   const inputNome = document.querySelector('input[name="nome"]');
   const inputData = document.querySelector('input[name="data_nascimento"]');
-  const inputCpf = document.querySelector('input[name="cpf"]');
+  const inputCpfCnpj = document.querySelector('input[name="cpf_cnpj"]');
   const inputCrmv = document.querySelector('input[name="crmv"]');
-  const inputEndereco = document.querySelector('input[name="endereco"]');
 
-  // Botões e Textos
   const submitBtn = document.getElementById("submit-btn");
   const formTitle = document.getElementById("form-title");
   const formSubtitle = document.getElementById("form-subtitle");
   const toggleText = document.getElementById("toggle-text");
   const toggleBtn = document.getElementById("toggle-btn");
 
-  // ================= FUNÇÃO CENTRAL DE URL =================
-  // Essa função garante que o formulário vá para a View correta do Django
+  // CSRF Token (pega uma vez)
+  const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
 
-// ================= FUNÇÃO CENTRAL DE URL (CORRIGIDA) =================
+  // ================= FUNÇÕES AUXILIARES =================
   function updateActionURL() {
-    // ATENÇÃO: As URLs devem bater exatamente com o seu urls.py
-    
-    if (currentMode === "login") {
-      // Tanto Tutor quanto Vet usam a mesma URL de login
-      authForm.action = "/login/";      
-    } else {
-      // Tanto Tutor quanto Vet usam a mesma URL de registro
-      authForm.action = "/register/";   
-    }
-    
-    console.log("Form Action atualizado para:", authForm.action);
+    authForm.action = currentMode === "login" ? "/login/" : "/register/";
+    console.log("Form action:", authForm.action);
   }
 
-  // ================= VISIBILIDADE E DISABLE =================
   function updateVisibility() {
     const isRegister = currentMode === "register";
 
-    // Helper para mostrar/esconder e habilitar/desabilitar inputs
     const toggleField = (container, input, show) => {
-      if (show) {
-        container.classList.remove("hidden");
-        if(input) input.disabled = false;
-      } else {
-        container.classList.add("hidden");
-        if(input) input.disabled = true;
-      }
+      if (!container) return;
+      container.classList.toggle("hidden", !show);
+      if (input) input.disabled = !show;
     };
 
-    // 1. Campos de Cadastro Geral (Nome, Data, Endereço)
-    // Aparecem no registro para ambos
     toggleField(registerNameField, inputNome, isRegister);
     toggleField(dateField, inputData, isRegister);
-    if(enderecoField) toggleField(enderecoField, inputEndereco, isRegister);
+    toggleField(cpfCnpjField, inputCpfCnpj, isRegister);
 
-    // 2. CPF (Aparece no registro para Tutor. Se Vet usa CNPJ/CPF, ajuste a lógica)
-    // Aqui assumindo que Veterinário e Tutor usam CPF/CNPJ no cadastro
-    toggleField(cpfCnpjField, inputCpf, isRegister);
-
-    // 3. CRMV (Apenas Veterinário no Registro)
     const showCrmv = isRegister && currentRole === "vet";
     toggleField(crmField, inputCrmv, showCrmv);
   }
 
-  // ================= MUDANÇA DE ROLE (TUTOR / VET) =================
+  // ================= MUDANÇA DE ROLE =================
   window.switchRole = function (role) {
     currentRole = role;
-    roleInput.value = role;
+    if (roleInput) roleInput.value = role;
 
     if (role === "tutor") {
-      // Estilos Tutor
       tabTutor.className = "flex-1 py-2 text-sm font-bold rounded-lg bg-white text-gray-800 shadow-sm transition-all";
       tabVet.className = "flex-1 py-2 text-sm font-bold rounded-lg text-gray-500 hover:bg-gray-50 transition-all";
-      
+
       sidePanel.classList.remove("bg-brand-darkTeal");
-      sidePanel.classList.add("bg-brand-purple"); // Roxo do Tutor
+      sidePanel.classList.add("bg-brand-purple");
 
       roleBadge.textContent = "Área do Tutor";
       roleBadge.className = "bg-white/20 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm";
-      
+
       heroTitle.textContent = currentMode === "register" ? "Junte-se a nós!" : "Bem-vindo de volta!";
       heroDesc.textContent = "Acompanhe a saúde emocional e física do seu pet em um só lugar.";
 
       submitBtn.className = "w-full py-3 rounded-xl font-bold text-white transition-all transform hover:-translate-y-0.5 bg-brand-purple hover:bg-purple-700 shadow-lg shadow-purple-200";
-    
     } else {
-      // Estilos Veterinário
       tabVet.className = "flex-1 py-2 text-sm font-bold rounded-lg bg-white text-gray-800 shadow-sm transition-all";
       tabTutor.className = "flex-1 py-2 text-sm font-bold rounded-lg text-gray-500 hover:bg-gray-50 transition-all";
 
       sidePanel.classList.remove("bg-brand-purple");
-      sidePanel.classList.add("bg-brand-darkTeal"); // Verde do Vet
+      sidePanel.classList.add("bg-brand-darkTeal");
 
       roleBadge.textContent = "Área do Veterinário";
-      
+
       heroTitle.textContent = currentMode === "register" ? "Expanda sua clínica" : "Olá, Doutor(a)";
       heroDesc.textContent = "Gerencie seus pacientes, prontuários e conecte-se com novos tutores.";
 
@@ -129,10 +98,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     updateVisibility();
-    updateActionURL(); // Atualiza a URL do form
+    updateActionURL();
   };
 
-  // ================= MUDANÇA DE MODO (LOGIN / CADASTRO) =================
+  // ================= MUDANÇA DE MODO =================
   window.toggleMode = function () {
     currentMode = currentMode === "login" ? "register" : "login";
 
@@ -150,8 +119,7 @@ document.addEventListener("DOMContentLoaded", function () {
       toggleBtn.textContent = "Criar cadastro";
     }
 
-    // Atualiza Role para atualizar os textos do Hero também
-    switchRole(currentRole); 
+    switchRole(currentRole);
   };
 
   // ================= MÁSCARA CPF/CNPJ =================
@@ -160,23 +128,159 @@ document.addEventListener("DOMContentLoaded", function () {
     cpfCnpjInput.addEventListener("input", e => {
       let v = e.target.value.replace(/\D/g, "");
       if (v.length <= 11) {
-        // CPF
         v = v.replace(/(\d{3})(\d)/, "$1.$2")
-             .replace(/(\d{3})(\d)/, "$1.$2")
-             .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+          .replace(/(\d{3})(\d)/, "$1.$2")
+          .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
       } else {
-        // CNPJ
         v = v.replace(/^(\d{2})(\d)/, "$1.$2")
-             .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
-             .replace(/\.(\d{3})(\d)/, ".$1/$2")
-             .replace(/(\d{4})(\d{1,2})$/, "$1-$2");
+          .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+          .replace(/\.(\d{3})(\d)/, ".$1/$2")
+          .replace(/(\d{4})(\d{1,2})$/, "$1-$2");
       }
       e.target.value = v;
     });
   }
 
+  // ================= SUBMISSÃO AJAX =================
+  function handleSubmit(event) {
+    event.preventDefault();
+    if (isSubmitting) return;
+
+    isSubmitting = true;
+    submitBtn.disabled = true;
+    submitBtn.textContent = currentMode === "login" ? "Entrando..." : "Cadastrando...";
+
+    const formData = new FormData(authForm);
+    formData.set("role", currentRole);
+
+    fetch(authForm.action, {
+      method: "POST",
+      body: formData,
+      headers: {
+        "X-CSRFToken": csrfToken || formData.get("csrfmiddlewaretoken"),
+      },
+    })
+      .then(async response => {
+        let data;
+        try {
+          data = await response.json();
+        } catch (e) {
+          const text = await response.text();
+          console.error("Resposta não-JSON:", text);
+          throw new Error("Resposta inválida do servidor");
+        }
+
+        if (data.success) {
+          showModal("success", "Sucesso!", "Redirecionando...", 1400);
+          setTimeout(() => {
+            window.location.href = data.redirect || "/";
+          }, 1600);
+        } else {
+          showModal("error", "Ops!", data.error || "Não foi possível completar a ação.");
+        }
+      })
+      .catch(err => {
+        console.error("Erro na requisição:", err);
+        showModal("error", "Erro de conexão",
+          "Não conseguimos nos comunicar com o servidor. Verifique sua conexão e tente novamente.");
+      })
+      .finally(() => {
+        isSubmitting = false;
+        submitBtn.disabled = false;
+        submitBtn.textContent = currentMode === "login" ? "Entrar" : "Cadastrar";
+      });
+  }
+
+  // ================= CONTROLE DO MODAL =================
+  function showModal(type, title, message, autoCloseMs = 0) {
+    const modal = document.getElementById("custom-modal");
+    const content = document.getElementById("modal-content");
+    const modalTitle = document.getElementById("modal-title");
+    const modalMessage = document.getElementById("modal-message");
+    const modalIcon = document.getElementById("modal-icon");
+
+    if (!modal) return;
+
+    modalTitle.textContent = title || "Atenção";
+    modalMessage.textContent = message || "Operação concluída.";
+
+    // Reset e configuração do ícone
+    modalIcon.className = "w-14 h-14 rounded-full flex items-center justify-center text-white text-3xl font-bold shrink-0";
+    modalIcon.textContent = "";
+
+    if (type === "success") {
+      modalIcon.textContent = "✓";
+      modalIcon.classList.add("bg-green-500");
+    } else if (type === "error") {
+      modalIcon.textContent = "!";
+      modalIcon.classList.add("bg-red-500");
+    } else {
+      modalIcon.textContent = "i";
+      modalIcon.classList.add("bg-blue-500");
+    }
+
+    // Mostra com animação
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+
+    setTimeout(() => {
+      content.classList.remove("scale-95", "opacity-0");
+      content.classList.add("scale-100", "opacity-100");
+    }, 10);
+
+    if (autoCloseMs > 0) {
+      setTimeout(closeModal, autoCloseMs);
+    }
+
+    // Foco no botão OK (melhora acessibilidade)
+    document.getElementById("modal-ok-btn")?.focus();
+  }
+
+  function closeModal() {
+    const modal = document.getElementById("custom-modal");
+    const content = document.getElementById("modal-content");
+
+    if (!modal) return;
+
+    content.classList.remove("scale-100", "opacity-100");
+    content.classList.add("scale-95", "opacity-0");
+
+    setTimeout(() => {
+      modal.classList.remove("flex");
+      modal.classList.add("hidden");
+    }, 300); // tempo da transição
+  }
+
+  function handleModalBackdropClick(event) {
+    // Só fecha se clicou no fundo (backdrop), não no conteúdo
+    if (event.target.id === "custom-modal") {
+      closeModal();
+    }
+  }
+
+  // Opcional: fechar com tecla Esc
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") {
+      const modal = document.getElementById("custom-modal");
+      if (modal && !modal.classList.contains("hidden")) {
+        closeModal();
+      }
+    }
+  });
+
   // ================= INICIALIZAÇÃO =================
-  // Define estado inicial
-  roleInput.value = "tutor";
-  switchRole("tutor"); // Isso já chama updateVisibility e updateActionURL
+  if (roleInput) roleInput.value = "tutor";
+  switchRole("tutor");
+
+  if (authForm) {
+    authForm.addEventListener("submit", handleSubmit);
+  } else {
+    console.warn("Formulário #auth-form não encontrado");
+  }
+
+  // Clique fora do modal
+  const modalElement = document.getElementById("custom-modal");
+  if (modalElement) {
+    modalElement.addEventListener("click", handleModalBackdropClick);
+  }
 });
