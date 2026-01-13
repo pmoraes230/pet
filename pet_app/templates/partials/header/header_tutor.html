@@ -106,7 +106,7 @@
         <div
           class="h-9 w-9 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-sm">
           {% if tutor.imagem_perfil_tutor %}
-          <img src="{{ tutor.imagem_perfil_tutor.url }}" alt="{{ tutor.nome }}">
+          <img src="{{ tutor.imagem_perfil_tutor.url }}" alt="{{ tutor.nome }}" class="w-full h-full object-cover rounded-full">
           {% else %}
           <img src="{% static "icons/image_user_default.svg" %}" alt="Foto do tutor"
             class="w-full h-full object-cover">
