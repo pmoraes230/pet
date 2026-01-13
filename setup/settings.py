@@ -2,6 +2,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import os
 from django.core.management.utils import get_random_secret_key
+import dj_database_url
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -74,15 +75,11 @@ WSGI_APPLICATION = 'setup.wsgi.application'
 
 if DEBUG == False:
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('dbnameMysql'),
-            'USER': os.getenv('usernameMysql'),
-            'PASSWORD': os.getenv('passwordMysql'),
-            'HOST': os.getenv('hostnameMysql'),
-            'PORT': os.getenv('portMysql')
-        }
-    }
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL'),
+        conn_max_age=600,  # Optional: Keeps connections alive for performance
+    )
+}
 else:
     # Configuração MySQL
     DATABASES = {
