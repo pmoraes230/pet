@@ -415,16 +415,21 @@ def mensagens_vet(request):
     
     # Pega o tutor selecionado se houver
     tutor_selecionado = None
-    mensagens = []
+    mensagens = [] # Aqui é a variável que guardará o resultado
     
     tutor_id = request.GET.get('tutor_id')
     if tutor_id:
         try:
             tutor_selecionado = models.Tutor.objects.get(id=tutor_id)
+            
+            # CORREÇÃO AQUI: 
+            # Chamamos o modelo "models.Mensagem" (com M maiúsculo)
+            # E usamos os campos em MAIÚSCULO para bater com seu model
             mensagens = models.Mensagem.objects.filter(
-                veterinario=veterinario,
-                tutor=tutor_selecionado
+                VETERINARIO=veterinario, 
+                TUTOR=tutor_selecionado
             ).order_by('DATA_ENVIO')
+            
         except models.Tutor.DoesNotExist:
             pass
 
@@ -438,29 +443,27 @@ def mensagens_vet(request):
 
 
 def enviar_mensagem_vet(request):
-    if request.method == "POST":
-        vet_data = get_veterinario_logado(request)
-        if not vet_data:
-            return redirect('login_veterinario')
-
-        veterinario = models.Veterinario.objects.get(id=vet_data['id'])
+    if request.method == 'POST':
+        # Pega o ID do veterinário logado da sessão
+        vet_id = request.session.get('user_id')
         tutor_id = request.POST.get('tutor_id')
-        conteudo = request.POST.get('mensagem')
+        texto = request.POST.get('mensagem')
 
-        try:
-            tutor = models.Tutor.objects.get(id=tutor_id)
-            models.Mensagem.objects.create(
-                veterinario=veterinario,
-                tutor=tutor,
-                CONTEUDO=conteudo,
-                ENVIADO_POR='VETERINARIO'
+        if texto and tutor_id:
+            # IMPORTANTE: Use TUTOR_id e VETERINARIO_id em MAIÚSCULO
+            # Pois é assim que está no seu models.py
+            from pet_app.models import Mensagem # Garanta que o import está correto
+            
+            Mensagem.objects.create(
+                TUTOR_id=tutor_id,          # MAIÚSCULO
+                VETERINARIO_id=vet_id,     # MAIÚSCULO
+                CONTEUDO=texto,             # MAIÚSCULO
+                ENVIADO_POR='VETERINARIO'   # MAIÚSCULO
             )
-        except models.Tutor.DoesNotExist:
-            pass
-
-        return redirect('mensagens_vet', tutor_id=tutor_id)
-
-    return redirect('mensagens_vet')
+            
+            return redirect(f'/mensagens_vet/?tutor_id={tutor_id}')
+            
+    return redirect('home')
 
 
 
@@ -561,3 +564,5 @@ def excluir_vacina_vet(request, vacina_id):
         messages.error(request, "Registro não encontrado.")
 
     return redirect('agenda_vet')
+
+

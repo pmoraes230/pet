@@ -285,3 +285,11 @@ ADD COLUMN tutor_id INT NULL;
 ALTER TABLE pet_app_notificacao 
 ADD CONSTRAINT fk_notif_tutor 
 FOREIGN KEY (tutor_id) REFERENCES tutor(ID) ON DELETE CASCADE;
+
+ALTER TABLE pet_app_notificacao 
+ADD CONSTRAINT fk_notif_vet 
+FOREIGN KEY (veterinario_id) REFERENCES veterinario (ID) 
+ON DELETE CASCADE;
+
+ALTER TABLE veterinario ENGINE=InnoDB;
+ALTER TABLE pet_app_notificacao ENGINE=InnoDB;

@@ -62,11 +62,12 @@
                     {% endfor %}
                 </div>
 
-                <div class="p-3 text-center bg-gray-50/50 rounded-b-xl">
-                    <a href="#" class="text-xs font-bold text-[#26C2B9] hover:text-[#1e968f] transition-colors">
-                        Ver todas as notificações
-                    </a>
-                </div>
+            <div class="p-3 text-center bg-gray-50/50 rounded-b-xl">
+                <!-- ANTES: href="#" -->
+                <a href="{% url 'historico_notificacao_vet' %}" class="text-xs font-bold text-[#26C2B9] hover:text-[#1e968f] transition-colors">
+                    Ver todas as notificações
+                </a>
+            </div>
             </div>
         </div>
 
