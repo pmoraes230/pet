@@ -1,13 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.contrib.auth.hashers import make_password, check_password
 from django.db.models import Sum
 from datetime import date
+from django.views.decorators.http import require_http_methods
 from . import models
 from django.contrib.auth import logout
-from django.urls import reverse
+from datetime import datetime
 from django.core.mail import send_mail
 from django.conf import settings
 from django.http import JsonResponse
@@ -41,132 +41,245 @@ except ImportError:
 def home(request):
     return render(request, 'tela_inicio/index.html')
 
-
-@csrf_exempt
+@require_http_methods(["GET", "POST"])
+@csrf_protect
 def login_view(request):
+    context = {
+        'email': '',
+        'role': 'tutor',  # default
+        # adicione outros campos se quiser preservar mais dados
+    }
+
     if request.method == 'GET':
-        return render(request, 'login/login.html')
+        return render(request, 'login/login.html', context)
 
-    if request.method == 'POST':
-        email = request.POST.get('email', '').strip().lower()
-        senha = request.POST.get('senha', '')
-        role = request.POST.get('role', '')
+    # POST
+    email = request.POST.get('email', '').strip().lower()
+    senha = request.POST.get('senha', '')
+    role  = request.POST.get('role', '')
 
-        if not email or not senha:
-            # Pode voltar com mensagem no template ou JSON
-            return render(request, 'login/login.html', {'error': 'Email e senha são obrigatórios.'})
+    context.update({
+        'email': email,
+        'role': role,
+    })
 
-        if role == "tutor":
-            try:
-                user = models.Tutor.objects.get(email__iexact=email)
-                if check_password(senha, user.senha_tutor):
-                    request.session['user_id'] = user.id
-                    request.session['user_role'] = 'tutor'
-                    request.session['user_nome'] = user.nome_tutor or ""
-                    request.session['user_email'] = user.email
-                    return redirect('tutor_dash')   # ← Redirect real!
-                else:
-                    return render(request, 'login/login.html', {'error': 'Senha incorreta.'})
-            except models.Tutor.DoesNotExist:
-                return render(request, 'login/login.html', {'error': 'Email de tutor não encontrado.'})
+    # Validações
+    if not email:
+        messages.error(request, "O email é obrigatório.")
+    if not senha:
+        messages.error(request, "A senha é obrigatória.")
+    if not role or role not in ['tutor', 'vet']:
+        messages.error(request, "Selecione um perfil válido (Tutor ou Veterinário).")
 
-        elif role == "vet":
-            try:
-                vet = models.Veterinario.objects.get(email__iexact=email)
-                if check_password(senha, vet.senha_veterinario):
-                    request.session['user_id'] = vet.id
-                    request.session['user_role'] = 'vet'
-                    request.session['user_nome'] = vet.nome or ""
-                    return redirect('dash_veterinario')   # ← Redirect real!
-                else:
-                    return render(request, 'login/login.html', {'error': 'Senha incorreta.'})
-            except models.Veterinario.DoesNotExist:
-                return render(request, 'login/login.html', {'error': 'Email de veterinário não encontrado.'})
+    if messages.get_messages(request):  # já tem erro → early return
+        return render(request, 'login/login.html', context)
 
+    user = None
+    user_role = None
+
+    try:
+        if role == 'tutor':
+            tutor = models.Tutor.objects.get(email__iexact=email)
+            if check_password(senha, tutor.senha_tutor):
+                user = tutor
+                user_role = 'tutor'
+            else:
+                messages.error(request, "Senha incorreta para tutor.")
+
+        elif role == 'vet':
+            vet = models.Veterinario.objects.get(email__iexact=email)
+            if check_password(senha, vet.senha_veterinario):
+                user = vet
+                user_role = 'vet'
+            else:
+                messages.error(request, "Senha incorreta para veterinário.")
+
+    except (models.Tutor.DoesNotExist, models.Veterinario.DoesNotExist):
+        messages.error(request, f"Email não encontrado para o perfil selecionado ({role.capitalize()}).")
+
+    except Exception as e:
+        messages.error(request, "Erro inesperado ao processar login. Tente novamente mais tarde.")
+        # Opcional: logger.error(f"Erro login: {e}")
+
+    if user and user_role:
+        # Login via sessão
+        request.session['user_id']    = user.id
+        request.session['user_role']  = user_role
+        request.session['user_nome']  = user.nome_tutor if user_role == 'tutor' else user.nome
+        request.session['user_email'] = user.email
+        request.session.modified = True
+
+        messages.success(request, f"Bem-vindo(a), {request.session['user_nome']}!")
+
+        if user_role == 'tutor':
+            return redirect('tutor_dash')   # confirme o name da URL
         else:
-            return render(request, 'login/login.html', {'error': 'Tipo de usuário inválido.'})
+            return redirect('dash_veterinario')
 
-    # Fallback para erros inesperados
-    return render(request, 'login/login.html', {'error': 'Erro interno no servidor.'})
+    # Erro → volta ao form com dados preenchidos
+    return render(request, 'login/login.html', context)
 
 def logout_view(request):
     logout(request)
+    messages.success(request, "Você saiu com sucesso.")
     return redirect('login')
 
-
-@csrf_exempt
+@require_http_methods(["POST"])
 def register_view(request):
+    # GET não é permitido aqui
     if request.method != 'POST':
         return redirect('login')
 
+    # Dados do formulário
     email = request.POST.get('email', '').strip().lower()
     senha = request.POST.get('senha', '')
-    nome = request.POST.get('nome', '').strip()
-    role = request.POST.get('role')
-    crmv = request.POST.get('crmv', '').strip()
-    data_nascimento = request.POST.get('data_nascimento')
+    role  = request.POST.get('role', '')
+    nome  = request.POST.get('nome', '').strip()
     cpf_cnpj = request.POST.get('cpf_cnpj', '').strip()
+    crmv  = request.POST.get('crmv', '').strip()
+    data_nascimento_str = request.POST.get('data_nascimento', '').strip()
 
-    if not email or not senha:
-        messages.error(request, "Dados incompletos.")
-        return render(request, 'login/login.html')
+    # Validações básicas
+    if not email:
+        messages.error(request, "O email é obrigatório.")
+    if not senha:
+        messages.error(request, "A senha é obrigatória.")
+    if not role or role not in ['tutor', 'vet']:
+        messages.error(request, "Selecione um perfil válido (Tutor ou Veterinário).")
 
-    if role == "tutor":
+    # Validações específicas por role
+    if role == 'tutor':
+        if not nome:
+            messages.error(request, "Nome completo é obrigatório para tutores.")
+        if not cpf_cnpj:
+            messages.error(request, "CPF é obrigatório para tutores.")
+        if not data_nascimento_str:
+            messages.error(request, "Data de nascimento é obrigatória para tutores.")
+
+    elif role == 'vet':
+        if not nome:
+            messages.error(request, "Nome é obrigatório para veterinários.")
+        if not cpf_cnpj:
+            messages.error(request, "CPF ou CNPJ é obrigatório para veterinários.")
+        if not crmv:
+            messages.error(request, "CRMV é obrigatório para veterinários.")
+
+    # Verifica se já existem mensagens de erro
+    if messages.get_messages(request):
+        return render(request, 'login/login.html', {
+            'email': email,
+            'nome': nome,
+            'cpf_cnpj': cpf_cnpj,
+            'crmv': crmv,
+            'data_nascimento': data_nascimento_str,
+            'role': role,
+        })
+
+    # Limpar CPF/CNPJ
+    cpf_cnpj_limpo = ''.join(filter(str.isdigit, cpf_cnpj))
+
+    # Validar formato CPF/CNPJ
+    if len(cpf_cnpj_limpo) not in (11, 14):
+        messages.error(request, "CPF deve ter 11 dígitos ou CNPJ 14 dígitos.")
+        return render(request, 'login/login.html', {
+            'email': email, 'nome': nome, 'cpf_cnpj': cpf_cnpj, 'crmv': crmv,
+            'data_nascimento': data_nascimento_str, 'role': role,
+        })
+
+    # Converter data de nascimento
+    data_nascimento = None
+    if data_nascimento_str:
         try:
-            cpf_limpo = "".join(filter(str.isdigit, cpf_cnpj))
+            data_nascimento = datetime.strptime(data_nascimento_str, '%Y-%m-%d').date()
+        except ValueError:
+            messages.error(request, "Data de nascimento inválida (use formato AAAA-MM-DD).")
+            return render(request, 'login/login.html', {
+                'email': email, 'nome': nome, 'cpf_cnpj': cpf_cnpj, 'crmv': crmv,
+                'data_nascimento': data_nascimento_str, 'role': role,
+            })
+
+    # Verificar se email já existe
+    if models.Tutor.objects.filter(email__iexact=email).exists() or \
+       models.Veterinario.objects.filter(email__iexact=email).exists():
+        messages.error(request, "Este email já está cadastrado.")
+        return render(request, 'login/login.html', {
+            'email': email, 'nome': nome, 'cpf_cnpj': cpf_cnpj, 'crmv': crmv,
+            'data_nascimento': data_nascimento_str, 'role': role,
+        })
+
+    try:
+        if role == 'tutor':
             tutor = models.Tutor.objects.create(
                 nome_tutor=nome,
                 email=email,
                 senha_tutor=make_password(senha),
-                cpf=cpf_limpo,
+                cpf=cpf_cnpj_limpo,
                 data_nascimento=data_nascimento,
-                endereco="Endereço não informado"
+                endereco="Endereço não informado",
             )
-
+            # Login automático
             request.session['user_id'] = tutor.id
             request.session['user_role'] = 'tutor'
             request.session['user_nome'] = tutor.nome_tutor
-            return redirect('tutor_dashboard')
+            request.session['user_email'] = tutor.email
 
-        except Exception as e:
-            print(e)
-            messages.error(request, "Erro ao cadastrar tutor.")
-            return render(request, 'login/login.html')
+            messages.success(request, "Cadastro realizado com sucesso! Bem-vindo(a)!")
+            return redirect('dash_tutor')
 
-    elif role == "vet":
-        try:
-            if models.Veterinario.objects.filter(email__iexact=email).exists():
-                messages.error(request, "Email já cadastrado.")
-                return render(request, 'login/login.html')
+        elif role == 'vet':
+            pf = None
+            pj = None
 
-            cpf_cnpj_limpo = "".join(filter(str.isdigit, cpf_cnpj))
-            pf, pj = None, None
             if len(cpf_cnpj_limpo) == 11:
-                pf = models.PessoaFisica.objects.create(cpf=cpf_cnpj_limpo, data_nascimento=date.today(), genero="N")
+                pf = models.PessoaFisica.objects.create(
+                    cpf=cpf_cnpj_limpo,
+                    data_nascimento=data_nascimento or datetime.today().date(),
+                    genero="N",
+                )
             elif len(cpf_cnpj_limpo) == 14:
-                pj = models.PessoaJuridica.objects.create(cnpj=cpf_cnpj_limpo, nome_fantasia=nome, endereco="-", data_criacao=date.today())
+                pj = models.PessoaJuridica.objects.create(
+                    cnpj=cpf_cnpj_limpo,
+                    nome_fantasia=nome,
+                    endereco="-",
+                    data_criacao=datetime.today().date(),
+                )
 
             vet = models.Veterinario.objects.create(
                 nome=nome,
                 email=email,
-                crmv=int(crmv.split('/')[0]) if crmv else 0,
-                uf_crmv='SP',
+                crmv=int(crmv.replace('/', '').strip() or 0),
+                uf_crmv='SP',  # ← TODO: tornar dinâmico no futuro
                 senha_veterinario=make_password(senha),
                 telefone="0",
                 pessoa_fisica=pf,
-                pessoa_juridica=pj
+                pessoa_juridica=pj,
             )
+
+            # Login automático
             request.session['user_id'] = vet.id
             request.session['user_role'] = 'vet'
             request.session['user_nome'] = vet.nome
+            request.session['user_email'] = vet.email
+
+            messages.success(request, "Cadastro realizado com sucesso! Bem-vindo(a), Dr(a).!")
             return redirect('vet_dashboard')
 
-        except Exception as e:
-            print(e)
-            messages.error(request, "Erro ao cadastrar veterinário.")
-            return render(request, 'login/login.html')
+    except ValueError as ve:
+        messages.error(request, f"Erro de validação: {str(ve)}")
+    except Exception as e:
+        # Em produção, use logging
+        print(f"Erro no cadastro: {str(e)}")
+        messages.error(request, "Erro ao criar conta. Tente novamente mais tarde.")
 
-    return redirect('login')
+    # Em caso de erro, retorna com os dados preenchidos
+    return render(request, 'login/login.html', {
+        'email': email,
+        'nome': nome,
+        'cpf_cnpj': cpf_cnpj,
+        'crmv': crmv,
+        'data_nascimento': data_nascimento_str,
+        'role': role,
+    })
 
 
 # ========================================================

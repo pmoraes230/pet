@@ -101,7 +101,13 @@
                             {% for pet in tutor.pet_set.all %}
                                 <div class="flex items-center gap-4">
                                     <div class="w-12 h-12 rounded-xl overflow-hidden">
-                                        <img src="{{ pet.imagem.url|default:'https://via.placeholder.com/150' }}" alt="{{ pet.nome }}" class="w-full h-full object-cover">
+                                        {% if pet.imagem %}
+                                        <img src="{{ pet.imagem.url }}" alt="{{ pet.nome }}" class="w-full h-full object-cover">
+                                        {% else %}
+                                        <div class="w-full h-full flex items-center justify-center bg-gray-100 text-gray-300">
+                                            <i data-lucide="paw-print" width="24" height="24"></i>
+                                        </div>
+                                        {% endif %}
                                     </div>
                                     <div class="flex-1">
                                         <p class="font-semibold text-gray-900">{{ pet.nome }}</p>
@@ -114,7 +120,7 @@
                                 <p class="text-gray-500 text-sm">Nenhum pet cadastrado ainda.</p>
                             {% endfor %}
                         </div>
-                        <a href="#" class="mt-5 inline-block text-brand-purple font-medium text-sm hover:underline">
+                        <a href="{% url "meus_pets" %}" class="mt-5 inline-block text-brand-purple font-medium text-sm hover:underline">
                             Ver todos os pets →
                         </a>
                     </div>

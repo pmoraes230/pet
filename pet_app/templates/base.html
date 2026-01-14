@@ -35,5 +35,20 @@
         });
     </script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="{% static 'scripts/modal-feedback.js' %}"></script>
+    {% if messages %}
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            {% for message in messages %}
+                showFeedbackModal(
+                    "{% if message.tags == 'success' %}success{% else %}error{% endif %}",
+                    "{% if message.tags == 'success' %}Sucesso{% else %}Erro{% endif %}",
+                    "{{ message|escapejs }}",
+                    "{% if message.tags == 'success' %}3500{% else %}5000{% endif %}"
+                );
+            {% endfor %}
+        });
+    </script>
+    {% endif %}
 </body>
 </html>

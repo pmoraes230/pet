@@ -22,7 +22,13 @@
                         
                         <div class="bg-white rounded-[2.5rem] shadow-sm p-6 flex flex-col items-center border border-gray-100">
                             <div class="w-full h-56 rounded-[2rem] overflow-hidden mb-4 relative group bg-gray-50">
-                                <img id="preview-img" src="{% if pet.imagem %}{{ pet.imagem.url }}{% else %}{% static 'images/default-pet.png' %}{% endif %}" class="w-full h-full object-cover">
+                                {% if not pet.imagem %}
+                                <div class="absolute inset-0 flex items-center justify-center text-gray-300">
+                                    <i data-lucide="paw-print" class="w-20 h-20 opacity-50"></i>
+                                </div>
+                                {% else %}
+                                <img id="preview-img" src="{{ pet.imagem.url }}" alt="{{ pet.nome }}" class="w-full h-full object-cover">
+                                {% endif %}
                                 <label class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
                                     <span class="text-white font-bold">Alterar Foto</span>
                                     <input type="file" name="imagem" class="hidden" accept="image/*" onchange="previewImage(this)">
