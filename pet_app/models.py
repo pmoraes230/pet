@@ -62,7 +62,7 @@ class Tutor(models.Model):
     endereco = models.CharField(db_column='ENDERECO', max_length=100, blank=True, null=True)
     data_nascimento = models.DateField(db_column='DATA_NASCIMENTO', blank=True, null=True)
     senha_tutor = models.CharField(db_column='senha_tutor', max_length=150)
-    imagem_perfil_tutor = models.ImageField(db_column='imagem_perfil_tutor', upload_to='tutor/', blank=True, null=True)
+    imagem_perfil_tutor = models.ImageField(upload_to='tutor')
     id_feedback_sistema = models.ForeignKey(Feedback, models.DO_NOTHING, db_column='ID_FEEDBACK_SISTEMA', blank=True, null=True)
     id_feedback_pet = models.ForeignKey(FeedbackPet, models.DO_NOTHING, db_column='ID_FEEDBACK_PET', blank=True, null=True)
 
