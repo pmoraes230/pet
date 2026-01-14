@@ -307,9 +307,9 @@ def vet_dashboard_view(request):
 
     # --- NOVO: BUSCAR NOTIFICAÇÕES DO BANCO ---
     # Pegamos as 5 mais recentes
-    notificacoes = models.Notificacao.objects.filter(veterinario=veterinario).order_by('-data_criacao')[:5]
+    notificacoes = models.pet_app_notificacao.objects.filter(veterinario=veterinario).order_by('-data_criacao')[:5]
     # Contamos quantas não foram lidas
-    notificacoes_nao_lidas_count = models.Notificacao.objects.filter(veterinario=veterinario, lida=False).count()
+    notificacoes_nao_lidas_count = models.pet_app_notificacao.objects.filter(veterinario=veterinario, lida=False).count()
     # ------------------------------------------
 
     consultas_hoje = models.Consulta.objects.filter(veterinario=veterinario, data_consulta=date.today()).count()
