@@ -18,6 +18,10 @@ SECRET_KEY = get_random_secret_key()
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
+DEBUG_TOOLBAR_CONFIG = {
+    'SHOW_TOOLBAR_CALLBACK': lambda request: False,  # desativa completamente
+}
+
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.vercel.app']  # Mantenha para dev
 render_url = os.getenv('RENDER_EXTERNAL_URL')
 if render_url:
@@ -73,29 +77,12 @@ WSGI_APPLICATION = 'setup.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-if DEBUG == False:
-    DATABASES = {
+DATABASES = {
     'default': dj_database_url.config(
         default=os.environ.get('DATABASE_URL'),
         conn_max_age=600,  # Optional: Keeps connections alive for performance
     )
 }
-else:
-    # Configuração MySQL
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': os.getenv('dbnameMysql', 'pet_patrick_db'),
-            'USER': os.getenv('usernameMysql', 'root'),
-            'PASSWORD': os.getenv('passwordMysql', ''), # Verifique se sua senha não é 'root' ou vazia
-            'HOST': os.getenv('hostnameMysql', '127.0.0.1'),
-            'PORT': os.getenv('portMysql', '3306'),
-            'OPTIONS': {
-                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-                'charset': 'utf8mb4',
-            },
-        }
-    }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

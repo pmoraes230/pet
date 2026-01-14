@@ -1,3 +1,4 @@
+
 document.addEventListener("DOMContentLoaded", function () {
 
   // Ativa ícones Lucide
@@ -143,53 +144,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // ================= SUBMISSÃO AJAX =================
   function handleSubmit(event) {
-    event.preventDefault();
     if (isSubmitting) return;
 
     isSubmitting = true;
     submitBtn.disabled = true;
     submitBtn.textContent = currentMode === "login" ? "Entrando..." : "Cadastrando...";
-
-    const formData = new FormData(authForm);
-    formData.set("role", currentRole);
-
-    fetch(authForm.action, {
-      method: "POST",
-      body: formData,
-      headers: {
-        "X-CSRFToken": csrfToken || formData.get("csrfmiddlewaretoken"),
-      },
-    })
-      .then(async response => {
-        let data;
-        try {
-          data = await response.json();
-        } catch (e) {
-          const text = await response.text();
-          console.error("Resposta não-JSON:", text);
-          throw new Error("Resposta inválida do servidor");
-        }
-
-        if (data.success) {
-          showModal("success", "Sucesso!", "Redirecionando...", 1400);
-          setTimeout(() => {
-            window.location.href = data.redirect || "/";
-          }, 1600);
-        } else {
-          showModal("error", "Ops!", data.error || "Não foi possível completar a ação.");
-        }
-      })
-      .catch(err => {
-        console.error("Erro na requisição:", err);
-        showModal("error", "Erro de conexão",
-          "Não conseguimos nos comunicar com o servidor. Verifique sua conexão e tente novamente.");
-      })
-      .finally(() => {
-        isSubmitting = false;
-        submitBtn.disabled = false;
-        submitBtn.textContent = currentMode === "login" ? "Entrar" : "Cadastrar";
-      });
-  }
+}
 
   // ================= CONTROLE DO MODAL =================
   function showModal(type, title, message, autoCloseMs = 0) {

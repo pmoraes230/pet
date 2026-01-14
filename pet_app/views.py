@@ -47,60 +47,47 @@ def login_view(request):
     if request.method == 'GET':
         return render(request, 'login/login.html')
 
-    # Sempre responder com JSON no POST
-    response_data = {"success": False, "error": "Erro desconhecido"}
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip().lower()
+        senha = request.POST.get('senha', '')
+        role = request.POST.get('role', '')
 
-    try:
-        if request.method == 'POST':
-            email = request.POST.get('email', '').strip().lower()
-            senha = request.POST.get('senha', '')
-            role = request.POST.get('role', '')
+        if not email or not senha:
+            # Pode voltar com mensagem no template ou JSON
+            return render(request, 'login/login.html', {'error': 'Email e senha são obrigatórios.'})
 
-            if not email or not senha:
-                response_data["error"] = "Email e senha são obrigatórios."
-                return JsonResponse(response_data, status=400)
+        if role == "tutor":
+            try:
+                user = models.Tutor.objects.get(email__iexact=email)
+                if check_password(senha, user.senha_tutor):
+                    request.session['user_id'] = user.id
+                    request.session['user_role'] = 'tutor'
+                    request.session['user_nome'] = user.nome_tutor or ""
+                    request.session['user_email'] = user.email
+                    return redirect('tutor_dash')   # ← Redirect real!
+                else:
+                    return render(request, 'login/login.html', {'error': 'Senha incorreta.'})
+            except models.Tutor.DoesNotExist:
+                return render(request, 'login/login.html', {'error': 'Email de tutor não encontrado.'})
 
-            if role == "tutor":
-                try:
-                    user = models.Tutor.objects.get(email__iexact=email)
-                    if check_password(senha, user.senha_tutor):
-                        request.session['user_id'] = user.id
-                        request.session['user_role'] = 'tutor'
-                        request.session['user_nome'] = user.nome_tutor or ""
-                        request.session['user_email'] = user.email
-                        response_data["success"] = True
-                        response_data["redirect"] = "/tutor_dash/dash_tutor/"
-                    else:
-                        response_data["error"] = "Senha incorreta."
-                except models.Tutor.DoesNotExist:
-                    response_data["error"] = "Email de tutor não encontrado."
+        elif role == "vet":
+            try:
+                vet = models.Veterinario.objects.get(email__iexact=email)
+                if check_password(senha, vet.senha_veterinario):
+                    request.session['user_id'] = vet.id
+                    request.session['user_role'] = 'vet'
+                    request.session['user_nome'] = vet.nome or ""
+                    return redirect('dash_veterinario')   # ← Redirect real!
+                else:
+                    return render(request, 'login/login.html', {'error': 'Senha incorreta.'})
+            except models.Veterinario.DoesNotExist:
+                return render(request, 'login/login.html', {'error': 'Email de veterinário não encontrado.'})
 
-            elif role == "vet":
-                try:
-                    vet = models.Veterinario.objects.get(email__iexact=email)
-                    if check_password(senha, vet.senha_veterinario):
-                        request.session['user_id'] = vet.id
-                        request.session['user_role'] = 'vet'
-                        request.session['user_nome'] = vet.nome or ""
-                        response_data["success"] = True
-                        response_data["redirect"] = "/vet_dash/"
-                    else:
-                        response_data["error"] = "Senha incorreta."
-                except models.Veterinario.DoesNotExist:
-                    response_data["error"] = "Email de veterinário não encontrado."
+        else:
+            return render(request, 'login/login.html', {'error': 'Tipo de usuário inválido.'})
 
-            else:
-                response_data["error"] = "Tipo de usuário inválido."
-
-    except Exception as e:
-        # Captura qualquer erro inesperado (útil em produção)
-        import traceback
-        print("Erro inesperado no login:", traceback.format_exc())
-        response_data["error"] = "Erro interno no servidor. Tente novamente mais tarde."
-
-    # Define status apropriado
-    status_code = 200 if response_data["success"] else 400
-    return JsonResponse(response_data, status=status_code)
+    # Fallback para erros inesperados
+    return render(request, 'login/login.html', {'error': 'Erro interno no servidor.'})
 
 def logout_view(request):
     logout(request)

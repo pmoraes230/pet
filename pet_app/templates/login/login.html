@@ -62,100 +62,107 @@
             </div>
 
             <!-- Form -->
-            <form id="auth-form" method="POST" action="{% url 'register' %}" class="space-y-5 max-w-sm mx-auto md:mx-0 w-full pt-8 md:pt-0">
-    {% csrf_token %}
-    
-    <!-- Campo hidden para role -->
-    <input type="hidden" name="role" id="role-input" value="tutor">
+            <form id="auth-form" method="POST" action="{% url 'register' %}"
+                class="space-y-5 max-w-sm mx-auto md:mx-0 w-full pt-8 md:pt-0">
+                {% csrf_token %}
 
-    <!-- Nome -->
-    <div id="register-name-field" class="hidden">
-        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nome Completo</label>
-        <input type="text" name="nome" placeholder="Seu nome" class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all outline-none">
-    </div>
+                <!-- Campo hidden para role -->
+                <input type="hidden" name="role" id="role-input" value="tutor">
 
-    <!-- Email -->
-    <div>
-        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Email</label>
-        <div class="relative">
-            <i data-lucide="mail" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" width="18" height="18"></i>
-            <input type="email" name="email" placeholder="seu@email.com" class="w-full pl-11 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all outline-none" required>
-        </div>
-    </div>
+                <!-- Nome -->
+                <div id="register-name-field" class="hidden">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nome Completo</label>
+                    <input type="text" name="nome" placeholder="Seu nome"
+                        class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all outline-none">
+                </div>
 
-    <!-- Senha -->
-    <div>
-        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Senha</label>
-        <div class="relative">
-            <i data-lucide="lock" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" width="18" height="18"></i>
-            <input type="password" name="senha" placeholder="••••••••" class="w-full pl-11 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all outline-none" required>
-        </div>
-    </div>
+                <!-- Email -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Email</label>
+                    <div class="relative">
+                        <i data-lucide="mail" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" width="18"
+                            height="18"></i>
+                        <input type="email" name="email" placeholder="seu@email.com"
+                            class="w-full pl-11 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all outline-none"
+                            required>
+                    </div>
+                </div>
 
-    <!-- CPF/CNPJ -->
-    <div id="cpf-cnpj-field" class="hidden">
-        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">CPF ou CNPJ</label>
-        <input type="text" name="cpf_cnpj" placeholder="000.000.000-00 ou 00.000.000/0000-00" id="cpf-cnpj-input"
-        class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all outline-none peer">
-        <p class="text-xs text-red-500 mt-1 hidden peer-invalid:block" id="cpf-cnpj-error">Informe um CPF ou CNPJ válido</p>
-    </div>
+                <!-- Senha -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Senha</label>
+                    <div class="relative">
+                        <i data-lucide="lock" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" width="18"
+                            height="18"></i>
+                        <input type="password" name="senha" placeholder="••••••••"
+                            class="w-full pl-11 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all outline-none"
+                            required>
+                    </div>
+                </div>
 
-    <!-- CRMV -->
-    <div id="crmv-field" class="hidden">
-        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">CRMV</label>
-        <input type="text" name="crmv" placeholder="CRMV do veterinário"
-        class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 
+                <!-- CPF/CNPJ -->
+                <div id="cpf-cnpj-field" class="hidden">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">CPF ou CNPJ</label>
+                    <input type="text" name="cpf_cnpj" placeholder="000.000.000-00 ou 00.000.000/0000-00"
+                        id="cpf-cnpj-input"
+                        class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all outline-none peer">
+                    <p class="text-xs text-red-500 mt-1 hidden peer-invalid:block" id="cpf-cnpj-error">Informe um CPF ou
+                        CNPJ válido</p>
+                </div>
+
+                <!-- CRMV -->
+                <div id="crmv-field" class="hidden">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">CRMV</label>
+                    <input type="text" name="crmv" placeholder="CRMV do veterinário" class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 
         focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 
         transition-all outline-none">
-    </div>
+                </div>
 
-    <!-- Data de nascimento -->
-    <div id="date-field" class="hidden">
-        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Data de nascimento</label>
-        <input type="date" name="data_nascimento" class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all outline-none">
-    </div>
+                <!-- Data de nascimento -->
+                <div id="date-field" class="hidden">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Data de nascimento</label>
+                    <input type="date" name="data_nascimento"
+                        class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all outline-none">
+                </div>
 
-    <button
-    id="submit-btn"
-    type="submit"
-    class="w-full bg-brand-purple text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
-    >
-    Entrar
-    </button>
-    </form>
+                <button id="submit-btn" type="submit"
+                    class="w-full bg-brand-purple text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all">
+                    Entrar
+                </button>
+            </form>
 
-    <div class="mt-8 text-center md:text-left text-sm text-gray-600">
-    <span id="toggle-text">Não tem conta?</span>
-    <button
-        type="button"
-        onclick="toggleMode()"
-        class="text-brand-purple font-bold hover:underline ml-1"
-        id="toggle-btn"
-    >
-        Criar cadastro
-    </button>
-    </div>
+            <div class="mt-8 text-center md:text-left text-sm text-gray-600">
+                <span id="toggle-text">Não tem conta?</span>
+                <button type="button" onclick="toggleMode()" class="text-brand-purple font-bold hover:underline ml-1"
+                    id="toggle-btn">
+                    Criar cadastro
+                </button>
+            </div>
 
-</div>
+        </div>
 
-<div id="custom-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 transform scale-95 transition-all duration-300" id="modal-content">
-        <div class="flex items-center gap-4 mb-4">
-            <div id="modal-icon" class="w-12 h-12 rounded-full flex items-center justify-center text-white text-2xl"></div>
-            <div>
-                <h3 id="modal-title" class="text-xl font-bold text-gray-800">Título</h3>
-                <p id="modal-message" class="text-gray-600 text-sm mt-1">Mensagem aqui</p>
+        <div id="custom-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 transform scale-95 transition-all duration-300"
+                id="modal-content">
+                <div class="flex items-center gap-4 mb-4">
+                    <div id="modal-icon"
+                        class="w-12 h-12 rounded-full flex items-center justify-center text-white text-2xl"></div>
+                    <div>
+                        <h3 id="modal-title" class="text-xl font-bold text-gray-800">Título</h3>
+                        <p id="modal-message" class="text-gray-600 text-sm mt-1">Mensagem aqui</p>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 mt-6">
+                    <button onclick="closeModal()"
+                        class="px-5 py-2.5 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition">Fechar</button>
+                    <button onclick="closeModal()"
+                        class="px-5 py-2.5 bg-brand-purple text-white rounded-xl font-bold hover:bg-purple-700 transition">OK</button>
+                </div>
             </div>
         </div>
-        <div class="flex justify-end gap-3 mt-6">
-            <button onclick="closeModal()" class="px-5 py-2.5 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition">Fechar</button>
-            <button onclick="closeModal()" class="px-5 py-2.5 bg-brand-purple text-white rounded-xl font-bold hover:bg-purple-700 transition">OK</button>
-        </div>
-    </div>
-</div>
 
 
-{% endblock %}
-{% block scripts %}
-<script src="{% static 'scripts/login.js' %}"></script>
-{% endblock %}
+        {% endblock %}
+        {% block scripts %}
+        <script src="{% static 'scripts/login.js' %}"></script>
+        {% endblock %}
