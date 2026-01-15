@@ -458,15 +458,9 @@ def enviar_mensagem_vet(request):
         except models.Tutor.DoesNotExist:
             pass
 
-        return redirect('mensagens_vet', tutor_id=tutor_id)
+        return redirect(f'/vet_dash/mensagens/?tutor_id={tutor_id}')
 
     return redirect('mensagens_vet')
-
-
-
-
-
-
 
 def perfil_pet_vet(request, pet_id):
     """Exibe e permite editar perfil do pet para o veterinário"""
