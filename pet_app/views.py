@@ -784,3 +784,5 @@ from django.contrib import messages
 
 # ... suas outras views ...
 
+
+# patrick fez merda to dando esse commit pra resolver
