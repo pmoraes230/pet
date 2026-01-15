@@ -228,16 +228,41 @@ class DiarioEmocional(models.Model):
     def __str__(self):
         return f"Diário {self.pet} - {self.data_registro}"
 
-class pet_app_notificacao(models.Model):
-    # Relaciona com o veterinário. Se for para tutor também, pode usar GenericForeignKey ou dois campos.
-    veterinario = models.ForeignKey('Veterinario', on_delete=models.CASCADE, related_name='notificacoes', null=True, blank=True)
+# --- Dentro de pet_app/models.py ---
+
+# No pet_app/models.py
+
+class Notificacao(models.Model):
+    # MUDE db_column='ID_VETERINARIO' para db_column='veterinario_id'
+    veterinario = models.ForeignKey(
+        'Veterinario', 
+        on_delete=models.CASCADE, 
+        related_name='notificacoes', 
+        null=True, 
+        blank=True, 
+        db_column='veterinario_id'  # <--- AJUSTE AQUI
+    )
+    
+    # Verifique se o tutor_id também está igual ao banco
+    tutor = models.ForeignKey(
+        'Tutor', 
+        on_delete=models.CASCADE, 
+        related_name='notificacoes_tutor', 
+        null=True, 
+        blank=True, 
+        db_column='tutor_id' # <--- Verifique se no SQL você criou como tutor_id
+    )
+
+    # Restante dos campos...
     mensagem = models.TextField()
+    tipo = models.CharField(max_length=20, default='sistema')
     data_criacao = models.DateTimeField(auto_now_add=True)
-    lida = models.BooleanField(default=True)
+    lida = models.BooleanField(default=False)
 
     class Meta:
-        ordering = ['-data_criacao']        
-        ordering = ['-data_criacao']        
+        db_table = 'pet_app_notificacao'
+        ordering = ['-data_criacao']
+
 
 
 class Mensagem(models.Model):
@@ -258,3 +283,65 @@ class CodigoRecuperacao(models.Model):
     email = models.EmailField()
     codigo = models.CharField(max_length=5)
     criado_em = models.DateTimeField(auto_now_add=True)
+
+# --- NO FINAL DO ARQUIVO (Sinais Automáticos) ---
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+# Usamos a classe Consulta diretamente para evitar o erro de 'app_label'
+@receiver(post_save, sender='pet_app.Consulta') 
+def avisar_nova_consulta(sender, instance, created, **kwargs):
+    if created: 
+        # Notifica o Veterinário
+        Notificacao.objects.create(
+            veterinario=instance.id_veterinario,
+            tipo='consulta',
+            mensagem=f"Nova consulta agendada: {instance.id_pet.nome} para o dia {instance.data_consulta.strftime('%d/%m')}."
+        )
+        # Notifica o Tutor
+        if instance.id_pet.id_tutor:
+            Notificacao.objects.create(
+                tutor=instance.id_pet.id_tutor,
+                tipo='consulta',
+                mensagem=f"Consulta confirmada para seu pet {instance.id_pet.nome} no dia {instance.data_consulta.strftime('%d/%m')}."
+            )
+
+            from django.db.models.signals import post_save
+from django.dispatch import receiver
+from .models import Consulta, Notificacao, Mensagem # Importe seus modelos
+
+# GATILHO 1: Quando uma CONSULTA é marcada
+@receiver(post_save, sender=Consulta)
+def notificar_consulta(sender, instance, created, **kwargs):
+    if created: # Se a consulta acabou de ser criada
+        # Notifica o Tutor
+        Notificacao.objects.create(
+            tutor=instance.id_pet.id_tutor,
+            tipo='consulta',
+            mensagem=f"Confirmado! Consulta para {instance.id_pet.nome} no dia {instance.data_consulta|date:'d/m'} às {instance.horario_consulta}."
+        )
+        # Notifica o Veterinário
+        Notificacao.objects.create(
+            veterinario=instance.id_veterinario,
+            tipo='consulta',
+            mensagem=f"Agenda: Nova consulta com {instance.id_pet.nome} marcada para {instance.data_consulta|date:'d/m'}."
+        )
+
+# GATILHO 2: Quando uma MENSAGEM é enviada
+@receiver(post_save, sender=Mensagem)
+def notificar_mensagem(sender, instance, created, **kwargs):
+    if created:
+        # Se quem enviou foi o veterinário, notifica o tutor
+        if instance.ENVIADO_POR == 'VETERINARIO':
+            Notificacao.objects.create(
+                tutor=instance.ID_TUTOR,
+                tipo='mensagem',
+                mensagem=f"O veterinário enviou uma nova mensagem para você."
+            )
+        # Se quem enviou foi o tutor, notifica o veterinário
+        else:
+            Notificacao.objects.create(
+                veterinario=instance.ID_VETERINARIO,
+                tipo='mensagem',
+                mensagem=f"O tutor {instance.ID_TUTOR.nome_tutor} enviou uma mensagem."
+            )

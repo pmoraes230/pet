@@ -7,10 +7,13 @@ from pet_app.utils import get_tutor_logado, get_veterinario_logado
 from django.urls import reverse
 import json
 from datetime import date, timedelta, datetime
+<<<<<<< HEAD
 from django.views import View
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 
+=======
+>>>>>>> parent of bd06df4 (areas notificaçoes funcionando, chat ajeitado. tutor pode marcar uma consulta.)
 
 # Create your views here.
 def tutor_dashboard_view(request):
@@ -552,4 +555,8 @@ def excluir_vacina(request, vacina_id):
     else:
         messages.error(request, "Registro não encontrado.")
 
+<<<<<<< HEAD
     return redirect('agendamentos')
+=======
+    return redirect('agendamentos')
+>>>>>>> parent of bd06df4 (areas notificaçoes funcionando, chat ajeitado. tutor pode marcar uma consulta.)

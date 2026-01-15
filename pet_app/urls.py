@@ -28,6 +28,7 @@ urlpatterns = [
     path('perfil/alterar-senha/', views.alterar_senha_logado, name='alterar_senha_logado'),
     path('recuperar-senha/codigo/', views.inserir_codigo, name='inserir_codigo'),
     path('recuperar-senha/nova/', views.nova_senha, name='nova_senha'),
+    path('notificacoes/', views.historico_notificacao, name='historico_notificacao'),
 
     # Pets
     path("meus-pets/", views.meus_pets, name="meus_pets"),
