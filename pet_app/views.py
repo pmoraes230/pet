@@ -699,9 +699,6 @@ def nova_senha(request):
         messages.error(request, "As senhas não conferem.")
 
     return render(request, 'autenticacao/nova_senha.html')
-<<<<<<< HEAD
-=======
-
 
 def historico_notificacao(request):
     # 1. Pega os dados da sessão
@@ -728,4 +725,134 @@ def historico_notificacao(request):
         'user_tipo': user_tipo # Envia o tipo exato para o HTML
     })
 
->>>>>>> parent of bd06df4 (areas notificaçoes funcionando, chat ajeitado. tutor pode marcar uma consulta.)
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from .models import Mensagem, Notificacao
+
+def mensagens_view_vet(request):
+    """Exibe o chat para o Veterinário."""
+    try:
+        user_id = request.session.get('user_id')
+        user_role = request.session.get('user_role')
+
+        if not user_id or user_role != 'vet':
+            return redirect('login')
+
+        vet_logado = get_object_or_404(models.Veterinario, id=user_id)
+        contatos_tutores = models.Tutor.objects.all()
+
+        tutor_id = request.GET.get('tutor_id')
+        mensagens = []
+        tutor_selecionado = None
+
+        if tutor_id:
+            tutor_selecionado = get_object_or_404(models.Tutor, id=tutor_id)
+            
+            # ESTA PARTE PRECISA ESTAR IDENTADA (DENTRO DO IF)
+            mensagens = Mensagem.objects.filter(
+                TUTOR=tutor_selecionado, 
+                VETERINARIO=vet_logado
+            ).order_by('DATA_ENVIO')
+
+        # O render fica fora do IF para carregar a página mesmo sem chat aberto
+        return render(request, 'mensagensvet.html', { 
+            'vet': vet_logado,
+            'contatos': contatos_tutores,
+            'mensagens': mensagens,
+            'tutor_selecionado': tutor_selecionado,
+        })
+        
+    except Exception as e:
+        print(f"Erro em mensagens_view_vet: {e}")
+        return render(request, 'erro.html', {'msg': str(e)})
+
+def historico_notificacao_vet(request):
+    """Exibe o histórico de notificações para o Veterinário."""
+    user_id = request.session.get('user_id')
+    user_role = request.session.get('user_role')
+
+    if not user_id or user_role != 'vet':
+        return redirect('login') 
+
+    # BUSCA O VETERINÁRIO (Obrigatório para o Header funcionar)
+    veterinario = get_object_or_404(models.Veterinario, id=user_id)
+    
+    # Busca as notificações
+    notificacoes = models.Notificacao.objects.filter(veterinario_id=user_id).order_by('-data_criacao')
+    
+    # Marca como lidas
+    notificacoes.filter(lida=False).update(lida=True)
+    
+    # IMPORTANTE: Removi o "notificacoes/" do caminho porque seu arquivo está solto na pasta templates
+    return render(request, 'notificacoes_history_vet.html', {
+        'notificacoes': notificacoes,
+        'veterinario': veterinario,  # Enviando o objeto para o Header
+        'user_role': user_role
+    })
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from .models import Consulta, Vacina, Pet, Veterinario, Tutor
+from datetime import datetime, timedelta
+
+@login_required
+def agenda_tutor(request):
+    # 1. Identificar o Tutor logado (ajuste conforme seu modelo de User/Tutor)
+    tutor = get_object_or_404(Tutor, usuario=request.user)
+    
+    # 2. Lógica do Calendário Strip
+    data_str = request.GET.get('data')
+    if data_str:
+        data_atual = datetime.strptime(data_str, '%Y-%m-%d').date()
+    else:
+        data_atual = datetime.now().date()
+
+    # Calcular o início da semana (segunda-feira)
+    inicio_semana = data_atual - timedelta(days=data_atual.weekday())
+    
+    dias_semana = []
+    nomes_dias = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
+    
+    for i in range(7):
+        dia = inicio_semana + timedelta(days=i)
+        dias_semana.append({
+            'nome': nomes_dias[i],
+            'num': dia.day,
+            'data_completa': dia.strftime('%Y-%m-%d'),
+            'hoje': dia == datetime.now().date(),
+            'selecionado': dia == data_atual
+        })
+
+    # 3. Buscar Dados para a Lista
+    # Filtramos consultas e vacinas apenas dos pets que pertencem a este tutor
+    consultas = Consulta.objects.filter(
+        pet__tutor=tutor, 
+        data_consulta__range=[inicio_semana, inicio_semana + timedelta(days=6)]
+    ).order_by('data_consulta', 'horario_consulta')
+
+    vacinas = Vacina.objects.filter(
+        pet__tutor=tutor,
+        data_aplicacao__range=[inicio_semana, inicio_semana + timedelta(days=6)]
+    ).order_by('data_aplicacao')
+
+    # 4. Dados para o Modal de Agendamento
+    pets = Pet.objects.filter(tutor=tutor)
+    veterinarios = Veterinario.objects.all()
+
+    context = {
+        'consultas': consultas,
+        'vacinas': vacinas,
+        'dias_semana': dias_semana,
+        'mes_atual': data_atual.strftime('%B'), # Pode precisar de tradução para PT-BR
+        'ano_atual': data_atual.year,
+        'data_anterior': (inicio_semana - timedelta(days=7)).strftime('%Y-%m-%d'),
+        'data_proxima': (inicio_semana + timedelta(days=7)).strftime('%Y-%m-%d'),
+        'pets': pets,
+        'veterinarios': veterinarios,
+    }
+
+    return render(request, 'agenda_tutor.html', context)
+
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Pet, Veterinario, Consulta, Vacina # Verifique se os nomes dos modelos estão corretos
+from django.contrib import messages
