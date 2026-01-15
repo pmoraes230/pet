@@ -6,17 +6,9 @@
     <!-- Sidebar -->
     {% include "partials/aside/aside_tutor.html" %}
 
-<<<<<<< HEAD
     <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
         {% include "partials/header/header_tutor.html" %}
         <div class="flex-1 overflow-y-auto p-6 md:p-10 pb-32">
-=======
-    <main class="flex-1 flex flex-col h-screen overflow-hidden relative p-px">
-        {% block header %}
-        {% include "partials/header/header_tutor.html" %}
-        {% endblock %}
-        <div class="flex-1 overflow-y-auto p-1 md:p-10 pb-24 z-10">
->>>>>>> funco
             <!-- Header da Página -->
             <div class="flex justify-between items-end mb-8">
                 <div>
@@ -82,42 +74,20 @@
                         class="bg-blue-50 text-blue-500 p-6 rounded-3xl group-hover:bg-blue-500 group-hover:text-white transition-all">
                         <i data-lucide="calendar" size="32"></i>
                     </div>
-<<<<<<< HEAD
-=======
-                    <div class="absolute top-6 right-6">
-                        <button onclick="toggleMenu('consulta-{{ c.id }}')"
-                            class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur-sm text-gray-500 hover:text-purple-600 shadow-sm transition-all">&#x22EE;</button>
-                        <div id="menu-consulta-{{ c.id }}"
-                            class="hidden absolute right-0 mt-2 bg-white shadow-2xl border border-gray-50 rounded-2xl py-2 w-40 z-20">
-                            <button onclick="openDeleteModal({{ c.id }}, 'Consulta', 'consulta')"
-                                class="w-full text-left px-6 py-3 text-red-500 font-bold hover:bg-red-50 transition-colors text-sm">🗑️
-                                Excluir</button>
-                        </div>
-                    </div>
->>>>>>> funco
                 </div>
                 {% endfor %}
 
                 <!-- Loop de Vacinas -->
                 {% for v in vacinas %}
                 <div
-<<<<<<< HEAD
                     class="bg-white p-6 rounded-[35px] shadow-sm flex items-center gap-8 border border-transparent hover:border-purple-200 transition-all group">
-=======
-                    class="bg-white p-6 rounded-[35px] shadow-sm flex items-center gap-8 border border-transparent hover:border-purple-200 transition-all group relative">
->>>>>>> funco
                     <div class="text-center border-r border-gray-100 pr-8 min-w-[100px]">
                         <span class="block text-xs font-black text-gray-400 uppercase tracking-tighter">{{
                             v.data_aplicacao|date:"d M" }}</span>
                         <span class="text-2xl font-black text-gray-800">08:00</span>
                     </div>
                     <div class="flex-1">
-<<<<<<< HEAD
                         <h4 class="text-2xl font-black text-gray-800 group-hover:text-purple-600 transition-colors">{{  v.nome }}</h4>
-=======
-                        <h4 class="text-2xl font-black text-gray-800 group-hover:text-purple-600 transition-colors">{{
-                            v.nome }}</h4>
->>>>>>> funco
                         <div class="flex items-center gap-4 mt-2 text-gray-500 font-bold text-sm">
                             <span class="text-purple-600">@{{ v.pet.nome }}</span>
                             <span class="flex items-center gap-1.5"><i data-lucide="map-pin" width="14"></i> Posto de
@@ -127,19 +97,6 @@
                     <div
                         class="bg-red-50 text-red-400 p-6 rounded-3xl group-hover:bg-red-400 group-hover:text-white transition-all">
                         <i data-lucide="syringe" size="32"></i>
-<<<<<<< HEAD
-=======
-                    </div>
-                    <div class="absolute top-6 right-6">
-                        <button onclick="toggleMenu('vacina-{{ v.id }}')"
-                            class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur-sm text-gray-500 hover:text-purple-600 shadow-sm transition-all">&#x22EE;</button>
-                        <div id="menu-vacina-{{ v.id }}"
-                            class="hidden absolute right-0 mt-2 bg-white shadow-2xl border border-gray-50 rounded-2xl py-2 w-40 z-20">
-                            <button onclick="openDeleteModal({{ v.id }}, 'Vacinação', 'vacina')"
-                                class="w-full text-left px-6 py-3 text-red-500 font-bold hover:bg-red-50 transition-colors text-sm">🗑️
-                                Excluir</button>
-                        </div>
->>>>>>> funco
                     </div>
                 </div>
                 {% endfor %}
@@ -151,10 +108,7 @@
                 </div>
                 {% endif %}
             </div>
-<<<<<<< HEAD
         </div>
-=======
->>>>>>> funco
     </main>
 </div>
 </div>
