@@ -41,4 +41,8 @@ urlpatterns = [
     path("perfil-veterinario/", views.perfil_veterinario, name="perfil_vet"),
     path("editar-perfil-veterinario/", views.editar_perfil_veterinario, name="editar_perfil_veterinario"),
     path('notificacoes/', views.lista_notificacoes, name='notificacoes_lista'),
+
+    # Verifique se as suas URLs de chat estão com esses nomes também:
+    path('mensagens/', views.mensagens_view, name='mensagens_view'),
+    path('mensagens_vet/', views.mensagens_view_vet, name='mensagens_view_vet'),
 ]

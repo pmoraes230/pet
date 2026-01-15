@@ -1,19 +1,26 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.contrib.auth.hashers import make_password, check_password
+from django.views.decorators.http import require_http_methods
 from django.db.models import Sum
 from datetime import date
-from django.views.decorators.http import require_http_methods
 from . import models
 from django.contrib.auth import logout
-from datetime import datetime
+from django.urls import reverse
 from django.core.mail import send_mail
 from django.conf import settings
 from django.http import JsonResponse
 import random
 import logging
 # pet_app/views.py
+from .models import Mensagem
+from .models import Pet, Veterinario, Consulta, Vacina # Verifique se os nomes dos modelos estão corretos
+from django.contrib import messages
+from pet_app import models as pet_models 
+from datetime import datetime, date, timedelta
+
 
 from django.shortcuts import render, redirect
 # ADICIONE ESTA LINHA ABAIXO:
@@ -29,7 +36,11 @@ except ImportError:
         user_id = request.session.get('user_id')
         user_role = request.session.get('user_role')
         if user_role == 'tutor' and user_id:
-            return {'id': user_id}
+            try:
+                # Retornamos o objeto completo para facilitar o uso nas views
+                return pet_models.Tutor.objects.get(id=user_id)
+            except pet_models.Tutor.DoesNotExist:
+                return None
         return None
     
     def get_veterinario_logado(request):
@@ -45,6 +56,7 @@ except ImportError:
 
 def home(request):
     return render(request, 'tela_inicio/index.html')
+
 
 @require_http_methods(["GET", "POST"])
 @csrf_protect
@@ -292,28 +304,27 @@ def register_view(request):
 # ========================================================
 
 def tutor_dashboard_view(request):
-    if request.session.get('user_role') != 'tutor':
-        return redirect('login')
-
-    tutor_id = request.session.get('user_id')
-    try:
-        tutor = models.Tutor.objects.get(id=tutor_id)
-    except models.Tutor.DoesNotExist:
+    tutor_data = get_tutor_logado(request) # tutor_data aqui é um dicionário
+    if not tutor_data:
         request.session.flush()
         return redirect('login')
 
-    pets = models.Pet.objects.filter(tutor=tutor)
-    proxima_consulta = models.Consulta.objects.filter(
+    # CORREÇÃO AQUI: 
+    # Usamos tutor_id (com o _id no final) e passamos apenas o número do ID
+    pets = pet_models.Pet.objects.filter(tutor_id=tutor_data['id'])
+    
+    # O restante do código continua igual
+    proxima_consulta = pet_models.Consulta.objects.filter(
         pet__in=pets,
         data_consulta__gte=date.today()
     ).order_by('data_consulta', 'horario_consulta').first()
 
-    historico_recente = models.Consulta.objects.filter(
+    historico_recente = pet_models.Consulta.objects.filter(
         pet__in=pets
     ).order_by('-data_consulta', '-horario_consulta')[:5]
 
     context = {
-        'tutor': tutor,
+        'tutor': tutor_data, # Passa o dicionário para o template
         'pets': pets,
         'proxima_consulta': proxima_consulta,
         'historico_recente': historico_recente,
@@ -386,7 +397,7 @@ def adicionar_pet(request):
             sexo=sexo,
             pelagem="Padrão",
             castrado="Não",
-            tutor=tutor
+            TUTOR=tutor
         )
         messages.success(request, "Pet adicionado!")
         return redirect('meus_pets')
@@ -425,9 +436,9 @@ def vet_dashboard_view(request):
 
     # --- NOVO: BUSCAR NOTIFICAÇÕES DO BANCO ---
     # Pegamos as 5 mais recentes
-    notificacoes = models.pet_app_notificacao.objects.filter(veterinario=veterinario).order_by('-data_criacao')[:5]
+    notificacoes = models.Notificacao.objects.filter(veterinario=veterinario).order_by('-data_criacao')[:5]
     # Contamos quantas não foram lidas
-    notificacoes_nao_lidas_count = models.pet_app_notificacao.objects.filter(veterinario=veterinario, lida=False).count()
+    notificacoes_nao_lidas_count = models.Notificacao.objects.filter(veterinario=veterinario, lida=False).count()
     # ------------------------------------------
 
     consultas_hoje = models.Consulta.objects.filter(veterinario=veterinario, data_consulta=date.today()).count()
@@ -505,13 +516,13 @@ import logging
 logger = logging.getLogger(__name__)
 
 def mensagens_view(request):
-    """Exibe chat para o Tutor."""
     try:
         tutor_data = get_tutor_logado(request)
         if not tutor_data:
             return redirect('login')
 
-        tutor = models.Tutor.objects.get(id=tutor_data['id'])
+        # Busca o objeto do tutor logado
+        tutor = models.Tutor.objects.get(id=tutor_data['id']) 
         contatos = models.Veterinario.objects.all()
 
         vet_id = request.GET.get('vet_id')
@@ -520,9 +531,13 @@ def mensagens_view(request):
 
         if vet_id:
             vet_selecionado = get_object_or_404(models.Veterinario, id=vet_id)
-            mensagens = models.Mensagem.objects.filter(
-                tutor=tutor,
-                veterinario=vet_selecionado
+            
+            # CORREÇÃO AQUI:
+            # O campo do banco é TUTOR (maiúsculo)
+            # A sua variável lá em cima é tutor (minúsculo)
+            mensagens = Mensagem.objects.filter(
+                TUTOR=tutor,               # Variável da linha 7
+                VETERINARIO=vet_selecionado # Variável da linha 15
             ).order_by('DATA_ENVIO')
 
         return render(request, 'mensagens.html', {
@@ -535,29 +550,38 @@ def mensagens_view(request):
         logger.exception("Erro em mensagens_view")
         return render(request, 'erro.html', {'msg': str(e)})
 
-
 def enviar_mensagem(request):
     if request.method == 'POST':
-        tutor_data = get_tutor_logado(request)
-        if not tutor_data:
-            return redirect('login')
-
-        tutor = get_object_or_404(models.Tutor, id=tutor_data['id'])
-        vet_id = request.POST.get('vet_id')
+        # Tenta pegar o tutor ou o veterinário logado
+        data_tutor = get_tutor_logado(request)
+        data_vet = get_veterinario_logado(request)
+        
         texto = request.POST.get('mensagem')
-
-        if texto and vet_id:
-            vet = get_object_or_404(models.Veterinario, id=vet_id)
+        
+        if data_tutor:
+            vet_id = request.POST.get('vet_id')
+            # CORREÇÃO: Usar nomes MAIÚSCULOS conforme o seu Model
             models.Mensagem.objects.create(
-                tutor=tutor,
-                veterinario=vet,
-                CONTEUDO=texto,
-                ENVIADO_POR='TUTOR'
+                TUTOR_id=data_tutor['id'], # Antes era tutor=
+                VETERINARIO_id=vet_id,     # Antes era veterinario=
+                CONTEUDO=texto,            # Antes era conteudo=
+                ENVIADO_POR='TUTOR'        # Antes era enviado_por=
             )
-            # Use o nome da URL em vez de path fixo se possível
             return redirect(f'/mensagens/?vet_id={vet_id}')
-            
-    return redirect('mensagens')
+
+        elif data_vet:
+            tutor_id = request.POST.get('tutor_id')
+            # CORREÇÃO: Usar nomes MAIÚSCULOS conforme o seu Model
+            models.Mensagem.objects.create(
+                VETERINARIO_id=data_vet['id'],
+                TUTOR_id=tutor_id,
+                CONTEUDO=texto,
+                ENVIADO_POR='VETERINARIO'
+            )
+            return redirect(f'/mensagens_vet/?tutor_id={tutor_id}')
+
+    return redirect('home')
+
 
 import random
 from django.shortcuts import render, redirect
@@ -700,33 +724,35 @@ def nova_senha(request):
 
     return render(request, 'autenticacao/nova_senha.html')
 
-def historico_notificacao(request):
-    # 1. Pega os dados da sessão
-    user_id = request.session.get('user_id')
-    user_tipo = request.session.get('user_tipo')
 
-    # 2. Segurança: Se não tiver sessão, volta pro login imediatamente
-    if not user_id or not user_tipo:
+def historico_notificacao(request):
+    # 1. Tenta pegar os dados usando suas funções de Utils
+    tutor_data = get_tutor_logado(request)
+    vet_data = get_veterinario_logado(request)
+
+    # 2. Verifica quem está logado
+    if tutor_data:
+        user_id = tutor_data['id']
+        # Filtra por tutor_id (minúsculo conforme seu model Notificacao)
+        notificacoes = Notificacao.objects.filter(tutor_id=user_id).order_by('-data_criacao')
+        user_tipo = 'tutor'
+    elif vet_data:
+        user_id = vet_data['id']
+        # Filtra por veterinario_id (minúsculo conforme seu model Notificacao)
+        notificacoes = Notificacao.objects.filter(veterinario_id=user_id).order_by('-data_criacao')
+        user_tipo = 'vet'
+    else:
+        # Se nenhum dos dois estiver logado, expulsa
         return redirect('login') 
 
-    # 3. Busca as notificações do usuário logado
-    if user_tipo == 'tutor':
-        notificacoes = Notificacao.objects.filter(tutor_id=user_id).order_by('-data_criacao')
-    else:
-        # Aqui garantimos que se não for tutor, filtramos por veterinário
-        notificacoes = Notificacao.objects.filter(veterinario_id=user_id).order_by('-data_criacao')
-    
-    # Marca as notificações como lidas
+    # Marca como lidas
     notificacoes.filter(lida=False).update(lida=True)
     
-    # 4. RENDERIZANDO COM O USER_TIPO EXPLÍCITO (Isso mata o bug)
     return render(request, 'notificacoes/notificacoes_history.html', {
         'notificacoes': notificacoes,
-        'user_tipo': user_tipo # Envia o tipo exato para o HTML
+        'user_tipo': user_tipo
     })
 
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 from .models import Mensagem, Notificacao
 
 def mensagens_view_vet(request):
@@ -856,3 +882,8 @@ def agenda_tutor(request):
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Pet, Veterinario, Consulta, Vacina # Verifique se os nomes dos modelos estão corretos
 from django.contrib import messages
+
+# ... suas outras views ...
+
+
+# patrick fez merda to dando esse commit pra resolver
