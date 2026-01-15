@@ -1,17 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.shortcuts import redirect, render
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth import logout
-from django.contrib.auth.decorators import login_required
 from django.views import View  # se usar no futuro
 from pet_app import models
-from pet_app.utils import get_tutor_logado, get_veterinario_logado
-from django.urls import reverse
+from pet_app.utils import get_tutor_logado
 import json
 from datetime import date, timedelta, datetime
-from pet_app.models import Tutor, Pet, Vacina, Consulta, DiarioEmocional
-from pet_app import models as pet_models
 
 
 # Create your views here.
@@ -69,10 +63,10 @@ def editar_perfil_tutor(request):
 
     if request.method == "POST":
         # Atualiza dados do tutor
-        tutor.nome_tutor = request.POST.get('nome_tutor')
-        tutor.cpf = request.POST.get('cpf')
-        tutor.data_nascimento = request.POST.get('data_nascimento')
-        tutor.endereco = request.POST.get('endereco')
+        tutor.nome_tutor = request.POST.get('nome_tutor', tutor.nome_tutor)
+        tutor.cpf = request.POST.get('cpf', tutor.cpf)
+        tutor.data_nascimento = request.POST.get('data_nascimento', tutor.data_nascimento)
+        tutor.endereco = request.POST.get('endereco', tutor.endereco)
         imagem_tutor = request.FILES.get('image_tutor')
         if imagem_tutor:
             tutor.imagem_perfil_tutor = imagem_tutor
@@ -371,10 +365,10 @@ def agendamentos_view(request):
         return redirect('login')
 
     # CORREÇÃO: Usamos pet_models.Tutor (com o prefixo correto)
-    tutor = pet_models.Tutor.objects.get(id=tutor_data['id'])
+    tutor = models.Tutor.objects.get(id=tutor_data['id'])
     
     # Buscamos os pets do tutor
-    meus_pets = pet_models.Pet.objects.filter(tutor=tutor)
+    meus_pets = models.Pet.objects.filter(tutor=tutor)
 
     # Lógica de calendário
     data_url = request.GET.get('data')
@@ -402,11 +396,11 @@ def agendamentos_view(request):
     fim_da_semana = segunda_da_semana + timedelta(days=6)
     
     # CORREÇÃO: Usamos pet_models para buscar Vacinas e Consultas
-    vacinas = pet_models.Vacina.objects.filter(
+    vacinas = models.Vacina.objects.filter(
         pet__in=meus_pets, 
         data_aplicacao__range=[segunda_da_semana, fim_da_semana]
     )
-    consultas = pet_models.Consulta.objects.filter(
+    consultas = models.Consulta.objects.filter(
         pet__in=meus_pets, 
         data_consulta__range=[segunda_da_semana, fim_da_semana]
     )
@@ -426,7 +420,7 @@ def agendamentos_view(request):
         
         # ESSENCIAL PARA O MODAL:
         'pets': meus_pets, 
-        'veterinarios': pet_models.Veterinario.objects.all(),
+        'veterinarios': models.Veterinario.objects.all(),
     }
     return render(request, 'agendamentos.html', context)
     # Removido o return duplicado
