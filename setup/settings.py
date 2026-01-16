@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import os
 from django.core.management.utils import get_random_secret_key
 import dj_database_url
+from decouple import config
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -16,7 +17,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = get_random_secret_key()
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'False').lower() == 'false'
+# DEBUG=True quando em desenvolvimento
+DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 
 DEBUG_TOOLBAR_CONFIG = {
     'SHOW_TOOLBAR_CALLBACK': lambda request: False,  # desativa completamente
@@ -41,7 +43,15 @@ INSTALLED_APPS = [
     'tutor_dash',
     'vet_dash',
     'storages',
+    'channels',
 ]
+
+# ASGI Configuration para Daphne
+ASGI_APPLICATION = 'setup.asgi.application'
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -192,5 +202,18 @@ STORAGES = {
     },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
+REDIS_URL = os.getenv("REDIS_URL") 
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.pubsub.RedisPubSubChannelLayer",
+        "CONFIG": {
+            "hosts": [os.getenv("REDIS_URL")],
+            "prefix": "chat_",
+            "expiry": 360,
+        },
     },
 }

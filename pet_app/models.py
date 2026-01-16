@@ -1,7 +1,11 @@
-from datetime import date
 from django.db import models
-
 from pet_app import models as pet_models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from datetime import datetime
+from django.shortcuts import get_object_or_404, redirect
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 class PessoaFisica(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
@@ -286,13 +290,6 @@ class CodigoRecuperacao(models.Model):
     codigo = models.CharField(max_length=5)
     criado_em = models.DateTimeField(auto_now_add=True)
 
-# --- NO FINAL DO ARQUIVO (Sinais Automáticos) ---
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-
-# Usamos a classe Consulta diretamente para evitar o erro de 'app_label'
-from datetime import datetime
-from django.shortcuts import get_object_or_404, redirect
 
 def agendar_consulta(request):
     if request.method == 'POST':
@@ -327,11 +324,6 @@ def agendar_consulta(request):
         return redirect('agendamentos')
     
     return redirect('agendamentos')
-
-
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from .models import Mensagem, Notificacao
 
 @receiver(post_save, sender=Mensagem)
 def notificar_mensagem(sender, instance, created, **kwargs):

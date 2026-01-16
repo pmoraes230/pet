@@ -1,6 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.contrib.auth.hashers import make_password, check_password
 from django.views.decorators.http import require_http_methods
@@ -8,17 +7,12 @@ from django.db.models import Sum
 from datetime import date
 from . import models
 from django.contrib.auth import logout
-from django.urls import reverse
 from django.core.mail import send_mail
 from django.conf import settings
 from django.http import JsonResponse
 import random
 import logging
-# pet_app/views.py
-from .models import Mensagem
-from .models import Pet, Veterinario, Consulta, Vacina # Verifique se os nomes dos modelos estão corretos
 from django.contrib import messages
-from pet_app import models as pet_models 
 from datetime import datetime, date, timedelta
 
 
@@ -38,8 +32,8 @@ except ImportError:
         if user_role == 'tutor' and user_id:
             try:
                 # Retornamos o objeto completo para facilitar o uso nas views
-                return pet_models.Tutor.objects.get(id=user_id)
-            except pet_models.Tutor.DoesNotExist:
+                return models.Tutor.objects.get(id=user_id)
+            except models.Tutor.DoesNotExist:
                 return None
         return None
     
@@ -311,15 +305,15 @@ def tutor_dashboard_view(request):
 
     # CORREÇÃO AQUI: 
     # Usamos tutor_id (com o _id no final) e passamos apenas o número do ID
-    pets = pet_models.Pet.objects.filter(tutor_id=tutor_data['id'])
+    pets = models.Pet.objects.filter(tutor_id=tutor_data['id'])
     
     # O restante do código continua igual
-    proxima_consulta = pet_models.Consulta.objects.filter(
+    proxima_consulta = models.Consulta.objects.filter(
         pet__in=pets,
         data_consulta__gte=date.today()
     ).order_by('data_consulta', 'horario_consulta').first()
 
-    historico_recente = pet_models.Consulta.objects.filter(
+    historico_recente = models.Consulta.objects.filter(
         pet__in=pets
     ).order_by('-data_consulta', '-horario_consulta')[:5]
 
@@ -506,15 +500,6 @@ def lista_notificacoes(request):
         'notificacoes': todas_notificacoes
     })
 
-
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from . import models 
-import logging
-
-# Adicionei logs para você ver o erro no terminal do VS Code
-logger = logging.getLogger(__name__)
-
 def mensagens_view(request):
     try:
         tutor_data = get_tutor_logado(request)
@@ -531,11 +516,8 @@ def mensagens_view(request):
 
         if vet_id:
             vet_selecionado = get_object_or_404(models.Veterinario, id=vet_id)
-            
-            # CORREÇÃO AQUI:
-            # O campo do banco é TUTOR (maiúsculo)
-            # A sua variável lá em cima é tutor (minúsculo)
-            mensagens = Mensagem.objects.filter(
+
+            mensagens = models.Mensagem.objects.filter(
                 TUTOR=tutor,               # Variável da linha 7
                 VETERINARIO=vet_selecionado # Variável da linha 15
             ).order_by('DATA_ENVIO')
@@ -560,7 +542,6 @@ def enviar_mensagem(request):
         
         if data_tutor:
             vet_id = request.POST.get('vet_id')
-            # CORREÇÃO: Usar nomes MAIÚSCULOS conforme o seu Model
             models.Mensagem.objects.create(
                 TUTOR_id=data_tutor['id'], # Antes era tutor=
                 VETERINARIO_id=vet_id,     # Antes era veterinario=
@@ -571,7 +552,6 @@ def enviar_mensagem(request):
 
         elif data_vet:
             tutor_id = request.POST.get('tutor_id')
-            # CORREÇÃO: Usar nomes MAIÚSCULOS conforme o seu Model
             models.Mensagem.objects.create(
                 VETERINARIO_id=data_vet['id'],
                 TUTOR_id=tutor_id,
@@ -582,10 +562,6 @@ def enviar_mensagem(request):
 
     return redirect('home')
 
-
-import random
-from django.shortcuts import render, redirect
-from .models import CodigoRecuperacao
 
 # --- 1. SOLICITAR (VIA LOGIN/ESQUECI SENHA) ---
 def solicitar_troca_senha(request):
@@ -607,7 +583,7 @@ def solicitar_troca_senha(request):
         codigo = str(random.randint(10000, 99999))
         
         # Salva no banco
-        CodigoRecuperacao.objects.create(email=email_destino, codigo=codigo)
+        models.CodigoRecuperacao.objects.create(email=email_destino, codigo=codigo)
         
         logger.info(f"Enviando código de recuperação para {email_destino}")
         
@@ -643,7 +619,7 @@ def alterar_senha_logado(request):
         return redirect('login')
 
     codigo = str(random.randint(10000, 99999))
-    CodigoRecuperacao.objects.create(email=email_do_tutor, codigo=codigo)
+    models.CodigoRecuperacao.objects.create(email=email_do_tutor, codigo=codigo)
     
     try:
         send_mail(
@@ -674,7 +650,7 @@ def inserir_codigo(request):
         email = request.session.get('email_recuperacao')
         
         # Verifica se o código existe no banco para esse email
-        valido = CodigoRecuperacao.objects.filter(email=email, codigo=codigo_enviado).exists()
+        valido = models.CodigoRecuperacao.objects.filter(email=email, codigo=codigo_enviado).exists()
         
         if valido:
             return redirect('nova_senha')
@@ -753,8 +729,6 @@ def historico_notificacao(request):
         'user_tipo': user_tipo
     })
 
-from .models import Mensagem, Notificacao
-
 def mensagens_view_vet(request):
     """Exibe o chat para o Veterinário."""
     try:
@@ -775,7 +749,7 @@ def mensagens_view_vet(request):
             tutor_selecionado = get_object_or_404(models.Tutor, id=tutor_id)
             
             # ESTA PARTE PRECISA ESTAR IDENTADA (DENTRO DO IF)
-            mensagens = Mensagem.objects.filter(
+            mensagens = models.Mensagem.objects.filter(
                 TUTOR=tutor_selecionado, 
                 VETERINARIO=vet_logado
             ).order_by('DATA_ENVIO')
@@ -816,15 +790,10 @@ def historico_notificacao_vet(request):
         'user_role': user_role
     })
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from .models import Consulta, Vacina, Pet, Veterinario, Tutor
-from datetime import datetime, timedelta
-
 @login_required
 def agenda_tutor(request):
     # 1. Identificar o Tutor logado (ajuste conforme seu modelo de User/Tutor)
-    tutor = get_object_or_404(Tutor, usuario=request.user)
+    tutor = get_object_or_404(models.Tutor, usuario=request.user)
     
     # 2. Lógica do Calendário Strip
     data_str = request.GET.get('data')

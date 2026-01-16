@@ -5,6 +5,7 @@ from django.views import View  # se usar no futuro
 from pet_app import models
 from pet_app.utils import get_tutor_logado
 import json
+from django.utils import timezone
 from datetime import date, timedelta, datetime
 
 
@@ -318,9 +319,6 @@ class PetDetailView(View):
 
         pet.save()
 
-        # Se quiser manter o SQL raw como antes, substitua o bloco acima por:
-        # self._update_pet_sql(pet, post_data, files)
-
 # ========================================================
 # MEDICAMENTOS / AGENDAMENTOS
 # ========================================================
@@ -477,17 +475,9 @@ def diario_emocional_view(request):
     })
 
 
-from django.shortcuts import render, get_object_or_404, redirect
-from pet_app.models import Pet, Vacina, Consulta # Import correto agora
-from django.utils import timezone
-
-from django.shortcuts import render, get_object_or_404, redirect
-from pet_app.models import Pet, Vacina, Consulta # Importando do app correto
-from django.utils import timezone
-
 def perfil_pet(request, pet_id):
     # 1. Busca o pet
-    pet = get_object_or_404(Pet, id=pet_id)
+    pet = get_object_or_404(models.Pet, id=pet_id)
     
     # 2. Se for POST, salva as alterações
     if request.method == "POST":
@@ -509,8 +499,8 @@ def perfil_pet(request, pet_id):
         return redirect('perfil_pet', pet_id=pet.id)
 
     # 3. Dados para exibição (fora do IF POST para carregar sempre)
-    vacinas = Vacina.objects.filter(id_pet=pet.id)
-    proxima_consulta = Consulta.objects.filter(
+    vacinas = models.Vacina.objects.filter(id_pet=pet.id)
+    proxima_consulta = models.Consulta.objects.filter(
         id_pet=pet.id, 
         data_consulta__gte=timezone.now().date()
     ).order_by('data_consulta').first()
