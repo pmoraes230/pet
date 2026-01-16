@@ -73,11 +73,4 @@ Coloque no terminal o seguinte comando ".\venv\Scripts\python.exe -m daphne -b 0
 O projeto será aberto automaticamente no seu navegador padrão (geralmente em http://127.0.0.1:8000/).
 
 
-## Layout ou Demonstração
-adicione um print ou um GIF aqui:
-
-Link para o deploy (opcional)
-
-
-# Desenvolvido com ❤️ para ajudar nossos melhores amigos. 🐶🐱
 
