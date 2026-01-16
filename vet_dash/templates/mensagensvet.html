@@ -18,34 +18,33 @@
             
             <!-- LISTA DE CONTATOS (TUTORES) -->
             <div class="w-full md:w-80 bg-white rounded-[2.5rem] shadow-sm border border-gray-100 flex flex-col overflow-hidden">
-                <div class="p-6">
+                <div class="p-6 border-b border-gray-50">
                     <h3 class="text-xl font-black text-gray-800 tracking-tight">Conversas</h3>
                 </div>
                 
-                <div class="flex-1 overflow-y-auto px-4 pb-4 space-y-3">
+                <div class="flex-1 overflow-y-auto px-4 py-4 space-y-3">
                     {% for contato in contatos %}
                     <a href="?tutor_id={{ contato.id }}" 
                        class="flex items-center gap-3 p-3 rounded-[2rem] transition-all group border 
                        {% if tutor_selecionado and contato.id == tutor_selecionado.id %} bg-purple-50 border-purple-100 {% else %} border-transparent hover:bg-gray-50 {% endif %}">
                         
-                        <div class="w-14 h-14 rounded-full overflow-hidden border-2 border-white shadow-sm flex-shrink-0">
+                        <div class="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-sm flex-shrink-0">
                             {% if contato.imagem_perfil_tutor %}
                                 <img src="{{ contato.imagem_perfil_tutor.url }}" class="w-full h-full object-cover">
                             {% else %}
                                 <div class="w-full h-full bg-purple-100 flex items-center justify-center text-purple-400">
-                                    <i data-lucide="user" width="24"></i>
+                                    <i data-lucide="user" width="20"></i>
                                 </div>
                             {% endif %}
                         </div>
 
                         <div class="flex-1 min-w-0">
-                            <div class="bg-white px-4 py-2 rounded-full border border-gray-100 shadow-sm inline-block max-w-full">
-                                <p class="text-sm font-bold text-gray-800 truncate">{{ contato.nome_tutor }}</p>
-                            </div>
+                            <p class="text-sm font-bold text-gray-800 truncate">{{ contato.nome_tutor }}</p>
+                            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Tutor</p>
                         </div>
                     </a>
                     {% empty %}
-                        <p class="text-center text-gray-400 text-sm mt-10">Nenhum tutor disponível.</p>
+                        <p class="text-center text-gray-400 text-sm mt-10 italic font-medium">Nenhum tutor disponível.</p>
                     {% endfor %}
                 </div>
             </div>
@@ -54,19 +53,35 @@
             <div class="hidden md:flex flex-1 bg-white/40 backdrop-blur-md rounded-[2.5rem] shadow-sm border border-white/60 flex-col overflow-hidden relative">
                 
                 {% if tutor_selecionado %}
-                    <!-- Cabeçalho do Chat -->
-                    <div class="p-6 border-b border-gray-100 bg-white/50 flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <h2 class="font-black text-gray-800">Atendimento: {{ tutor_selecionado.nome_tutor }}</h2>
-                            <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                    <!-- Cabeçalho do Chat (Clicável para ver detalhes) -->
+                    <div onclick="openTutorModal()" class="p-6 border-b border-gray-100 bg-white/50 flex items-center justify-between cursor-pointer hover:bg-white/80 transition-all">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-full overflow-hidden bg-purple-100 flex-shrink-0">
+                                {% if tutor_selecionado.imagem_perfil_tutor %}
+                                    <img src="{{ tutor_selecionado.imagem_perfil_tutor.url }}" class="w-full h-full object-cover">
+                                {% else %}
+                                    <div class="w-full h-full flex items-center justify-center text-purple-400">
+                                        <i data-lucide="user" width="20"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h2 class="font-black text-gray-800">{{ tutor_selecionado.nome_tutor }}</h2>
+                                    <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                                </div>
+                                <p class="text-[10px] font-black text-purple-500 uppercase tracking-tighter">Clique para ver perfil e pets</p>
+                            </div>
                         </div>
+                        <button class="bg-gray-100 p-3 rounded-2xl text-gray-400 hover:text-purple-600 transition-colors">
+                            <i data-lucide="info" width="20"></i>
+                        </button>
                     </div>
 
                     <!-- Mensagens -->
                     <div id="chat-box" class="flex-1 overflow-y-auto p-8 space-y-6 bg-gradient-to-b from-transparent to-white/30">
                         {% for msg in mensagens %}
                             {% if msg.ENVIADO_POR == 'VETERINARIO' %}
-                                <!-- Mensagem do Veterinário (Direita - Roxo) -->
                                 <div class="flex flex-col items-end ml-auto max-w-[70%] group">
                                     <div class="bg-purple-600 text-white p-5 rounded-t-[2rem] rounded-bl-[2rem] shadow-lg shadow-purple-200/50 text-sm font-medium leading-relaxed">
                                         {{ msg.CONTEUDO }}
@@ -74,7 +89,6 @@
                                     <span class="text-[10px] font-black text-gray-400 mt-2 mr-2 uppercase tracking-widest">{{ msg.DATA_ENVIO|date:"H:i" }}</span>
                                 </div>
                             {% else %}
-                                <!-- Mensagem do Tutor (Esquerda - Branco/Cinza) -->
                                 <div class="flex flex-col items-start max-w-[70%] group">
                                     <div class="bg-white text-gray-700 p-5 rounded-t-[2rem] rounded-br-[2rem] shadow-sm border border-gray-100 text-sm font-medium leading-relaxed">
                                         {{ msg.CONTEUDO }}
@@ -94,10 +108,9 @@
                     <div class="p-6 bg-white/80 border-t border-gray-50">
                         <form method="POST" action="{% url 'enviar_mensagem_vet' %}" class="relative flex items-center">
                             {% csrf_token %}
-                            <!-- Corrigido para .id minúsculo -->
                             <input type="hidden" name="tutor_id" value="{{ tutor_selecionado.id }}">
                             <input type="text" name="mensagem" placeholder="Responder ao tutor..." required
-                                class="w-full bg-gray-50 border border-gray-100 rounded-full py-5 px-8 text-sm font-bold text-gray-700 focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all shadow-inner">
+                                class="w-full bg-gray-50 border border-gray-100 rounded-full py-5 px-8 text-sm font-bold text-gray-700 focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all shadow-inner outline-none">
                             <button type="submit" class="absolute right-3 p-4 bg-transparent text-gray-800 hover:text-purple-600 transition-transform hover:scale-110 active:scale-90">
                                 <i data-lucide="send-horizontal" width="28" height="28"></i>
                             </button>
@@ -115,7 +128,6 @@
                     </div>
                 {% endif %}
             </div>
-
         </div>
 
         <!-- Footer Decorativo -->
@@ -127,11 +139,110 @@
     </main>
 </div>
 
+<!-- ============================================================== -->
+<!-- MODAL DE DETALHES DO TUTOR E PETS -->
+<!-- ============================================================== -->
+{% if tutor_selecionado %}
+<div id="modalTutorInfo" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-lg rounded-[40px] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+        
+        <!-- Header Perfil -->
+        <div class="relative h-32 bg-purple-600">
+            <button onclick="closeTutorModal()" class="absolute top-6 right-6 bg-white/20 p-2 rounded-full text-white hover:bg-white/40 transition-colors z-10">
+                <i data-lucide="x" width="20" height="20"></i>
+            </button>
+        </div>
+
+        <div class="px-8 pb-8">
+            <!-- Foto e Nome -->
+            <div class="relative -mt-16 mb-6 flex flex-col items-center text-center">
+                <div class="w-32 h-32 rounded-[2.5rem] border-8 border-white bg-gray-100 overflow-hidden shadow-xl">
+                    {% if tutor_selecionado.imagem_perfil_tutor %}
+                        <img src="{{ tutor_selecionado.imagem_perfil_tutor.url }}" class="w-full h-full object-cover">
+                    {% else %}
+                        <div class="w-full h-full flex items-center justify-center text-gray-300">
+                            <i data-lucide="user" width="48"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                <h3 class="mt-4 text-2xl font-black text-gray-800 italic">{{ tutor_selecionado.nome_tutor }}</h3>
+                <p class="text-gray-400 font-bold uppercase text-[10px] tracking-[0.2em]">Tutor Responsável</p>
+            </div>
+
+            <!-- Informações de Contato -->
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <div class="bg-gray-50 p-4 rounded-3xl border border-gray-100">
+                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">E-mail</label>
+                    <p class="text-sm font-bold text-gray-700 truncate">{{ tutor_selecionado.email|default:"Não informado" }}</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-3xl border border-gray-100">
+                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Telefone</label>
+                    <p class="text-sm font-bold text-gray-700">{{ tutor_selecionado.telefone|default:"(00) 00000-0000" }}</p>
+                </div>
+            </div>
+
+            <!-- Lista de Pets -->
+            <div>
+                <h4 class="text-sm font-black text-gray-800 mb-4 flex items-center gap-2">
+                    <i data-lucide="dog" class="text-purple-600" width="18"></i>
+                    Pets Vinculados
+                </h4>
+                <div class="space-y-3">
+                    {% for pet in tutor_selecionado.pet_set.all %}
+                    <div class="flex items-center gap-4 p-4 bg-purple-50 rounded-[2rem] border border-purple-100">
+                        <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-purple-600 shadow-sm">
+                            <i data-lucide="paw-print" width="20"></i>
+                        </div>
+                        <div>
+                            <p class="font-black text-gray-800">{{ pet.nome }}</p>
+                            <p class="text-xs text-gray-500 font-medium">{{ pet.raca }} • {{ pet.idade }} anos</p>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-center text-gray-400 text-sm italic">Nenhum pet cadastrado.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <button onclick="closeTutorModal()" class="w-full mt-8 py-4 bg-gray-100 text-gray-500 rounded-2xl font-black hover:bg-gray-200 transition-colors">
+                Fechar Perfil
+            </button>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <script>
     lucide.createIcons();
+    
+    // Auto-scroll para o fim do chat
     const chatBox = document.getElementById('chat-box');
     if (chatBox) {
         chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // Funções do Modal de Detalhes
+    function openTutorModal() {
+        const modal = document.getElementById('modalTutorInfo');
+        if (modal) {
+            modal.classList.remove('hidden');
+            lucide.createIcons();
+        }
+    }
+
+    function closeTutorModal() {
+        const modal = document.getElementById('modalTutorInfo');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    }
+
+    // Fechar ao clicar fora
+    window.onclick = function (event) {
+        const modal = document.getElementById('modalTutorInfo');
+        if (event.target == modal) {
+            closeTutorModal();
+        }
     }
 </script>
 {% endblock %}
