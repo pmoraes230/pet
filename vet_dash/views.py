@@ -16,7 +16,7 @@ from django.utils import timezone
 def dash_veterinario(request):
     vet_data = get_veterinario_logado(request)
     if not vet_data:
-        return redirect('login_veterinario')
+        return redirect('login')
 
     veterinario = models.Veterinario.objects.get(id=vet_data['id'])
 
@@ -65,7 +65,7 @@ def dash_veterinario(request):
 def pacientes_view(request):
     vet_data = get_veterinario_logado(request)
     if not vet_data:
-        return redirect('login_veterinario')
+        return redirect('login')
 
     veterinario = models.Veterinario.objects.get(id=vet_data['id'])
     pacientes = models.Pet.objects.all().order_by('nome')
@@ -83,7 +83,7 @@ def pacientes_view(request):
 def agenda_view(request):
     vet_data = get_veterinario_logado(request)
     if not vet_data:
-        return redirect('login_veterinario')
+        return redirect('login')
 
     veterinario = models.Veterinario.objects.get(id=vet_data['id'])
 
@@ -176,7 +176,7 @@ def agenda_view(request):
 def prontuarios_view(request):
     vet_data = get_veterinario_logado(request)
     if not vet_data:
-        return redirect('login_veterinario')
+        return redirect('login')
 
     veterinario = models.Veterinario.objects.get(id=vet_data['id'])
     pet_id = request.GET.get('pet_id')
@@ -221,7 +221,7 @@ def prontuarios_view(request):
 def financeiro_view(request):
     vet_data = get_veterinario_logado(request)
     if not vet_data:
-        return redirect('login_veterinario')
+        return redirect('login')
 
     veterinario = models.Veterinario.objects.get(id=vet_data['id'])
 
@@ -292,7 +292,7 @@ def financeiro_view(request):
 def perfil_veterinario(request):
     vet_data = get_veterinario_logado(request)
     if not vet_data:
-        return redirect('login_veterinario')
+        return redirect('login')
     
     veterinario = models.Veterinario.objects.get(id=vet_data['id'])
     contatos = models.ContatoVeterinario.objects.filter(veterinario_id=veterinario.id)
@@ -308,7 +308,7 @@ def perfil_veterinario(request):
 def editar_perfil_veterinario(request):
     vet_data = get_veterinario_logado(request)
     if not vet_data:
-        return redirect('login_veterinario')
+        return redirect('login')
 
     veterinario = models.Veterinario.objects.get(id=vet_data['id'])
 
@@ -357,7 +357,7 @@ def editar_perfil_veterinario(request):
 def detalhe_pet_view(request, pet_id):
     vet_data = get_veterinario_logado(request)
     if not vet_data:
-        return redirect('login_veterinario')
+        return redirect('login')
 
     veterinario = models.Veterinario.objects.get(id=vet_data['id'])
     pet = get_object_or_404(models.Pet, id=pet_id)
@@ -406,7 +406,7 @@ def detalhe_pet_view(request, pet_id):
 def mensagens_vet(request):
     vet_data = get_veterinario_logado(request)
     if not vet_data:
-        return redirect('login_veterinario')
+        return redirect('login')
 
     veterinario = models.Veterinario.objects.get(id=vet_data['id'])
     
@@ -422,8 +422,8 @@ def mensagens_vet(request):
         try:
             tutor_selecionado = models.Tutor.objects.get(id=tutor_id)
             mensagens = models.Mensagem.objects.filter(
-                veterinario=veterinario,
-                tutor=tutor_selecionado
+                VETERINARIO=veterinario,
+                TUTOR=tutor_selecionado
             ).order_by('DATA_ENVIO')
         except models.Tutor.DoesNotExist:
             pass
@@ -441,7 +441,7 @@ def enviar_mensagem_vet(request):
     if request.method == "POST":
         vet_data = get_veterinario_logado(request)
         if not vet_data:
-            return redirect('login_veterinario')
+            return redirect('login')
 
         veterinario = models.Veterinario.objects.get(id=vet_data['id'])
         tutor_id = request.POST.get('tutor_id')
@@ -450,23 +450,17 @@ def enviar_mensagem_vet(request):
         try:
             tutor = models.Tutor.objects.get(id=tutor_id)
             models.Mensagem.objects.create(
-                veterinario=veterinario,
-                tutor=tutor,
+                VETERINARIO=veterinario,
+                TUTOR=tutor,
                 CONTEUDO=conteudo,
                 ENVIADO_POR='VETERINARIO'
             )
         except models.Tutor.DoesNotExist:
             pass
 
-        return redirect('mensagens_vet', tutor_id=tutor_id)
+        return redirect(f'/vet_dash/mensagens/?tutor_id={tutor_id}')
 
     return redirect('mensagens_vet')
-
-
-
-
-
-
 
 def perfil_pet_vet(request, pet_id):
     """Exibe e permite editar perfil do pet para o veterinário"""
@@ -526,7 +520,7 @@ def perfil_pet_vet(request, pet_id):
 def excluir_consulta_vet(request, consulta_id):
     vet_data = get_veterinario_logado(request)
     if not vet_data:
-        return redirect('login_veterinario')
+        return redirect('login')
 
     veterinario = models.Veterinario.objects.get(id=vet_data['id'])
     consulta = models.Consulta.objects.filter(
@@ -546,7 +540,7 @@ def excluir_consulta_vet(request, consulta_id):
 def excluir_vacina_vet(request, vacina_id):
     vet_data = get_veterinario_logado(request)
     if not vet_data:
-        return redirect('login_veterinario')
+        return redirect('login')
 
     veterinario = models.Veterinario.objects.get(id=vet_data['id'])
     vacina = models.Vacina.objects.filter(

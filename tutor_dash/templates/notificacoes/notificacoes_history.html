@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="bg-gray-50 flex flex-col md:flex-row h-screen overflow-hidden">
+    
+    <!-- SIDEBAR FIXA DO TUTOR -->
+    {% include "partials/aside/aside_tutor.html" %}
+
+    <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+        
+        <!-- HEADER FIXO DO TUTOR -->
+        {% include "partials/header/header_tutor.html" %}
+
+        <!-- Conteúdo das Notificações -->
+        <div class="flex-1 overflow-y-auto p-6 md:p-10 pb-24 z-10">
+            <div class="max-w-4xl mx-auto">
+                
+                <!-- Título e Contador -->
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 class="text-3xl font-black text-gray-800 tracking-tight">Notificações</h2>
+                        <p class="text-gray-400 font-bold">Histórico de mensagens e alertas do seu pet.</p>
+                    </div>
+                    <div class="bg-white px-4 py-2 rounded-2xl border border-gray-100 shadow-sm">
+                         <span class="text-xs font-black text-gray-400 uppercase tracking-widest">
+                            {{ notificacoes.count }} registros
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Lista de Notificações -->
+                <div class="space-y-4">
+                    {% for n in notificacoes %}
+                    <div class="bg-white rounded-[2rem] p-6 border {% if not n.lida %}border-purple-200 bg-purple-50/10{% else %}border-gray-100{% endif %} shadow-sm flex items-center gap-6 hover:shadow-md transition-all">
+                        
+                        <!-- Ícone Dinâmico -->
+                        <div class="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0
+                            {% if n.tipo == 'consulta' %} bg-teal-50 text-[#26C2B9] 
+                            {% elif n.tipo == 'vacina' %} bg-purple-50 text-purple-600 
+                            {% else %} bg-blue-50 text-blue-500 {% endif %}">
+                            <i data-lucide="{% if n.tipo == 'consulta' %}calendar{% elif n.tipo == 'vacina' %}syringe{% else %}bell{% endif %}" width="24"></i>
+                        </div>
+
+                        <!-- Conteúdo da Notificação -->
+                        <div class="flex-1">
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                                    {{ n.tipo|default:"Aviso" }}
+                                </span>
+                                <span class="text-[10px] font-bold text-gray-400 flex items-center gap-1">
+                                    <i data-lucide="clock" width="10"></i>
+                                    {{ n.data_criacao|date:"d/m/Y" }} às {{ n.data_criacao|date:"H:i" }}
+                                </span>
+                            </div>
+                            <p class="text-gray-800 font-bold text-lg leading-tight">{{ n.mensagem }}</p>
+                        </div>
+
+                        <!-- Indicador visual de nova notificação (Bolinha) -->
+                        {% if not n.lida %}
+                            <div class="w-2.5 h-2.5 bg-purple-600 rounded-full"></div>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <!-- Caso não existam notificações -->
+                    <div class="text-center py-24 bg-white rounded-[3rem] border-2 border-dashed border-gray-100">
+                        <i data-lucide="bell-off" class="mx-auto text-gray-200 mb-4" width="48"></i>
+                        <p class="text-gray-400 font-black italic">Você não possui notificações no momento.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    // Inicializa ícones do Lucide
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    });
+</script>
+{% endblock %}

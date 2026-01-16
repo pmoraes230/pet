@@ -1,15 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.shortcuts import redirect, render
-from django.contrib.auth.decorators import login_required
+from django.views import View  # se usar no futuro
 from pet_app import models
-from pet_app.utils import get_tutor_logado, get_veterinario_logado
-from django.urls import reverse
+from pet_app.utils import get_tutor_logado
 import json
 from datetime import date, timedelta, datetime
-from django.views import View
-from django.shortcuts import render, get_object_or_404, redirect
-from django.utils import timezone
 
 
 # Create your views here.
@@ -50,11 +46,9 @@ def perfil_tutor(request):
         return redirect('login')
 
     tutor = models.Tutor.objects.get(id=tutor_data['id'])
-    pet = models.Pet.objects.filter(tutor=tutor)
 
     return render(request, 'edit_tutor/tutor_perfil.html', {
         'tutor': tutor,
-        'pet': pet
         # 'contatos': contatos,  # Descomente quando o modelo existir
     })
 
@@ -69,10 +63,10 @@ def editar_perfil_tutor(request):
 
     if request.method == "POST":
         # Atualiza dados do tutor
-        tutor.nome_tutor = request.POST.get('nome_tutor')
-        tutor.cpf = request.POST.get('cpf')
-        tutor.data_nascimento = request.POST.get('data_nascimento')
-        tutor.endereco = request.POST.get('endereco')
+        tutor.nome_tutor = request.POST.get('nome_tutor', tutor.nome_tutor)
+        tutor.cpf = request.POST.get('cpf', tutor.cpf)
+        tutor.data_nascimento = request.POST.get('data_nascimento', tutor.data_nascimento)
+        tutor.endereco = request.POST.get('endereco', tutor.endereco)
         imagem_tutor = request.FILES.get('image_tutor')
         if imagem_tutor:
             tutor.imagem_perfil_tutor = imagem_tutor
@@ -213,7 +207,7 @@ def adicionar_pet(request):
             sexo=request.POST.get('sexo'),
             pelagem=request.POST.get('pelagem', 'Não informada'),
             castrado=request.POST.get('castrado', 'Não'),
-            tutor=tutor
+            TUTOR=tutor
         )
 
         messages.success(request, "Pet cadastrado com sucesso!")
@@ -365,13 +359,18 @@ def medicamentos_view(request):
 
 
 def agendamentos_view(request):
+    # Usando sua função utilitária ou lógica de pegar o ID do tutor logado
     tutor_data = get_tutor_logado(request)
     if not tutor_data:
         return redirect('login')
 
+    # CORREÇÃO: Usamos pet_models.Tutor (com o prefixo correto)
     tutor = models.Tutor.objects.get(id=tutor_data['id'])
-    pets = models.Pet.objects.filter(tutor=tutor)
+    
+    # Buscamos os pets do tutor
+    meus_pets = models.Pet.objects.filter(tutor=tutor)
 
+    # Lógica de calendário
     data_url = request.GET.get('data')
     if data_url:
         try:
@@ -383,25 +382,28 @@ def agendamentos_view(request):
 
     segunda_da_semana = hoje_referencia - timedelta(days=hoje_referencia.weekday())
     
-    data_semana_anterior = segunda_da_semana - timedelta(days=7)
-    data_semana_proxima = segunda_da_semana + timedelta(days=7)
-
     dias_semana = []
     nomes_curtos = ['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom']
-    hoje_real = date.today()
-    
     for i in range(7):
         dia_iterado = segunda_da_semana + timedelta(days=i)
         dias_semana.append({
             'nome': nomes_curtos[i],
             'num': dia_iterado.day,
-            'hoje': dia_iterado == hoje_real,
+            'hoje': dia_iterado == date.today(),
             'data_full': dia_iterado
         })
 
     fim_da_semana = segunda_da_semana + timedelta(days=6)
-    vacinas = models.Vacina.objects.filter(pet__in=pets, data_aplicacao__range=[segunda_da_semana, fim_da_semana])
-    consultas = models.Consulta.objects.filter(pet__in=pets, data_consulta__range=[segunda_da_semana, fim_da_semana])
+    
+    # CORREÇÃO: Usamos pet_models para buscar Vacinas e Consultas
+    vacinas = models.Vacina.objects.filter(
+        pet__in=meus_pets, 
+        data_aplicacao__range=[segunda_da_semana, fim_da_semana]
+    )
+    consultas = models.Consulta.objects.filter(
+        pet__in=meus_pets, 
+        data_consulta__range=[segunda_da_semana, fim_da_semana]
+    )
 
     meses = {1:'Janeiro', 2:'Fevereiro', 3:'Março', 4:'Abril', 5:'Maio', 6:'Junho',
              7:'Julho', 8:'Agosto', 9:'Setembro', 10:'Outubro', 11:'Novembro', 12:'Dezembro'}
@@ -413,8 +415,12 @@ def agendamentos_view(request):
         'consultas': consultas,
         'mes_atual': meses[segunda_da_semana.month],
         'ano_atual': segunda_da_semana.year,
-        'data_anterior': data_semana_anterior.strftime('%Y-%m-%d'),
-        'data_proxima': data_semana_proxima.strftime('%Y-%m-%d'),
+        'data_anterior': (segunda_da_semana - timedelta(days=7)).strftime('%Y-%m-%d'),
+        'data_proxima': (segunda_da_semana + timedelta(days=7)).strftime('%Y-%m-%d'),
+        
+        # ESSENCIAL PARA O MODAL:
+        'pets': meus_pets, 
+        'veterinarios': models.Veterinario.objects.all(),
     }
     return render(request, 'agendamentos.html', context)
     # Removido o return duplicado
@@ -467,14 +473,21 @@ def diario_emocional_view(request):
         'recentes': recentes,
         'pet_selecionado': pet_selecionado,
         'grafico_labels': json.dumps(labels),
-        'grafico_valores': json.dumps(valores),
-        'tutor': tutor,
         'grafico_valores': json.dumps(valores)
     })
 
+
+from django.shortcuts import render, get_object_or_404, redirect
+from pet_app.models import Pet, Vacina, Consulta # Import correto agora
+from django.utils import timezone
+
+from django.shortcuts import render, get_object_or_404, redirect
+from pet_app.models import Pet, Vacina, Consulta # Importando do app correto
+from django.utils import timezone
+
 def perfil_pet(request, pet_id):
     # 1. Busca o pet
-    pet = get_object_or_404(models.Pet, id=pet_id)
+    pet = get_object_or_404(Pet, id=pet_id)
     
     # 2. Se for POST, salva as alterações
     if request.method == "POST":
@@ -496,8 +509,8 @@ def perfil_pet(request, pet_id):
         return redirect('perfil_pet', pet_id=pet.id)
 
     # 3. Dados para exibição (fora do IF POST para carregar sempre)
-    vacinas = models.Vacina.objects.filter(id_pet=pet.id)
-    proxima_consulta = models.Consulta.objects.filter(
+    vacinas = Vacina.objects.filter(id_pet=pet.id)
+    proxima_consulta = Consulta.objects.filter(
         id_pet=pet.id, 
         data_consulta__gte=timezone.now().date()
     ).order_by('data_consulta').first()
@@ -552,4 +565,58 @@ def excluir_vacina(request, vacina_id):
     else:
         messages.error(request, "Registro não encontrado.")
 
+    return redirect('agendamentos')
+
+from datetime import datetime # Certifique-se de que este import está no topo do arquivo
+
+from datetime import datetime
+from django.shortcuts import get_object_or_404, redirect
+
+
+def agendar_consulta(request):
+    if request.method == 'POST':
+        pet_id = request.POST.get('pet')
+        vet_id = request.POST.get('veterinario')
+        data_str = request.POST.get('data')
+        hora = request.POST.get('hora')
+        tipo = request.POST.get('tipo')
+        obs = request.POST.get('obs')
+
+        # 1. Busca as instâncias do Pet e Veterinário
+        pet_obj = get_object_or_404(models.Pet, id=pet_id)
+        vet_obj = get_object_or_404(models.Veterinario, id=vet_id)
+
+        # 2. Converte a string de data para um objeto date (evita erro no Signal)
+        try:
+            data_objeto = datetime.strptime(data_str, '%Y-%m-%d').date()
+        except (ValueError, TypeError):
+            data_objeto = None # Ou use datetime.now().date()
+
+        # 3. Cria o registro seguindo EXATAMENTE os nomes do seu modelo
+        models.Consulta.objects.create(
+            tipo_de_consulta=tipo,
+            data_consulta=data_objeto,
+            horario_consulta=hora,
+            # Limitamos a 255 caracteres para bater com o max_length do seu CharField
+            observacoes=obs[:255] if obs else None, 
+            status='Agendado',
+            pet=pet_obj,        # Atributo definido no seu model
+            veterinario=vet_obj # Atributo definido no seu model
+        )
+
+        return redirect('agendamentos')
+    
+    return redirect('agendamentos')
+    
+
+# Função para excluir consulta
+def excluir_consulta(request, id):
+    consulta = get_object_or_404(models.Consulta, id=id)
+    consulta.delete()
+    return redirect('agendamentos')
+
+# Função para excluir vacina
+def excluir_vacina(request, id):
+    vacina = get_object_or_404(models.Vacina, id=id)
+    vacina.delete()
     return redirect('agendamentos')
