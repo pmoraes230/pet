@@ -68,14 +68,9 @@ Clique em Instalar.
 
 ## 4. Executar o Projeto
 
-Localize o arquivo web_pet.html no explorador de arquivos.
+Coloque no terminal o seguinte comando ".\venv\Scripts\python.exe -m daphne -b 0.0.0.0 -p 8000 setup.asgi:application"
 
-Clique com o botão direito sobre ele.
-
-Selecione a opção “Open with Live Server”.
-
-
-O projeto será aberto automaticamente no seu navegador padrão (geralmente em http://127.0.0.1:5500).
+O projeto será aberto automaticamente no seu navegador padrão (geralmente em http://127.0.0.1:8000/).
 
 
 ## Layout ou Demonstração
