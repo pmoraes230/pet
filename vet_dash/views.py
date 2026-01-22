@@ -6,8 +6,10 @@ from django.db.models.functions import ExtractMonth
 import json
 from pet_app import models
 from pet_app.utils import get_veterinario_logado
-from pet_app.models import Pet, Vacina, Consulta
 from django.utils import timezone
+from django.core.files.uploadedfile import UploadedFile
+from django.db import transaction, IntegrityError
+from django.core.exceptions import ValidationError
 
 
 # ------------------------
@@ -296,56 +298,242 @@ def perfil_veterinario(request):
     
     veterinario = models.Veterinario.objects.get(id=vet_data['id'])
     contatos = models.ContatoVeterinario.objects.filter(veterinario_id=veterinario.id)
+
+    try:
+        veterinario = models.Veterinario.objects.get(id=vet_data['id'])
+    except models.Veterinario.DoesNotExist:
+        messages.error(request, "Veterinário não encontrado.")
+        return redirect('login')
     
-    # MUDE AQUI: Verifique qual é o nome do seu arquivo HTML
-    # Se você criou como vet_perfil.html, mude para:
+    if request.method == "POST":
+        # Coletar dados do POST
+        nome = request.POST.get('nome', '').strip()
+        email = request.POST.get('email', '').strip()
+        crmv = request.POST.get('crmv', '').strip()
+        uf_crmv = request.POST.get('uf_crmv', '').strip()
+        telefone = request.POST.get('telefone', '').strip()
+        image_veterinario = request.FILES.get('image_veterinario')
+        
+        # Coletar contatos do POST (listas)
+        tipos = request.POST.getlist('tipo_contato')
+        ddds = request.POST.getlist('ddd')
+        numeros = request.POST.getlist('numero')
+        
+        # Validações básicas
+        errors = []
+        if not nome:
+            errors.append("Nome é obrigatório.")
+        if not email or '@' not in email:
+            errors.append("Email inválido.")
+        if not crmv:
+            errors.append("CRMV é obrigatório.")
+        if not uf_crmv:
+            errors.append("UF do CRMV é obrigatória.")
+        if telefone and not telefone.isdigit():
+            errors.append("Telefone deve conter apenas números.")
+        
+        # Validação de imagem
+        if image_veterinario:
+            if not isinstance(image_veterinario, UploadedFile):
+                errors.append("Imagem inválida.")
+            elif image_veterinario.content_type not in ['image/jpeg', 'image/png']:
+                errors.append("Apenas imagens JPEG ou PNG são permitidas.")
+            elif image_veterinario.size > 5 * 1024 * 1024:  # 5MB
+                errors.append("A imagem deve ter no máximo 5MB.")
+        
+        # Validação de contatos
+        contatos_validos = []
+        for i in range(len(tipos)):
+            tipo = tipos[i].strip()
+            ddd = ddds[i].strip()
+            numero = numeros[i].strip()
+            if ddd or numero:  # Só validar se pelo menos um campo preenchido
+                if not ddd.isdigit() or len(ddd) != 2:
+                    errors.append(f"DDD inválido para contato {i+1}.")
+                if not numero.isdigit() or len(numero) < 8:
+                    errors.append(f"Número inválido para contato {i+1}.")
+                contatos_validos.append({'tipo_contato': tipo, 'ddd': ddd, 'numero': numero})
+        
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+            # Recarregar contatos existentes para o template
+            contatos = models.ContatoVeterinario.objects.filter(veterinario=veterinario)
+            return render(request, 'editar_perfil_veterinario.html', {
+                'veterinario': veterinario,
+                'contatos': contatos
+            })
+        
+        # Tentativa de salvar com transação
+        try:
+            with transaction.atomic():
+                # Atualizar Veterinario
+                veterinario.nome = nome
+                veterinario.email = email
+                veterinario.crmv = crmv
+                veterinario.uf_crmv = uf_crmv
+                veterinario.telefone = telefone
+                if image_veterinario:
+                    veterinario.imagem_perfil_veterinario = image_veterinario
+                veterinario.save()
+                
+                # Manipulação eficiente de contatos: comparar com existentes
+                contatos_existentes = list(models.ContatoVeterinario.objects.filter(veterinario=veterinario))
+                ids_existentes = {c.id for c in contatos_existentes}
+                
+                # Criar ou atualizar contatos
+                for contato_data in contatos_validos:
+                    # Verificar se já existe (simplificado: assumir que tipo+ddd+numero é único por vet)
+                    existing = next((c for c in contatos_existentes if c.tipo_contato == contato_data['tipo_contato'] and c.ddd == contato_data['ddd'] and c.numero == contato_data['numero']), None)
+                    if existing:
+                        # Atualizar se necessário (aqui, assumindo que dados são os mesmos, mas pode expandir)
+                        pass
+                    else:
+                        models.ContatoVeterinario.objects.create(
+                            veterinario=veterinario,
+                            **contato_data
+                        )
+                
+                # Deletar contatos não enviados (aqueles que não estão em contatos_validos)
+                for c in contatos_existentes:
+                    if not any(c.tipo_contato == cd['tipo_contato'] and c.ddd == cd['ddd'] and c.numero == cd['numero'] for cd in contatos_validos):
+                        c.delete()
+            
+            messages.success(request, "Perfil atualizado com sucesso!")
+            return redirect('perfil_veterinario')
+        
+        except IntegrityError as e:
+            messages.error(request, f"Erro ao salvar: {str(e)}. Verifique se o email ou CRMV já estão em uso.")
+        except ValidationError as e:
+            messages.error(request, f"Dados inválidos: {str(e)}")
+        except Exception as e:
+            messages.error(request, f"Erro inesperado: {str(e)}. Tente novamente.")
+    
+    
     return render(request, 'vet_perfil.html', {
         'veterinario': veterinario, 
         'contatos': contatos
     })
 
-
 def editar_perfil_veterinario(request):
+    # Verificar se o veterinário está logado
     vet_data = get_veterinario_logado(request)
     if not vet_data:
         return redirect('login')
-
-    veterinario = models.Veterinario.objects.get(id=vet_data['id'])
-
+    
+    try:
+        veterinario = models.Veterinario.objects.get(id=vet_data['id'])
+    except models.Veterinario.DoesNotExist:
+        messages.error(request, "Veterinário não encontrado.")
+        return redirect('login')
+    
     if request.method == "POST":
-        veterinario.nome = request.POST.get('nome')
-        veterinario.email = request.POST.get('email')
-        veterinario.crmv = request.POST.get('crmv')
-        veterinario.uf_crmv = request.POST.get('uf_crmv')
-        veterinario.telefone = request.POST.get('telefone')
-
-        if request.FILES.get('image_veterinario'):
-            veterinario.imagem_perfil_veterinario = request.FILES['image_veterinario']
-
-        veterinario.save()
-
-        # Atualiza contatos
+        # Coletar dados do POST
+        nome = request.POST.get('nome', '').strip()
+        email = request.POST.get('email', '').strip()
+        crmv = request.POST.get('crmv', '').strip()
+        uf_crmv = request.POST.get('uf_crmv', '').strip()
+        telefone = request.POST.get('telefone', '').strip()
+        image_veterinario = request.FILES.get('image_veterinario')
+        
+        # Coletar contatos do POST (listas)
         tipos = request.POST.getlist('tipo_contato')
         ddds = request.POST.getlist('ddd')
         numeros = request.POST.getlist('numero')
-
-        models.ContatoVeterinario.objects.filter(
-            veterinario=veterinario).delete()  # Correção aqui também
-
+        
+        # Validações básicas
+        errors = []
+        if not nome:
+            errors.append("Nome é obrigatório.")
+        if not email or '@' not in email:
+            errors.append("Email inválido.")
+        if not crmv:
+            errors.append("CRMV é obrigatório.")
+        if not uf_crmv:
+            errors.append("UF do CRMV é obrigatória.")
+        if telefone and not telefone.isdigit():
+            errors.append("Telefone deve conter apenas números.")
+        
+        # Validação de imagem
+        if image_veterinario:
+            if not isinstance(image_veterinario, UploadedFile):
+                errors.append("Imagem inválida.")
+            elif image_veterinario.content_type not in ['image/jpeg', 'image/png']:
+                errors.append("Apenas imagens JPEG ou PNG são permitidas.")
+            elif image_veterinario.size > 5 * 1024 * 1024:  # 5MB
+                errors.append("A imagem deve ter no máximo 5MB.")
+        
+        # Validação de contatos
+        contatos_validos = []
         for i in range(len(tipos)):
-            if ddds[i].strip() and numeros[i].strip():
-                models.ContatoVeterinario.objects.create(
-                    veterinario=veterinario,
-                    tipo_contato=tipos[i],
-                    ddd=ddds[i],
-                    numero=numeros[i]
-                )
-
-        messages.success(request, "Perfil atualizado com sucesso!")
-        return redirect('perfil_veterinario')
-
+            tipo = tipos[i].strip()
+            ddd = ddds[i].strip()
+            numero = numeros[i].strip()
+            if ddd or numero:  # Só validar se pelo menos um campo preenchido
+                if not ddd.isdigit() or len(ddd) != 2:
+                    errors.append(f"DDD inválido para contato {i+1}.")
+                if not numero.isdigit() or len(numero) < 8:
+                    errors.append(f"Número inválido para contato {i+1}.")
+                contatos_validos.append({'tipo_contato': tipo, 'ddd': ddd, 'numero': numero})
+        
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+            # Recarregar contatos existentes para o template
+            contatos = models.ContatoVeterinario.objects.filter(veterinario=veterinario)
+            return render(request, 'editar_perfil_veterinario.html', {
+                'veterinario': veterinario,
+                'contatos': contatos
+            })
+        
+        # Tentativa de salvar com transação
+        try:
+            with transaction.atomic():
+                # Atualizar Veterinario
+                veterinario.nome = nome
+                veterinario.email = email
+                veterinario.crmv = crmv
+                veterinario.uf_crmv = uf_crmv
+                veterinario.telefone = telefone
+                if image_veterinario:
+                    veterinario.imagem_perfil_veterinario = image_veterinario
+                veterinario.save()
+                
+                # Manipulação eficiente de contatos: comparar com existentes
+                contatos_existentes = list(models.ContatoVeterinario.objects.filter(veterinario=veterinario))
+                ids_existentes = {c.id for c in contatos_existentes}
+                
+                # Criar ou atualizar contatos
+                for contato_data in contatos_validos:
+                    # Verificar se já existe (simplificado: assumir que tipo+ddd+numero é único por vet)
+                    existing = next((c for c in contatos_existentes if c.tipo_contato == contato_data['tipo_contato'] and c.ddd == contato_data['ddd'] and c.numero == contato_data['numero']), None)
+                    if existing:
+                        # Atualizar se necessário (aqui, assumindo que dados são os mesmos, mas pode expandir)
+                        pass
+                    else:
+                        models.ContatoVeterinario.objects.create(
+                            veterinario=veterinario,
+                            **contato_data
+                        )
+                
+                # Deletar contatos não enviados (aqueles que não estão em contatos_validos)
+                for c in contatos_existentes:
+                    if not any(c.tipo_contato == cd['tipo_contato'] and c.ddd == cd['ddd'] and c.numero == cd['numero'] for cd in contatos_validos):
+                        c.delete()
+            
+            messages.success(request, "Perfil atualizado com sucesso!")
+            return redirect('perfil_veterinario')
+        
+        except IntegrityError as e:
+            messages.error(request, f"Erro ao salvar: {str(e)}. Verifique se o email ou CRMV já estão em uso.")
+        except ValidationError as e:
+            messages.error(request, f"Dados inválidos: {str(e)}")
+        except Exception as e:
+            messages.error(request, f"Erro inesperado: {str(e)}. Tente novamente.")
+    
+    # GET: Carregar dados existentes
     contatos = models.ContatoVeterinario.objects.filter(veterinario=veterinario)
-    return render(request, 'editar_perfil_veterinario.html', {
+    return render(request, 'editar_perfil.html', {
         'veterinario': veterinario,
         'contatos': contatos
     })
@@ -464,12 +652,12 @@ def enviar_mensagem_vet(request):
 
 def perfil_pet_vet(request, pet_id):
     """Exibe e permite editar perfil do pet para o veterinário"""
-    pet = get_object_or_404(Pet, id=pet_id)
+    pet = get_object_or_404(models.Pet, id=pet_id)
     
     if request.method == "POST":
         # Se veio nome_vacina, salva vacina
         if request.POST.get('nome_vacina'):
-            Vacina.objects.create(
+            models.Vacina.objects.create(
                 nome=request.POST.get('nome_vacina'),
                 data_aplicacao=request.POST.get('data_aplicacao'),
                 proxima_dose=request.POST.get('proxima_dose') or None,
@@ -494,8 +682,8 @@ def perfil_pet_vet(request, pet_id):
         return redirect('perfil_pet_vet', pet_id=pet.id)
 
     # GET: Busca as vacinas atualizadas
-    vacinas = Vacina.objects.filter(pet_id=pet.id).order_by('-data_aplicacao')
-    proxima_consulta = Consulta.objects.filter(
+    vacinas = models.Vacina.objects.filter(pet_id=pet.id).order_by('-data_aplicacao')
+    proxima_consulta = models.Consulta.objects.filter(
         pet_id=pet.id, 
         data_consulta__gte=timezone.now().date()
     ).order_by('data_consulta').first()
