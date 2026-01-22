@@ -118,6 +118,7 @@ def login_view(request):
         request.session['user_role']  = user_role
         request.session['user_nome']  = user.nome_tutor if user_role == 'tutor' else user.nome
         request.session['user_email'] = user.email
+        request.session['image_tutor'] = user.imagem_perfil_tutor.url if user_role == 'tutor' and user.imagem_perfil_tutor else None
         request.session.modified = True
 
         messages.success(request, f"Bem-vindo(a), {request.session['user_nome']}!")

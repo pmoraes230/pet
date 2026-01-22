@@ -105,11 +105,11 @@
         <!-- Avatar -->
         <div
           class="h-9 w-9 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-sm">
-          {% if not tutor.imagem_perfil_tutor %}
+          {% if not request.session.image_tutor %}
           <img src="{% static "icons/image_user_default.svg" %}" alt="Foto do tutor"
           class="w-full h-full object-cover">
           {% else %}
-          <img src="{{ tutor.imagem_perfil_tutor.url }}" alt="{{ tutor.nome_tutor }}" class="w-full h-full object-cover rounded-full">
+          <img src="{{ request.session.image_tutor }}" alt="{{ request.session.user_nome }}" class="w-full h-full object-cover rounded-full">
           {% endif %}
         </div>
 
