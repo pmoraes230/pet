@@ -359,10 +359,7 @@ def perfil_veterinario(request):
                 messages.error(request, error)
             # Recarregar contatos existentes para o template
             contatos = models.ContatoVeterinario.objects.filter(veterinario=veterinario)
-            return render(request, 'editar_perfil_veterinario.html', {
-                'veterinario': veterinario,
-                'contatos': contatos
-            })
+            return redirect('perfil_veterinario')
         
         # Tentativa de salvar com transação
         try:

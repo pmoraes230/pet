@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.contrib.auth.hashers import make_password, check_password
 from django.views.decorators.http import require_http_methods
@@ -507,8 +508,7 @@ def mensagens_view(request):
         if not tutor_data:
             return redirect('login')
 
-        # Busca o objeto do tutor logado
-        tutor = models.Tutor.objects.get(id=tutor_data['id']) 
+        tutor = models.Tutor.objects.get(id=tutor_data['id'])
         contatos = models.Veterinario.objects.all()
 
         vet_id = request.GET.get('vet_id')
@@ -517,12 +517,21 @@ def mensagens_view(request):
 
         if vet_id:
             vet_selecionado = get_object_or_404(models.Veterinario, id=vet_id)
-
             mensagens = models.Mensagem.objects.filter(
-                TUTOR=tutor,               # Variável da linha 7
-                VETERINARIO=vet_selecionado # Variável da linha 15
+                TUTOR=tutor,
+                VETERINARIO=vet_selecionado
             ).order_by('DATA_ENVIO')
 
+        # Suporte a AJAX: Retorne HTML parcial se for requisição AJAX
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            html = render_to_string('partials/chat_box.html', {
+                'mensagens': mensagens,
+                'vet_selecionado': vet_selecionado,
+                'tutor': tutor
+            })
+            return JsonResponse({'html': html})
+
+        # Render normal para carregamento inicial
         return render(request, 'mensagens.html', {
             'tutor': tutor,
             'contatos': contatos,
@@ -535,22 +544,20 @@ def mensagens_view(request):
 
 def enviar_mensagem(request):
     if request.method == 'POST':
-        # Tenta pegar o tutor ou o veterinário logado
+        # Fallback para envio via POST (se WS falhar)
         data_tutor = get_tutor_logado(request)
         data_vet = get_veterinario_logado(request)
-        
         texto = request.POST.get('mensagem')
         
         if data_tutor:
             vet_id = request.POST.get('vet_id')
             models.Mensagem.objects.create(
-                TUTOR_id=data_tutor['id'], # Antes era tutor=
-                VETERINARIO_id=vet_id,     # Antes era veterinario=
-                CONTEUDO=texto,            # Antes era conteudo=
-                ENVIADO_POR='TUTOR'        # Antes era enviado_por=
+                TUTOR_id=data_tutor['id'],
+                VETERINARIO_id=vet_id,
+                CONTEUDO=texto,
+                ENVIADO_POR='TUTOR'
             )
             return redirect(f'/mensagens/?vet_id={vet_id}')
-
         elif data_vet:
             tutor_id = request.POST.get('tutor_id')
             models.Mensagem.objects.create(
@@ -560,9 +567,7 @@ def enviar_mensagem(request):
                 ENVIADO_POR='VETERINARIO'
             )
             return redirect(f'/mensagens_vet/?tutor_id={tutor_id}')
-
     return redirect('home')
-
 
 # --- 1. SOLICITAR (VIA LOGIN/ESQUECI SENHA) ---
 def solicitar_troca_senha(request):
@@ -731,7 +736,6 @@ def historico_notificacao(request):
     })
 
 def mensagens_view_vet(request):
-    """Exibe o chat para o Veterinário."""
     try:
         user_id = request.session.get('user_id')
         user_role = request.session.get('user_role')
@@ -748,23 +752,29 @@ def mensagens_view_vet(request):
 
         if tutor_id:
             tutor_selecionado = get_object_or_404(models.Tutor, id=tutor_id)
-            
-            # ESTA PARTE PRECISA ESTAR IDENTADA (DENTRO DO IF)
             mensagens = models.Mensagem.objects.filter(
-                TUTOR=tutor_selecionado, 
+                TUTOR=tutor_selecionado,
                 VETERINARIO=vet_logado
             ).order_by('DATA_ENVIO')
 
-        # O render fica fora do IF para carregar a página mesmo sem chat aberto
-        return render(request, 'mensagensvet.html', { 
+        # 🔴 Suporte a AJAX: Retorne HTML parcial se for requisição AJAX
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            html = render_to_string('partials/chat_box_vet.html', {
+                'mensagens': mensagens,
+                'tutor_selecionado': tutor_selecionado,
+                'vet': vet_logado
+            })
+            return JsonResponse({'html': html})
+
+        # Render normal para carregamento inicial
+        return render(request, 'mensagensvet.html', {
             'vet': vet_logado,
             'contatos': contatos_tutores,
             'mensagens': mensagens,
             'tutor_selecionado': tutor_selecionado,
         })
-        
     except Exception as e:
-        print(f"Erro em mensagens_view_vet: {e}")
+        logger.exception("Erro em mensagens_view_vet")
         return render(request, 'erro.html', {'msg': str(e)})
 
 def historico_notificacao_vet(request):

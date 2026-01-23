@@ -10,24 +10,30 @@ from .models import Mensagem, Veterinario, Tutor
 User = get_user_model()
 logger = logging.getLogger(__name__)
 
-
 class ChatConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
         try:
             self.contact_id = int(self.scope['url_route']['kwargs']['contact_id'])
-            self.user = self.scope["user"]
-
-            logger.info(
-                f"WebSocket connect: user={self.user} | authenticated={self.user.is_authenticated}"
-            )
-
-            # 🔴 NÃO use user fake em produção
-            if not self.user.is_authenticated:
+            
+            # 🔴 Busque o user via sessão (Tutor ou Veterinario)
+            session = self.scope.get('session', {})
+            user_id = session.get('user_id')
+            user_role = session.get('user_role')  # 'tutor' ou 'vet'
+            if not user_id or not user_role:
+                logger.warning("Usuário não logado via sessão. Fechando WS.")
                 await self.close()
                 return
-
-            self.user_id = self.user.id
+            
+            self.user = await self.get_user(user_id, user_role)  # 🔴 Busca Tutor ou Vet
+            if not self.user:
+                logger.warning("Usuário não encontrado no banco. Fechando WS.")
+                await self.close()
+                return
+            
+            self.user_id = self.user.id  # ID do Tutor ou Vet
+            self.user_role = user_role  # Armazene o role para uso posterior
+            logger.info(f"WebSocket connect: user={self.user} | user_id={self.user_id} | role={self.user_role}")
 
             # Nome único da sala (independente da ordem)
             user_ids = sorted([self.user_id, self.contact_id])
@@ -40,7 +46,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             )
 
             await self.accept()
-
             logger.info(f"WebSocket conectado na sala {self.room_group_name}")
 
         except Exception as e:
@@ -106,20 +111,21 @@ class ChatConsumer(AsyncWebsocketConsumer):
         enviado_por = None
 
         # Usuário é TUTOR
-        try:
-            tutor = Tutor.objects.get(user=user)
-            vet = Veterinario.objects.get(id=self.contact_id)
-            enviado_por = "TUTOR"
-        except (Tutor.DoesNotExist, Veterinario.DoesNotExist):
-            pass
+        if self.user_role == 'tutor':
+            try:
+                tutor = user  # self.user já é o objeto Tutor
+                vet = Veterinario.objects.get(id=self.contact_id)
+                enviado_por = "TUTOR"
+            except Veterinario.DoesNotExist:
+                return None
 
         # Usuário é VETERINARIO
-        if not tutor:
+        elif self.user_role == 'vet':
             try:
-                vet = Veterinario.objects.get(user=user)
+                vet = user  # self.user já é o objeto Veterinario
                 tutor = Tutor.objects.get(id=self.contact_id)
                 enviado_por = "VETERINARIO"
-            except (Veterinario.DoesNotExist, Tutor.DoesNotExist):
+            except Tutor.DoesNotExist:
                 return None
 
         if not tutor or not vet:
@@ -132,3 +138,18 @@ class ChatConsumer(AsyncWebsocketConsumer):
             ENVIADO_POR=enviado_por,
             LIDA=False
         )
+
+    # =========================
+    # 🔴 NOVO MÉTODO: Busca Tutor ou Veterinario pelo ID e role
+    # =========================
+    @database_sync_to_async
+    def get_user(self, user_id, user_role):
+        try:
+            if user_role == 'tutor':
+                return Tutor.objects.get(id=user_id)
+            elif user_role == 'vet':
+                return Veterinario.objects.get(id=user_id)
+            else:
+                return None
+        except (Tutor.DoesNotExist, Veterinario.DoesNotExist):
+            return None

@@ -142,26 +142,29 @@
 </div>
 
 <script>
-    const loggedUserId = {{ request.user.id }};
+    const loggedUserId = {% if request.session.user_id %}{{ request.session.user_id }}{% else %}null{% endif %};
     lucide.createIcons();
     const chatBox = document.getElementById('chat-box');
     if (chatBox) {
         chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    const vetId = "{{ vet_selecionado.id }}"; // ID do contato
+    let currentVetId = "{{ vet_selecionado.id }}";  // ID atual (inicial, pode ser vazio)
+    let socket = null;  // WebSocket global para reutilizar
     const form = document.querySelector('form');
 
-    if (vetId) {
+    // Função para conectar/reutilizar WebSocket
+    function connectWebSocket(vetId) {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            // Já conectado, não faz nada (reutiliza)
+            return;
+        }
         const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
         const wsUrl = `${protocol}://${window.location.host}/ws/chat/${vetId}/`;
-
-        const socket = new WebSocket(wsUrl);
+        socket = new WebSocket(wsUrl);
 
         socket.onmessage = function (e) {
             const data = JSON.parse(e.data);
-
-            // 🔴 REGRA CORRETA
             const isMe = data.sender_id === loggedUserId;
 
             const msgDiv = document.createElement('div');
@@ -170,17 +173,16 @@
                 : 'flex flex-col items-start max-w-[70%]';
 
             msgDiv.innerHTML = `
-            <div class="${isMe
+                <div class="${isMe
                     ? 'bg-purple-600 text-white p-5 rounded-t-[2rem] rounded-bl-[2rem] shadow-lg shadow-purple-200/50'
                     : 'bg-white text-gray-700 p-5 rounded-t-[2rem] rounded-br-[2rem] shadow-sm border border-gray-100'
                 } text-sm font-medium leading-relaxed">
-                ${data.mensagem}
-            </div>
-            <span class="text-[10px] font-black text-gray-400 mt-2 ${isMe ? 'mr-2' : 'ml-2'
-                } uppercase tracking-widest">
-                ${data.data_envio}
-            </span>
-        `;
+                    ${data.mensagem}
+                </div>
+                <span class="text-[10px] font-black text-gray-400 mt-2 ${isMe ? 'mr-2' : 'ml-2'} uppercase tracking-widest">
+                    ${data.data_envio}
+                </span>
+            `;
 
             chatBox.appendChild(msgDiv);
             chatBox.scrollTop = chatBox.scrollHeight;
@@ -193,21 +195,76 @@
         socket.onerror = function (e) {
             console.error('❌ Erro no WebSocket:', e);
         };
-
-        // Envio da mensagem
-        form.addEventListener('submit', function (e) {
-            e.preventDefault();
-
-            const input = form.querySelector('input[name="mensagem"]');
-            const mensagem = input.value.trim();
-
-            if (mensagem && socket.readyState === WebSocket.OPEN) {
-                socket.send(JSON.stringify({
-                    mensagem: mensagem
-                }));
-                input.value = '';
-            }
-        });
     }
+
+    // Função para carregar mensagens via AJAX (sem reload)
+    async function loadMessages(vetId) {
+        try {
+            const response = await fetch(`?vet_id=${vetId}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });  // Requisição AJAX para a mesma URL com novo vet_id
+            const html = await response.text();
+            
+            // Parseie o HTML retornado e extraia apenas a seção de mensagens
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            // Atualize o chat-box
+            const newChatBox = doc.getElementById('chat-box');
+            if (newChatBox) {
+                chatBox.innerHTML = newChatBox.innerHTML;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+            
+            // Atualize o cabeçalho (opcional)
+            const newHeader = doc.querySelector('.p-6.border-b');  // Selecione o cabeçalho
+            if (newHeader) {
+                document.querySelector('.p-6.border-b').innerHTML = newHeader.innerHTML;
+            }
+            
+            // Atualize o form (para o action correto)
+            const newForm = doc.querySelector('form');
+            if (newForm) {
+                form.action = newForm.action;
+            }
+        } catch (error) {
+            console.error('Erro ao carregar mensagens:', error);
+        }
+    }
+
+    // Event listener para cliques nos contatos (sem reload)
+    document.querySelectorAll('.contato-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const vetId = this.dataset.vetId;
+            currentVetId = vetId;
+            loadMessages(vetId);  // Carrega mensagens dinamicamente
+            connectWebSocket(vetId);  // Conecta WS se necessário (reutiliza se já aberto)
+            
+            // Destaque o contato selecionado (opcional)
+            document.querySelectorAll('.contato-item').forEach(el => el.classList.remove('bg-purple-50', 'border-purple-100'));
+            this.classList.add('bg-purple-50', 'border-purple-100');
+        });
+    });
+
+    // Inicializa se já houver um vet selecionado
+    if (currentVetId) {
+        connectWebSocket(currentVetId);
+    }
+
+    // Envio da mensagem (reutiliza o socket atual)
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const input = form.querySelector('input[name="mensagem"]');
+        const mensagem = input.value.trim();
+
+        if (mensagem && socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({
+                mensagem: mensagem
+            }));
+            input.value = '';
+        }
+    });
 </script>
 {% endblock %}

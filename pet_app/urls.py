@@ -22,7 +22,6 @@ urlpatterns = [
     # ==================================================
     path("perfil-tutor/", views.perfil_tutor, name="perfil_tutor"),
     path("editar-perfil-tutor/", views.editar_perfil_tutor, name="editar_perfil_tutor"),
-    path('mensagens/', views.mensagens_view, name='mensagens'),
     path('mensagens/enviar/', views.enviar_mensagem, name='enviar_mensagem'),
     path('esqueci-senha/', views.solicitar_troca_senha, name='solicitar_troca_senha'),
     path('perfil/alterar-senha/', views.alterar_senha_logado, name='alterar_senha_logado'),
@@ -43,6 +42,6 @@ urlpatterns = [
     path('notificacoes/', views.lista_notificacoes, name='notificacoes_lista'),
 
     # Verifique se as suas URLs de chat estão com esses nomes também:
-    path('mensagens/', views.mensagens_view, name='mensagens_view'),
+    path('mensagens/', views.mensagens_view, name='mensagens'),
     path('mensagens_vet/', views.mensagens_view_vet, name='mensagens_view_vet'),
 ]
