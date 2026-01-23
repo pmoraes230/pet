@@ -16,7 +16,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         try:
             self.contact_id = int(self.scope['url_route']['kwargs']['contact_id'])
             
-            # 🔴 Busque o user via sessão (Tutor ou Veterinario)
+            # Busque o user via sessão (Tutor ou Veterinario)
             session = self.scope.get('session', {})
             user_id = session.get('user_id')
             user_role = session.get('user_role')  # 'tutor' ou 'vet'
@@ -48,12 +48,31 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.accept()
             logger.info(f"WebSocket conectado na sala {self.room_group_name}")
 
+            # 🔴 Notifique que o usuário está online na sala
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    "type": "user_status",
+                    "sender_id": self.user_id,
+                    "status": "online",
+                }
+            )
+
         except Exception as e:
             logger.error(f"Erro no connect: {e}", exc_info=True)
             await self.close()
 
     async def disconnect(self, close_code):
         if hasattr(self, "room_group_name"):
+            # Notifique que o usuário está offline na sala
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    "type": "user_status",
+                    "sender_id": self.user_id,
+                    "status": "offline",
+                }
+            )
             await self.channel_layer.group_discard(
                 self.room_group_name,
                 self.channel_name
@@ -62,30 +81,49 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         try:
             data = json.loads(text_data)
-            conteudo = data.get("mensagem")
+            event_type = data.get("type")
 
-            if not conteudo:
-                return
-
-            mensagem = await self.save_message(self.user, conteudo)
-
-            if not mensagem:
-                await self.send(text_data=json.dumps({
-                    "error": "Erro ao salvar mensagem"
-                }))
-                return
-
-            # 🔴 ENVIA O ID REAL DO REMETENTE
-            await self.channel_layer.group_send(
-                self.room_group_name,
-                {
-                    "type": "chat_message",
-                    "mensagem": mensagem.CONTEUDO,
-                    "sender_id": self.user.id,
-                    "enviado_por": mensagem.ENVIADO_POR,
-                    "data_envio": mensagem.DATA_ENVIO.strftime("%H:%M"),
-                }
-            )
+            if event_type == "typing_start":
+                # 🔴 Envie evento de início de digitação
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        "type": "user_typing",
+                        "sender_id": self.user_id,
+                        "is_typing": True,
+                    }
+                )
+            elif event_type == "typing_stop":
+                # 🔴 Envie evento de fim de digitação
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        "type": "user_typing",
+                        "sender_id": self.user_id,
+                        "is_typing": False,
+                    }
+                )
+            elif event_type == "message":
+                # Código existente para mensagens
+                conteudo = data.get("mensagem")
+                if not conteudo:
+                    return
+                mensagem = await self.save_message(self.user, conteudo)
+                if not mensagem:
+                    await self.send(text_data=json.dumps({
+                        "error": "Erro ao salvar mensagem"
+                    }))
+                    return
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        "type": "chat_message",
+                        "mensagem": mensagem.CONTEUDO,
+                        "sender_id": self.user.id,
+                        "enviado_por": mensagem.ENVIADO_POR,
+                        "data_envio": mensagem.DATA_ENVIO.strftime("%H:%M"),
+                    }
+                )
 
         except Exception as e:
             logger.error(f"Erro no receive: {e}", exc_info=True)
@@ -93,10 +131,26 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 "error": "Erro ao processar mensagem"
             }))
 
+    # Novos métodos para eventos de digitação e status
+    async def user_typing(self, event):
+        await self.send(text_data=json.dumps({
+            "type": "typing",
+            "sender_id": event["sender_id"],
+            "is_typing": event["is_typing"],
+        }))
+
+    async def user_status(self, event):
+        await self.send(text_data=json.dumps({
+            "type": "status",
+            "sender_id": event["sender_id"],
+            "status": event["status"],
+        }))
+
     async def chat_message(self, event):
         await self.send(text_data=json.dumps({
+            "type": "message",
             "mensagem": event["mensagem"],
-            "sender_id": event["sender_id"],   # 🔴 ESSENCIAL
+            "sender_id": event["sender_id"],
             "enviado_por": event["enviado_por"],
             "data_envio": event["data_envio"],
         }))

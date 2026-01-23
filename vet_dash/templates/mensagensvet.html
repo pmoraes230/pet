@@ -1,259 +1,276 @@
-        {% extends "base.html" %}
-        {% load static %}
+{% extends "base.html" %}
+{% load static %}
 
-        {% block content %}
-        <div class="bg-gray-50 flex flex-col md:flex-row h-screen overflow-hidden">
+{% block content %}
+<div class="bg-gray-50 flex flex-col md:flex-row h-screen overflow-hidden">
+    
+    {% block aside %}
+        {% include "partials/aside/aside_vet.html" %}
+    {% endblock %}
+
+    <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+        
+        {% block header %}
+            {% include "partials/header/header_vet.html" %}
+        {% endblock %}
+
+        <div class="flex-1 flex overflow-hidden p-4 md:p-6 gap-4 z-10">
             
-            {% block aside %}
-                {% include "partials/aside/aside_vet.html" %}
-            {% endblock %}
-
-            <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+            <!-- LISTA DE CONTATOS (TUTORES) -->
+            <div class="w-full md:w-80 bg-white rounded-[2.5rem] shadow-sm border border-gray-100 flex flex-col overflow-hidden">
+                <div class="p-6 border-b border-gray-50">
+                    <h3 class="text-xl font-black text-gray-800 tracking-tight">Conversas</h3>
+                </div>
                 
-                {% block header %}
-                    {% include "partials/header/header_vet.html" %}
-                {% endblock %}
-
-                <div class="flex-1 flex overflow-hidden p-4 md:p-6 gap-4 z-10">
-                    
-                    <!-- LISTA DE CONTATOS (TUTORES) -->
-                    <div class="w-full md:w-80 bg-white rounded-[2.5rem] shadow-sm border border-gray-100 flex flex-col overflow-hidden">
-                        <div class="p-6 border-b border-gray-50">
-                            <h3 class="text-xl font-black text-gray-800 tracking-tight">Conversas</h3>
-                        </div>
+                <div class="flex-1 overflow-y-auto px-4 pb-4 space-y-3">
+                    {% for contato in contatos %}
+                    <a href="?tutor_id={{ contato.id }}" 
+                       class="flex items-center gap-3 p-3 rounded-[2rem] transition-all group border 
+                       {% if tutor_selecionado and contato.id == tutor_selecionado.id %} bg-purple-50 border-purple-100 {% else %} border-transparent hover:bg-gray-50 {% endif %}">
                         
-                        <div class="flex-1 overflow-y-auto px-4 pb-4 space-y-3">
-                            {% for contato in contatos %}
-                            <a href="?tutor_id={{ contato.id }}" 
-                            class="flex items-center gap-3 p-3 rounded-[2rem] transition-all group border 
-                            {% if tutor_selecionado and contato.id == tutor_selecionado.id %} bg-purple-50 border-purple-100 {% else %} border-transparent hover:bg-gray-50 {% endif %}">
-                                
-                                <div class="w-14 h-14 rounded-full overflow-hidden border-2 border-white shadow-sm flex-shrink-0">
-                                    {% if contato.imagem_perfil_tutor %}
-                                        <img src="{{ contato.imagem_perfil_tutor.url }}" class="w-full h-full object-cover">
-                                    {% else %}
-                                        <div class="w-full h-full bg-purple-100 flex items-center justify-center text-purple-400">
-                                            <i data-lucide="user" width="24"></i>
-                                        </div>
-                                    {% endif %}
+                        <div class="w-14 h-14 rounded-full overflow-hidden border-2 border-white shadow-sm flex-shrink-0">
+                            {% if contato.imagem_perfil_tutor %}
+                                <img src="{{ contato.imagem_perfil_tutor.url }}" class="w-full h-full object-cover">
+                            {% else %}
+                                <div class="w-full h-full bg-purple-100 flex items-center justify-center text-purple-400">
+                                    <i data-lucide="user" width="24"></i>
                                 </div>
+                            {% endif %}
+                        </div>
 
-                                <div class="flex-1 min-w-0">
-                                    <div class="bg-white px-4 py-2 rounded-full border border-gray-100 shadow-sm inline-block max-w-full">
-                                        <p class="text-sm font-bold text-gray-800 truncate">{{ contato.nome_tutor }}</p>
-                                    </div>
-                                </div>
-                            </a>
-                            {% empty %}
-                                <p class="text-center text-gray-400 text-sm mt-10">Nenhum tutor disponível.</p>
-                            {% endfor %}
+                        <div class="flex-1 min-w-0">
+                            <div class="bg-white px-4 py-2 rounded-full border border-gray-100 shadow-sm inline-block max-w-full">
+                                <p class="text-sm font-bold text-gray-800 truncate">{{ contato.nome_tutor }}</p>
+                            </div>
+                        </div>
+                    </a>
+                    {% empty %}
+                        <p class="text-center text-gray-400 text-sm mt-10">Nenhum tutor disponível.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- JANELA DE CHAT PRINCIPAL -->
+            <div class="hidden md:flex flex-1 bg-white/40 backdrop-blur-md rounded-[2.5rem] shadow-sm border border-white/60 flex-col overflow-hidden relative">
+                
+                {% if tutor_selecionado %}
+                    <!-- Cabeçalho do Chat -->
+                    <div class="p-6 border-b border-gray-100 bg-white/50 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <h2 class="font-black text-gray-800">Conversando com {{ tutor_selecionado.nome_tutor }}</h2>
+                            <!-- Adicione este span para o ponto de status (inicialmente cinza) -->
+                            <span id="status-dot" class="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></span>
                         </div>
                     </div>
 
-                    <!-- JANELA DE CHAT PRINCIPAL -->
-                    <div class="hidden md:flex flex-1 bg-white/40 backdrop-blur-md rounded-[2.5rem] shadow-sm border border-white/60 flex-col overflow-hidden relative">
-                        
-                        {% if tutor_selecionado %}
-                            <!-- Cabeçalho do Chat -->
-                            <div class="p-6 border-b border-gray-100 bg-white/50 flex items-center justify-between">
-                                <div class="flex items-center gap-3">
-                                    <h2 class="font-black text-gray-800">Conversando com {{ tutor_selecionado.nome_tutor }}</h2>
-                                    <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                                </div>
-                            </div>
-
-                            <!-- Mensagens -->
-                            <div id="chat-box" class="flex-1 overflow-y-auto p-8 space-y-6 bg-gradient-to-b from-transparent to-white/30">
-                                {% for msg in mensagens %}
-                                    {# Usa campos conforme definido em pet_app.models.Mensagem #}
-                                    {% if msg.ENVIADO_POR == 'VETERINARIO' %}
-                                        <!-- Mensagem do Veterinário (Direita - Roxo) -->
-                                        <div class="flex flex-col items-end ml-auto max-w-[70%] group">
-                                            <div class="bg-purple-600 text-white p-5 rounded-t-[2rem] rounded-bl-[2rem] shadow-lg shadow-purple-200/50 text-sm font-medium leading-relaxed">
-                                                {{ msg.CONTEUDO }}
-                                            </div>
-                                            <span class="text-[10px] font-black text-gray-400 mt-2 mr-2 uppercase tracking-widest">{{ msg.DATA_ENVIO|date:"H:i" }}</span>
-                                        </div>
-                                    {% else %}
-                                        <!-- Mensagem do Tutor (Esquerda - Branco/Cinza) -->
-                                        <div class="flex flex-col items-start max-w-[70%] group">
-                                            <div class="bg-white text-gray-700 p-5 rounded-t-[2rem] rounded-br-[2rem] shadow-sm border border-gray-100 text-sm font-medium leading-relaxed">
-                                                {{ msg.CONTEUDO }}
-                                            </div>
-                                            <span class="text-[10px] font-black text-gray-400 mt-2 ml-2 uppercase tracking-widest">{{ msg.DATA_ENVIO|date:"H:i" }}</span>
-                                        </div>
-                                    {% endif %}
-                                {% empty %}
-                                    <div class="h-full flex flex-col items-center justify-center text-gray-400">
-                                        <i data-lucide="messages-square" width="48" height="48" class="mb-2 opacity-20"></i>
-                                        <p class="font-medium italic">Inicie uma conversa...</p>
+                    <!-- Mensagens -->
+                    <div id="chat-box" class="flex-1 overflow-y-auto p-8 space-y-6 bg-gradient-to-b from-transparent to-white/30">
+                        {% for msg in mensagens %}
+                            {# Usa campos conforme definido em pet_app.models.Mensagem #}
+                            {% if msg.ENVIADO_POR == 'VETERINARIO' %}
+                                <!-- Mensagem do Veterinário (Direita - Roxo) -->
+                                <div class="flex flex-col items-end ml-auto max-w-[70%] group">
+                                    <div class="bg-purple-600 text-white p-5 rounded-t-[2rem] rounded-bl-[2rem] shadow-lg shadow-purple-200/50 text-sm font-medium leading-relaxed">
+                                        {{ msg.CONTEUDO }}
                                     </div>
-                                {% endfor %}
-                            </div>
-
-                            <!-- Input de Texto -->
-                            <div class="p-6 bg-white/80 border-t border-gray-50">
-                                <form method="POST" action="{% url 'enviar_mensagem_vet' %}" class="relative flex items-center">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="tutor_id" value="{{ tutor_selecionado.id }}">
-                                    <input type="text" name="mensagem" placeholder="conversar" required
-                                        class="w-full bg-gray-50 border border-gray-100 rounded-full py-5 px-8 text-sm font-bold text-gray-700 focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all shadow-inner">
-                                    <button type="submit" class="absolute right-3 p-4 bg-transparent text-gray-800 hover:text-purple-600 transition-transform hover:scale-110 active:scale-90">
-                                        <i data-lucide="send-horizontal" width="28" height="28"></i>
-                                    </button>
-                                </form>
-                            </div>
-
-                        {% else %}
-                            <!-- Estado Vazio -->
-                            <div class="flex-1 flex flex-col items-center justify-center p-10 text-center">
-                                <div class="bg-purple-50 p-10 rounded-full mb-6">
-                                    <i data-lucide="message-circle" class="text-purple-300" width="64" height="64"></i>
+                                    <span class="text-[10px] font-black text-gray-400 mt-2 mr-2 uppercase tracking-widest">{{ msg.DATA_ENVIO|date:"H:i" }}</span>
                                 </div>
-                                <h3 class="text-2xl font-black text-gray-800 mb-2">Suas Mensagens</h3>
-                                <p class="text-gray-500 max-w-xs font-medium">Selecione um tutor na lista ao lado para responder dúvidas ou enviar atualizações.</p>
+                            {% else %}
+                                <!-- Mensagem do Tutor (Esquerda - Branco/Cinza) -->
+                                <div class="flex flex-col items-start max-w-[70%] group">
+                                    <div class="bg-white text-gray-700 p-5 rounded-t-[2rem] rounded-br-[2rem] shadow-sm border border-gray-100 text-sm font-medium leading-relaxed">
+                                        {{ msg.CONTEUDO }}
+                                    </div>
+                                    <span class="text-[10px] font-black text-gray-400 mt-2 ml-2 uppercase tracking-widest">{{ msg.DATA_ENVIO|date:"H:i" }}</span>
+                                </div>
+                            {% endif %}
+                        {% empty %}
+                            <div class="h-full flex flex-col items-center justify-center text-gray-400">
+                                <i data-lucide="messages-square" width="48" height="48" class="mb-2 opacity-20"></i>
+                                <p class="font-medium italic">Inicie uma conversa...</p>
                             </div>
-                        {% endif %}
+                        {% endfor %}
+                    </div>
 
-                </div>
+                    <div id="typing-indicator" style="display: none;" class="text-sm text-gray-500 italic ml-8">O contato está digitando...</div>
 
-                <!-- Footer Decorativo -->
-                <div class="absolute bottom-0 left-0 w-full overflow-hidden leading-none rotate-180 text-brand-teal pointer-events-none z-0 opacity-40">
-                    <svg class="relative block w-[calc(100%+1.3px)] h-[60px] text-purple-100" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
-                        <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" fill="currentColor"></path>
-                    </svg>
-                </div>
-            </main>
+                    <!-- Input de Texto -->
+                    <div class="p-6 bg-white/80 border-t border-gray-50">
+                        <form method="POST" action="{% url 'enviar_mensagem_vet' %}" class="relative flex items-center">
+                            {% csrf_token %}
+                            <input type="hidden" name="tutor_id" value="{{ tutor_selecionado.id }}">
+                            <input type="text" name="mensagem" placeholder="conversar" required
+                                class="w-full bg-gray-50 border border-gray-100 rounded-full py-5 px-8 text-sm font-bold text-gray-700 focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all shadow-inner">
+                            <button type="submit" class="absolute right-3 p-4 bg-transparent text-gray-800 hover:text-purple-600 transition-transform hover:scale-110 active:scale-90">
+                                <i data-lucide="send-horizontal" width="28" height="28"></i>
+                            </button>
+                        </form>
+                    </div>
+
+                {% else %}
+                    <!-- Estado Vazio -->
+                    <div class="flex-1 flex flex-col items-center justify-center p-10 text-center">
+                        <div class="bg-purple-50 p-10 rounded-full mb-6">
+                            <i data-lucide="message-circle" class="text-purple-300" width="64" height="64"></i>
+                        </div>
+                        <h3 class="text-2xl font-black text-gray-800 mb-2">Suas Mensagens</h3>
+                        <p class="text-gray-500 max-w-xs font-medium">Selecione um tutor na lista ao lado para responder dúvidas ou enviar atualizações.</p>
+                    </div>
+                {% endif %}
+
         </div>
 
-        <script>
-            const loggedUserId = {% if request.session.user_id %}{{ request.session.user_id }}{% else %}null{% endif %};
-            lucide.createIcons();
-            const chatBox = document.getElementById('chat-box');
-            if (chatBox) {
+        <!-- Footer Decorativo -->
+        <div class="absolute bottom-0 left-0 w-full overflow-hidden leading-none rotate-180 text-brand-teal pointer-events-none z-0 opacity-40">
+             <svg class="relative block w-[calc(100%+1.3px)] h-[60px] text-purple-100" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" fill="currentColor"></path>
+            </svg>
+        </div>
+    </main>
+</div>
+
+<script>
+(function() {
+    const loggedUserId = {% if request.session.user_id %}{{ request.session.user_id }}{% else %}null{% endif %};
+    lucide.createIcons();
+    const chatBox = document.getElementById('chat-box');
+    if (chatBox) {
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    let currentTutorId = "{{ tutor_selecionado.id }}";  // ID atual (inicial, pode ser vazio)
+    let socket = null;  // WebSocket global para reutilizar
+    let typingTimeout;  // Timeout para parar "digitando"
+    let isTyping = false;  // Flag para evitar envios excessivos
+    const form = document.querySelector('form');
+
+    // 🔴 Verificação inicial
+    if (!loggedUserId) {
+        console.warn('Usuário não logado. WebSocket não será iniciado.');
+        return;
+    }
+
+    // Função para conectar/reutilizar WebSocket
+    function connectWebSocket(tutorId) {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            console.log('WebSocket já conectado, reutilizando.');
+            return;
+        }
+        const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+        const wsUrl = `${protocol}://${window.location.host}/ws/chat/${tutorId}/`;
+        console.log('🔌 Tentando conectar ao WebSocket:', wsUrl);
+        console.log('Tutor ID:', tutorId);
+        socket = new WebSocket(wsUrl);
+
+        socket.onopen = function() {
+            console.log('✅ WebSocket conectado com sucesso.');
+        };
+
+        socket.onmessage = function (e) {
+            const data = JSON.parse(e.data);
+            console.log('📨 Mensagem recebida:', data);  // Log para depurar
+            if (data.type === "message") {
+                const isMe = data.sender_id === loggedUserId;
+                const msgDiv = document.createElement('div');
+                msgDiv.className = isMe
+                    ? 'flex flex-col items-end ml-auto max-w-[70%]'
+                    : 'flex flex-col items-start max-w-[70%]';
+                msgDiv.innerHTML = `
+                    <div class="${isMe
+                        ? 'bg-purple-600 text-white p-5 rounded-t-[2rem] rounded-bl-[2rem] shadow-lg shadow-purple-200/50'
+                        : 'bg-white text-gray-700 p-5 rounded-t-[2rem] rounded-br-[2rem] shadow-sm border border-gray-100'
+                    } text-sm font-medium leading-relaxed">
+                        ${data.mensagem}
+                    </div>
+                    <span class="text-[10px] font-black text-gray-400 mt-2 ${isMe ? 'mr-2' : 'ml-2'} uppercase tracking-widest">
+                        ${data.data_envio}
+                    </span>
+                `;
+                chatBox.appendChild(msgDiv);
                 chatBox.scrollTop = chatBox.scrollHeight;
-            }
-
-            // 🔴 Mude para tutorId (para vet, o contato é o tutor)
-            let currentTutorId = "{{ tutor_selecionado.id }}";  // ID atual (inicial, pode ser vazio)
-            let socket = null;  // WebSocket global para reutilizar
-            const form = document.querySelector('form');
-
-            // Função para conectar/reutilizar WebSocket
-            function connectWebSocket(tutorId) {
-                if (socket && socket.readyState === WebSocket.OPEN) {
-                    // Já conectado, não faz nada (reutiliza)
-                    return;
+            } else if (data.type === "typing") {
+                const typingIndicator = document.getElementById('typing-indicator');
+                if (data.sender_id !== loggedUserId) {
+                    typingIndicator.style.display = data.is_typing ? 'block' : 'none';
                 }
-                const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-                // 🔴 URL do WS com tutorId (contato do vet)
-                const wsUrl = `${protocol}://${window.location.host}/ws/chat/${tutorId}/`;
-                socket = new WebSocket(wsUrl);
-
-                socket.onmessage = function (e) {
-                    const data = JSON.parse(e.data);
-                    const isMe = data.sender_id === loggedUserId;
-
-                    const msgDiv = document.createElement('div');
-                    msgDiv.className = isMe
-                        ? 'flex flex-col items-end ml-auto max-w-[70%]'
-                        : 'flex flex-col items-start max-w-[70%]';
-
-                    msgDiv.innerHTML = `
-                        <div class="${isMe
-                            ? 'bg-purple-600 text-white p-5 rounded-t-[2rem] rounded-bl-[2rem] shadow-lg shadow-purple-200/50'
-                            : 'bg-white text-gray-700 p-5 rounded-t-[2rem] rounded-br-[2rem] shadow-sm border border-gray-100'
-                        } text-sm font-medium leading-relaxed">
-                            ${data.mensagem}
-                        </div>
-                        <span class="text-[10px] font-black text-gray-400 mt-2 ${isMe ? 'mr-2' : 'ml-2'} uppercase tracking-widest">
-                            ${data.data_envio}
-                        </span>
-                    `;
-
-                    chatBox.appendChild(msgDiv);
-                    chatBox.scrollTop = chatBox.scrollHeight;
-                };
-
-                socket.onclose = function () {
-                    console.error('❌ WebSocket fechado inesperadamente');
-                };
-
-                socket.onerror = function (e) {
-                    console.error('❌ Erro no WebSocket:', e);
-                };
-            }
-
-            // Função para carregar mensagens via AJAX (sem reload)
-            async function loadMessages(tutorId) {
-                try {
-                    // Fetch com tutor_id
-                    const response = await fetch(`?tutor_id=${tutorId}`, {
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    });
-                    const html = await response.text();
-                    
-                    // Parseie o HTML retornado e extraia apenas a seção de mensagens
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-                    
-                    // Atualize o chat-box
-                    const newChatBox = doc.getElementById('chat-box');
-                    if (newChatBox) {
-                        chatBox.innerHTML = newChatBox.innerHTML;
-                        chatBox.scrollTop = chatBox.scrollHeight;
+            } else if (data.type === "status") {
+                const statusDot = document.getElementById('status-dot');
+                if (data.sender_id !== loggedUserId) {
+                    if (data.status === "online") {
+                        statusDot.classList.remove('bg-gray-400');
+                        statusDot.classList.add('bg-green-500');
+                    } else {
+                        statusDot.classList.remove('bg-green-500');
+                        statusDot.classList.add('bg-gray-400');
                     }
-                    
-                    // Atualize o cabeçalho (opcional)
-                    const newHeader = doc.querySelector('.p-6.border-b');
-                    if (newHeader) {
-                        document.querySelector('.p-6.border-b').innerHTML = newHeader.innerHTML;
-                    }
-                    
-                    // Atualize o form
-                    const newForm = doc.querySelector('form');
-                    if (newForm) {
-                        form.action = newForm.action;
-                    }
-                } catch (error) {
-                    console.error('Erro ao carregar mensagens:', error);
                 }
             }
+        };
 
-            // Event listener para cliques nos contatos (sem reload)
-            document.querySelectorAll('.contato-item').forEach(item => {
-                item.addEventListener('click', function() {
-                    // 🔴 Use data-tutor-id
-                    const tutorId = this.dataset.tutorId;
-                    currentTutorId = tutorId;
-                    loadMessages(tutorId);  // Carrega mensagens dinamicamente
-                    connectWebSocket(tutorId);  // Conecta WS com tutorId
-                    
-                    // Destaque o contato selecionado
-                    document.querySelectorAll('.contato-item').forEach(el => el.classList.remove('bg-purple-50', 'border-purple-100'));
-                    this.classList.add('bg-purple-50', 'border-purple-100');
-                });
+        socket.onclose = function () {
+            console.error('❌ WebSocket fechado inesperadamente');
+        };
+
+        socket.onerror = function (e) {
+            console.error('❌ Erro no WebSocket:', e);
+        };
+    }
+
+    // 🔴 Função para enviar eventos de digitação
+    function sendTypingEvent(isTyping) {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({
+                type: isTyping ? "typing_start" : "typing_stop"
+            }));
+        }
+    }
+
+    // 🔴 Detecte digitação no input
+    const input = document.querySelector('input[name="mensagem"]');
+    if (input) {
+        input.addEventListener('input', function() {
+            if (!isTyping) {
+                isTyping = true;
+                sendTypingEvent(true);
+            }
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+                isTyping = false;
+                sendTypingEvent(false);
+            }, 1000);
+        });
+    } else {
+        console.error('❌ Input de mensagem não encontrado!');
+    }
+
+    // Inicializa se já houver um tutor selecionado
+    if (currentTutorId) {
+        connectWebSocket(currentTutorId);
+    }
+
+    // Envio da mensagem
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const input = form.querySelector('input[name="mensagem"]');
+        const mensagem = input.value.trim();
+        console.log('📤 Tentando enviar mensagem:', mensagem);  // Log para depurar
+
+        if (mensagem && socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({
+                type: "message",  // ✅ Adicionado para consistência
+                mensagem: mensagem
+            }));
+            console.log('✅ Mensagem enviada via WebSocket.');
+            input.value = '';
+            isTyping = false;
+            sendTypingEvent(false);
+        } else {
+            console.warn('❌ Não foi possível enviar: mensagem vazia ou socket não aberto.', {
+                mensagem: mensagem,
+                socketState: socket ? socket.readyState : 'null'
             });
-
-            // Inicializa se já houver um tutor selecionado
-            if (currentTutorId) {
-                connectWebSocket(currentTutorId);
-            }
-
-            // Envio da mensagem (reutiliza o socket atual)
-            form.addEventListener('submit', function (e) {
-                e.preventDefault();
-                const input = form.querySelector('input[name="mensagem"]');
-                const mensagem = input.value.trim();
-
-                if (mensagem && socket && socket.readyState === WebSocket.OPEN) {
-                    socket.send(JSON.stringify({
-                        mensagem: mensagem
-                    }));
-                    input.value = '';
-                }
-            });
-        </script>
-        {% endblock %}
+        }
+    });
+})();
+</script>
+{% endblock %}

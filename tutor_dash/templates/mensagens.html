@@ -63,7 +63,8 @@
                 <div class="p-6 border-b border-gray-100 bg-white/50 flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <h2 class="font-black text-gray-800">Conversando com Dr(a). {{ vet_selecionado.nome }}</h2>
-                        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                        <!-- Adicione este span para o ponto de status (inicialmente cinza) -->
+                        <span id="status-dot" class="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></span>
                     </div>
                 </div>
 
@@ -98,6 +99,8 @@
                     </div>
                     {% endfor %}
                 </div>
+
+                <div id="typing-indicator" style="display: none;" class="text-sm text-gray-500 italic ml-8">O contato está digitando...</div>
 
                 <!-- Input de Texto -->
                 <div class="p-6 bg-white/80 border-t border-gray-50">
@@ -142,6 +145,7 @@
 </div>
 
 <script>
+(function() {
     const loggedUserId = {% if request.session.user_id %}{{ request.session.user_id }}{% else %}null{% endif %};
     lucide.createIcons();
     const chatBox = document.getElementById('chat-box');
@@ -151,7 +155,15 @@
 
     let currentVetId = "{{ vet_selecionado.id }}";  // ID atual (inicial, pode ser vazio)
     let socket = null;  // WebSocket global para reutilizar
+    let typingTimeout;  // Timeout para parar "digitando"
+    let isTyping = false;  // Flag para evitar envios excessivos
     const form = document.querySelector('form');
+
+    // 🔴 Verificação inicial
+    if (!loggedUserId) {
+        console.warn('Usuário não logado. WebSocket não será iniciado.');
+        return;  // ✅ Agora está dentro da função IIFE, então é válido
+    }
 
     // Função para conectar/reutilizar WebSocket
     function connectWebSocket(vetId) {
@@ -165,27 +177,45 @@
 
         socket.onmessage = function (e) {
             const data = JSON.parse(e.data);
-            const isMe = data.sender_id === loggedUserId;
-
-            const msgDiv = document.createElement('div');
-            msgDiv.className = isMe
-                ? 'flex flex-col items-end ml-auto max-w-[70%]'
-                : 'flex flex-col items-start max-w-[70%]';
-
-            msgDiv.innerHTML = `
-                <div class="${isMe
-                    ? 'bg-purple-600 text-white p-5 rounded-t-[2rem] rounded-bl-[2rem] shadow-lg shadow-purple-200/50'
-                    : 'bg-white text-gray-700 p-5 rounded-t-[2rem] rounded-br-[2rem] shadow-sm border border-gray-100'
-                } text-sm font-medium leading-relaxed">
-                    ${data.mensagem}
-                </div>
-                <span class="text-[10px] font-black text-gray-400 mt-2 ${isMe ? 'mr-2' : 'ml-2'} uppercase tracking-widest">
-                    ${data.data_envio}
-                </span>
-            `;
-
-            chatBox.appendChild(msgDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
+            if (data.type === "message") {
+                // Código existente para mensagens
+                const isMe = data.sender_id === loggedUserId;
+                const msgDiv = document.createElement('div');
+                msgDiv.className = isMe
+                    ? 'flex flex-col items-end ml-auto max-w-[70%]'
+                    : 'flex flex-col items-start max-w-[70%]';
+                msgDiv.innerHTML = `
+                    <div class="${isMe
+                        ? 'bg-purple-600 text-white p-5 rounded-t-[2rem] rounded-bl-[2rem] shadow-lg shadow-purple-200/50'
+                        : 'bg-white text-gray-700 p-5 rounded-t-[2rem] rounded-br-[2rem] shadow-sm border border-gray-100'
+                    } text-sm font-medium leading-relaxed">
+                        ${data.mensagem}
+                    </div>
+                    <span class="text-[10px] font-black text-gray-400 mt-2 ${isMe ? 'mr-2' : 'ml-2'} uppercase tracking-widest">
+                        ${data.data_envio}
+                    </span>
+                `;
+                chatBox.appendChild(msgDiv);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            } else if (data.type === "typing") {
+                // 🔴 Mostre/oculte indicador de digitação
+                const typingIndicator = document.getElementById('typing-indicator');
+                if (data.sender_id !== loggedUserId) {  // Não mostre para si mesmo
+                    typingIndicator.style.display = data.is_typing ? 'block' : 'none';
+                }
+            } else if (data.type === "status") {
+                // 🔴 Atualize ponto de status
+                const statusDot = document.getElementById('status-dot');
+                if (data.sender_id !== loggedUserId) {  // Status do contato
+                    if (data.status === "online") {
+                        statusDot.classList.remove('bg-gray-400');
+                        statusDot.classList.add('bg-green-500');
+                    } else {
+                        statusDot.classList.remove('bg-green-500');
+                        statusDot.classList.add('bg-gray-400');
+                    }
+                }
+            }
         };
 
         socket.onclose = function () {
@@ -196,6 +226,29 @@
             console.error('❌ Erro no WebSocket:', e);
         };
     }
+
+    // 🔴 Função para enviar eventos de digitação (movida para fora)
+    function sendTypingEvent(isTyping) {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({
+                type: isTyping ? "typing_start" : "typing_stop"
+            }));
+        }
+    }
+
+    // 🔴 Detecte digitação no input (movida para fora)
+    const input = document.querySelector('input[name="mensagem"]');
+    input.addEventListener('input', function() {
+        if (!isTyping) {
+            isTyping = true;
+            sendTypingEvent(true);
+        }
+        clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(() => {
+            isTyping = false;
+            sendTypingEvent(false);
+        }, 1000);  // Pare após 1 segundo sem input
+    });
 
     // Função para carregar mensagens via AJAX (sem reload)
     async function loadMessages(vetId) {
@@ -261,10 +314,15 @@
 
         if (mensagem && socket && socket.readyState === WebSocket.OPEN) {
             socket.send(JSON.stringify({
+                type: "message",
                 mensagem: mensagem
             }));
             input.value = '';
+            // Pare "digitando" ao enviar
+            isTyping = false;
+            sendTypingEvent(false);
         }
     });
+})();
 </script>
 {% endblock %}
