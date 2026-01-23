@@ -4,6 +4,7 @@ import os
 from django.core.management.utils import get_random_secret_key
 import dj_database_url
 from decouple import config
+IS_RAILWAY = 'RAILWAY_ENVIRONMENT' in os.environ
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -18,17 +19,13 @@ SECRET_KEY = get_random_secret_key()
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG=True quando em desenvolvimento
-DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 DEBUG_TOOLBAR_CONFIG = {
     'SHOW_TOOLBAR_CALLBACK': lambda request: False,  # desativa completamente
 }
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.vercel.app']  # Mantenha para dev
-render_url = os.getenv('RENDER_EXTERNAL_URL')
-if render_url:
-    ALLOWED_HOSTS.append(render_url.replace('https://', '').replace('http://', ''))
-
+ALLOWED_HOSTS = ['.railway.app', 'localhost', '127.0.0.1']
 
 # Application definition
 
@@ -88,12 +85,38 @@ WSGI_APPLICATION = 'setup.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.getenv('DATABASE_URL'),
-        conn_max_age=600,  # Optional: Keeps connections alive for performance
-    )
-}
+if IS_RAILWAY:
+    # No Railway: usa rede privada (interno)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ.get('MYSQLDATABASE'),
+            'USER': os.environ.get('MYSQLUSER'),
+            'PASSWORD': os.environ.get('MYSQLPASSWORD'),
+            'HOST': os.environ.get('MYSQLHOST'),          # será mysql.railway.internal
+            'PORT': os.environ.get('MYSQLPORT', '3306'),
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            },
+        }
+    }
+else:
+    # Local: use host público do Railway OU um banco local para dev
+    # Opção 1: Banco local (recomendado para dev rápido)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'db_pet',
+            'USER': 'root',          # ou seu user local
+            'PASSWORD': '',
+            'HOST': '127.0.0.1',
+            'PORT': '3306',
+            'OPTIONS': {
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            }
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
