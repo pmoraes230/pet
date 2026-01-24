@@ -3,4 +3,6 @@
 python manage.py migrate --noinput
 python manage.py collectstatic --noinput
 
-gunicorn setup.wsgi:application --bind 0.0.0.0:$PORT
+gunicorn setup.asgi:application \
+  -k uvicorn.workers.UvicornWorker \
+  --bind 0.0.0.0:$PORT
