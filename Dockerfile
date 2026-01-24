@@ -8,9 +8,9 @@ ENV PYTHONUNBUFFERED=1
 # Diretório de trabalho
 WORKDIR /app
 
-# Instala dependências do sistema (para MySQL e build)
+# Instala dependências do sistema (para MySQL/MariaDB e build)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libmysqlclient-dev build-essential pkg-config \
+    libmariadb-dev-compat build-essential pkg-config \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
