@@ -99,16 +99,13 @@
                     {% endfor %}
                 </div>
 
-                <!-- Input de Texto -->
+                <!-- INPUT DE MENSAGEM (WebSocket Only) -->
                 <div class="p-6 bg-white/80 border-t border-gray-50">
-                    <form method="POST" action="{% url 'enviar_mensagem' %}" class="relative flex items-center">
-                        {% csrf_token %}
-                        <input type="hidden" name="vet_id" value="{{ vet_selecionado.id }}">
-                        <input type="text" name="mensagem" placeholder="conversar" required
-                            class="w-full bg-gray-50 border border-gray-100 rounded-full py-5 px-8 text-sm font-bold text-gray-700 focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all shadow-inner">
-                        <button type="submit"
-                            class="absolute right-3 p-4 bg-transparent text-gray-800 hover:text-purple-600 transition-transform hover:scale-110 active:scale-90">
-                            <i data-lucide="send-horizontal" width="28" height="28"></i>
+                    <form id="chat-form" class="relative flex items-center">
+                        <input type="text" id="mensagem-input" placeholder="Digite sua mensagem..." required class="w-full bg-gray-50 border border-gray-100 rounded-full py-5 px-8
+                            text-sm font-bold text-gray-700 focus:ring-2 focus:ring-purple-500">
+                        <button type="submit" class="absolute right-3 p-4 text-gray-800 hover:text-purple-600">
+                            <i data-lucide="send-horizontal" width="28"></i>
                         </button>
                     </form>
                 </div>
@@ -142,72 +139,78 @@
 </div>
 
 <script>
-    const loggedUserId = {{ request.user.id }};
+(function () {
     lucide.createIcons();
+
     const chatBox = document.getElementById('chat-box');
-    if (chatBox) {
-        chatBox.scrollTop = chatBox.scrollHeight;
+    const form = document.getElementById('chat-form');
+    const input = document.getElementById('mensagem-input');
+
+    // 🚫 Se não existir chat aberto, não inicializa JS
+    if (!form || !chatBox || !input) {
+        return;
     }
 
-    const vetId = "{{ vet_selecionado.id }}"; // ID do contato
-    const form = document.querySelector('form');
+    // 🔹 ID do tutor logado (JS-safe)
+    const loggedUserId = Number("{{ request.user.id|default:'' }}") || null;
 
-    if (vetId) {
-        const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-        const wsUrl = `${protocol}://${window.location.host}/ws/chat/${vetId}/`;
+    // 🔹 Lê vet_id da URL → ?vet_id=3
+    const params = new URLSearchParams(window.location.search);
+    const vetId = params.get('vet_id');
 
-        const socket = new WebSocket(wsUrl);
+    if (!vetId) {
+        console.warn('Nenhum veterinário selecionado.');
+        return;
+    }
 
-        socket.onmessage = function (e) {
-            const data = JSON.parse(e.data);
+    // 🔹 WebSocket
+    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    const socket = new WebSocket(
+        `${protocol}://${window.location.host}/ws/chat/${vetId}/`
+    );
 
-            // 🔴 REGRA CORRETA
-            const isMe = data.sender_id === loggedUserId;
+    socket.onmessage = function (event) {
+        const data = JSON.parse(event.data);
+        const isMe = data.sender_id === loggedUserId;
 
-            const msgDiv = document.createElement('div');
-            msgDiv.className = isMe
-                ? 'flex flex-col items-end ml-auto max-w-[70%]'
-                : 'flex flex-col items-start max-w-[70%]';
+        const msgDiv = document.createElement('div');
+        msgDiv.className = isMe
+            ? 'flex flex-col items-end ml-auto max-w-[70%]'
+            : 'flex flex-col items-start max-w-[70%]';
 
-            msgDiv.innerHTML = `
-            <div class="${isMe
-                    ? 'bg-purple-600 text-white p-5 rounded-t-[2rem] rounded-bl-[2rem] shadow-lg shadow-purple-200/50'
-                    : 'bg-white text-gray-700 p-5 rounded-t-[2rem] rounded-br-[2rem] shadow-sm border border-gray-100'
-                } text-sm font-medium leading-relaxed">
+        msgDiv.innerHTML = `
+            <div class="${
+                isMe
+                    ? 'bg-purple-600 text-white rounded-bl-[2rem]'
+                    : 'bg-white text-gray-700 rounded-br-[2rem]'
+            } p-5 rounded-t-[2rem] shadow text-sm">
                 ${data.mensagem}
             </div>
-            <span class="text-[10px] font-black text-gray-400 mt-2 ${isMe ? 'mr-2' : 'ml-2'
-                } uppercase tracking-widest">
+            <span class="text-[10px] text-gray-400 mt-1">
                 ${data.data_envio}
             </span>
         `;
 
-            chatBox.appendChild(msgDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        };
+        chatBox.appendChild(msgDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    };
 
-        socket.onclose = function () {
-            console.error('❌ WebSocket fechado inesperadamente');
-        };
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
 
-        socket.onerror = function (e) {
-            console.error('❌ Erro no WebSocket:', e);
-        };
+        const mensagem = input.value.trim();
+        if (!mensagem) return;
 
-        // Envio da mensagem
-        form.addEventListener('submit', function (e) {
-            e.preventDefault();
+        if (socket.readyState !== WebSocket.OPEN) {
+            console.error('WebSocket ainda não conectado.');
+            return;
+        }
 
-            const input = form.querySelector('input[name="mensagem"]');
-            const mensagem = input.value.trim();
+        socket.send(JSON.stringify({ mensagem }));
+        input.value = '';
+    });
 
-            if (mensagem && socket.readyState === WebSocket.OPEN) {
-                socket.send(JSON.stringify({
-                    mensagem: mensagem
-                }));
-                input.value = '';
-            }
-        });
-    }
+})();
 </script>
+
 {% endblock %}

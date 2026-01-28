@@ -212,8 +212,6 @@ CHANNEL_LAYERS = {
         "BACKEND": "channels_redis.pubsub.RedisPubSubChannelLayer",
         "CONFIG": {
             "hosts": [os.getenv("REDIS_URL")],
-            "prefix": "chat_",
-            "expiry": 360,
         },
     },
 }

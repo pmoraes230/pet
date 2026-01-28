@@ -50,5 +50,9 @@
         });
     </script>
     {% endif %}
+
+    <script>
+        window.LOGGED_USER_ID = {{ request.user.id }};
+    </script>
 </body>
 </html>
