@@ -92,6 +92,12 @@ DATABASES = {
     )
 }
 
+# Sobrescreva OPTIONS para forçar SSL (obrigatório para Aiven)
+DATABASES['default']['OPTIONS'] = {
+    'ssl': {},  # Para MySQL, isso habilita SSL sem certificados específicos (usa os do sistema)
+    'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+}
+
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
