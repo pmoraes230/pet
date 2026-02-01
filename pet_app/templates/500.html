@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="bg-gray-50 min-h-screen flex items-center justify-center p-6">
+    <div class="max-w-2xl w-full text-center space-y-10">
+        <div class="text-9xl md:text-[12rem] font-black text-red-200 select-none">
+            500
+        </div>
+
+        <div class="space-y-6">
+            <h1 class="text-4xl md:text-6xl font-black text-gray-800">
+                Algo deu muito errado...
+            </h1>
+            
+            <p class="text-xl text-gray-600 max-w-lg mx-auto">
+                Nosso servidor tropeçou feio. 
+                Já estamos chamando o técnico (ou dando petisco pra ele se acalmar).
+            </p>
+
+            <div class="pt-8">
+                <a href="{% url 'index' %}" 
+                   class="bg-purple-600 text-white font-black text-lg px-12 py-5 rounded-2xl 
+                          hover:bg-purple-700 transition shadow-lg shadow-purple-200 inline-block">
+                    Voltar para a segurança
+                </a>
+            </div>
+
+            <p class="text-gray-500 pt-12">
+                Se o problema continuar, 
+                <a href="#" class="text-purple-600 font-bold underline">
+                    nos avise por aqui
+                </a>.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}  

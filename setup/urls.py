@@ -3,6 +3,9 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+handler404 = 'pet_app.views.custom404'
+handler500 = 'pet_app.views.custom500'
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("", include("pet_app.urls")),           

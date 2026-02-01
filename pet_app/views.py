@@ -23,6 +23,12 @@ from .models import Notificacao, Consulta, Pet # E outros modelos que você usar
 
 logger = logging.getLogger(__name__)
 
+def custom404(request, exception=None):
+    return render(request, '404.html', status=404)
+
+def custom500(request, exception=None):
+    return render(request, '500.html', status=500)
+
 # Utils imports (se existir)
 try:
     from .utils import get_tutor_logado, get_veterinario_logado

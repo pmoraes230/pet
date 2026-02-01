@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="bg-gray-50 min-h-screen flex items-center justify-center p-6">
+    <div class="max-w-2xl w-full text-center space-y-10">
+        <!-- Ilustração / Emoji grande -->
+        <div class="text-9xl md:text-[12rem] font-black text-purple-200 select-none">
+            404
+        </div>
+
+        <div class="space-y-6">
+            <h1 class="text-4xl md:text-6xl font-black text-gray-800">
+                Ops... página não encontrada
+            </h1>
+
+            <div class="flex flex-col sm:flex-row gap-4 justify-center pt-6">
+                <a href="{% url 'index' %}" 
+                   class="bg-purple-600 text-white font-black text-lg px-10 py-5 rounded-2xl 
+                          hover:bg-purple-700 transition shadow-lg shadow-purple-200">
+                    Voltar para a página inicial
+                </a>
+                
+                <a href="#" 
+                   class="bg-white text-purple-700 font-bold border-2 border-purple-200 
+                          px-10 py-5 rounded-2xl hover:bg-purple-50 transition">
+                    Falar com o suporte
+                </a>
+            </div>
+        </div>
+
+        <!-- Toque divertido (opcional) -->
+        {% comment %} <div class="pt-12 opacity-70">
+            <img src="{% static 'images/404-dog-cat-confused.png' %}" 
+                 alt="Pet confuso" 
+                 class="mx-auto h-48 md:h-64 object-contain">
+            <p class="mt-4 text-gray-500 italic">
+                "Eu juro que não comi essa página..."
+            </p>
+        </div> {% endcomment %}
+    </div>
+</div>
+{% endblock %}

@@ -208,7 +208,7 @@ def adicionar_pet(request):
             sexo=request.POST.get('sexo'),
             pelagem=request.POST.get('pelagem', 'Não informada'),
             castrado=request.POST.get('castrado', 'Não'),
-            TUTOR=tutor
+            tutor=tutor
         )
 
         messages.success(request, "Pet cadastrado com sucesso!")
