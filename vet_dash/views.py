@@ -170,7 +170,47 @@ def agenda_view(request):
 
     return render(request, 'agenda.html', context)
 
+def aceitar_consulta(request, consulta_id):
+    vet_login = get_veterinario_logado(request)
+    if not get_veterinario_logado(request):
+        return redirect('login')  # ajuste o nome da sua view de login vet
 
+    consulta = get_object_or_404(models.Consulta, id=consulta_id)
+    
+    if consulta.veterinario.id != vet_login['id']:
+        messages.error(request, "Esta consulta não pertence à sua conta.")
+        return redirect('agenda_vet')
+
+    if consulta.status != 'Pendente':
+        messages.warning(request, f"Status atual: {consulta.status}. Não é possível aceitar.")
+        return redirect('agenda_vet')
+
+    consulta.status = 'Confirmado'
+    consulta.save()
+    messages.success(request, f"Consulta de {consulta.pet.nome} confirmada!")
+    
+    return redirect('agenda_vet')  # ou com ?data=... para manter o filtro
+
+def rejeitar_consulta(request, consulta_id):
+    vet_login = get_veterinario_logado(request)
+    if not get_veterinario_logado(request):
+        return redirect('login')
+
+    consulta = get_object_or_404(models.Consulta, id=consulta_id)
+    
+    if consulta.veterinario.id != vet_login['id']:
+        messages.error(request, "Esta consulta não pertence à sua conta.")
+        return redirect('agenda_vet')
+
+    if consulta.status != 'Pendente':
+        messages.warning(request, f"Status atual: {consulta.status}. Não é possível rejeitar.")
+        return redirect('agenda_vet')
+
+    consulta.status = 'Cancelado'
+    consulta.save()
+    messages.success(request, f"Consulta de {consulta.pet.nome} rejeitada.")
+    
+    return redirect('agenda_vet')
 
 # ------------------------
 # Prontuários

@@ -515,18 +515,26 @@ def mensagens_view(request):
             return redirect('login')
 
         tutor = models.Tutor.objects.get(id=tutor_data['id'])
-        contatos = models.Veterinario.objects.all()
+        vets_confirmados = models.Consulta.objects.filter(
+            pet__tutor=tutor,
+            status='Confirmado'
+        ).values_list('veterinario_id', flat=True).distinct()
+
+        contatos = models.Veterinario.objects.filter(id__in=vets_confirmados)
 
         vet_id = request.GET.get('vet_id')
         mensagens = []
         vet_selecionado = None
 
-        if vet_id:
+        if vet_id and int(vet_id) in vets_confirmados:  # Verifique se o vet é permitido
             vet_selecionado = get_object_or_404(models.Veterinario, id=vet_id)
             mensagens = models.Mensagem.objects.filter(
                 TUTOR=tutor,
                 VETERINARIO=vet_selecionado
             ).order_by('DATA_ENVIO')
+        else:
+            if vet_id:
+                messages.error(request, "Você não pode interagir com este veterinário até que uma consulta seja confirmada.")
 
         # Suporte a AJAX: Retorne HTML parcial se for requisição AJAX
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -557,6 +565,15 @@ def enviar_mensagem(request):
         
         if data_tutor:
             vet_id = request.POST.get('vet_id')
+            has_confirmed = models.Consulta.objects.filter(
+                pet__tutor_id=data_tutor['id'],
+                veterinario_id=vet_id,
+                status='Confirmado'
+            ).exists()
+            if not has_confirmed:
+                messages.error(request, "Você não pode enviar mensagens para este veterinário até que uma consulta seja confirmada.")
+                return redirect(f'/mensagens/?vet_id={vet_id}')
+            
             models.Mensagem.objects.create(
                 TUTOR_id=data_tutor['id'],
                 VETERINARIO_id=vet_id,
@@ -842,14 +859,14 @@ def agenda_tutor(request):
         data_consulta__range=[inicio_semana, inicio_semana + timedelta(days=6)]
     ).order_by('data_consulta', 'horario_consulta')
 
-    vacinas = Vacina.objects.filter(
+    vacinas = models.Vacina.objects.filter(
         pet__tutor=tutor,
         data_aplicacao__range=[inicio_semana, inicio_semana + timedelta(days=6)]
     ).order_by('data_aplicacao')
 
     # 4. Dados para o Modal de Agendamento
     pets = Pet.objects.filter(tutor=tutor)
-    veterinarios = Veterinario.objects.all()
+    veterinarios = models.Veterinario.objects.all()
 
     context = {
         'consultas': consultas,
@@ -864,12 +881,3 @@ def agenda_tutor(request):
     }
 
     return render(request, 'agenda_tutor.html', context)
-
-from django.shortcuts import render, redirect, get_object_or_404
-from .models import Pet, Veterinario, Consulta, Vacina # Verifique se os nomes dos modelos estão corretos
-from django.contrib import messages
-
-# ... suas outras views ...
-
-
-# patrick fez merda to dando esse commit pra resolver

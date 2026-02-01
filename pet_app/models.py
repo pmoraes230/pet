@@ -145,6 +145,7 @@ class Prontuariopet(models.Model):
 
 class Consulta(models.Model):
     STATUS_CHOICES = [
+        ('Pendente', 'Pendente'),
         ('Agendado', 'Agendado'),
         ('Confirmado', 'Confirmado'),
         ('Concluido', 'Concluído'),
@@ -159,7 +160,7 @@ class Consulta(models.Model):
     horario_consulta = models.TimeField(db_column='HORARIO_CONSULTA', blank=True, null=True)
     observacoes = models.CharField(db_column='OBSERVACOES', max_length=255, blank=True, null=True)
     valor_consulta = models.DecimalField(db_column='VALOR_CONSULTA', max_digits=10, decimal_places=2, default=0.00, blank=True, null=True)
-    status = models.CharField(db_column='STATUS', max_length=20, choices=STATUS_CHOICES, default='Agendado', blank=True, null=True)
+    status = models.CharField(db_column='STATUS', max_length=20, choices=STATUS_CHOICES, default='Pendente', blank=True, null=True)
 
     pet = models.ForeignKey(Pet, models.DO_NOTHING, db_column='ID_PET', blank=True, null=True)
     veterinario = models.ForeignKey(Veterinario, models.DO_NOTHING, db_column='ID_VETERINARIO', blank=True, null=True)
@@ -348,9 +349,6 @@ def notificar_mensagem(sender, instance, created, **kwargs):
                 mensagem=f"O tutor {instance.TUTOR.nome_tutor} enviou uma mensagem."
             )
 
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from .models import Consulta, Notificacao, Mensagem # Importe seus modelos
 
 # GATILHO 1: Quando uma CONSULTA é marcada
 @receiver(post_save, sender='pet_app.Consulta') 

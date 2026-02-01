@@ -357,12 +357,10 @@ def medicamentos_view(request):
 
 
 def agendamentos_view(request):
-    # Usando sua função utilitária ou lógica de pegar o ID do tutor logado
     tutor_data = get_tutor_logado(request)
     if not tutor_data:
         return redirect('login')
 
-    # CORREÇÃO: Usamos pet_models.Tutor (com o prefixo correto)
     tutor = models.Tutor.objects.get(id=tutor_data['id'])
     
     # Buscamos os pets do tutor
@@ -393,7 +391,6 @@ def agendamentos_view(request):
 
     fim_da_semana = segunda_da_semana + timedelta(days=6)
     
-    # CORREÇÃO: Usamos pet_models para buscar Vacinas e Consultas
     vacinas = models.Vacina.objects.filter(
         pet__in=meus_pets, 
         data_aplicacao__range=[segunda_da_semana, fim_da_semana]
@@ -415,14 +412,10 @@ def agendamentos_view(request):
         'ano_atual': segunda_da_semana.year,
         'data_anterior': (segunda_da_semana - timedelta(days=7)).strftime('%Y-%m-%d'),
         'data_proxima': (segunda_da_semana + timedelta(days=7)).strftime('%Y-%m-%d'),
-        
-        # ESSENCIAL PARA O MODAL:
         'pets': meus_pets, 
         'veterinarios': models.Veterinario.objects.all(),
     }
     return render(request, 'agendamentos.html', context)
-    # Removido o return duplicado
-
 
 def diario_emocional_view(request):
     tutor_data = get_tutor_logado(request)
@@ -582,16 +575,15 @@ def agendar_consulta(request):
         except (ValueError, TypeError):
             data_objeto = None # Ou use datetime.now().date()
 
-        # 3. Cria o registro seguindo EXATAMENTE os nomes do seu modelo
         models.Consulta.objects.create(
             tipo_de_consulta=tipo,
             data_consulta=data_objeto,
             horario_consulta=hora,
             # Limitamos a 255 caracteres para bater com o max_length do seu CharField
             observacoes=obs[:255] if obs else None, 
-            status='Agendado',
-            pet=pet_obj,        # Atributo definido no seu model
-            veterinario=vet_obj # Atributo definido no seu model
+            status='Pendente',
+            pet=pet_obj,
+            veterinario=vet_obj
         )
 
         return redirect('agendamentos')

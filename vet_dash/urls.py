@@ -15,5 +15,7 @@ urlpatterns = [
     path('pacientes/<int:pet_id>/perfil/', views.perfil_pet_vet, name='perfil_pet_vet'),
     path('excluir-consulta/<int:consulta_id>/', views.excluir_consulta_vet, name='excluir_consulta_vet'),
     path('excluir-vacina/<int:vacina_id>/', views.excluir_vacina_vet, name='excluir_vacina_vet'),
+    path('aceitar-consulta/<int:consulta_id>/', views.aceitar_consulta, name='aceitar_consulta'),
+    path('rejeitar-consulta/<int:consulta_id>/', views.rejeitar_consulta, name='rejeitar_consulta'),
 ]
 

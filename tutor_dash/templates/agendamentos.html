@@ -64,36 +64,73 @@
                         vet: 'Dr(a). {{ c.veterinario.nome }}',
                         data: '{{ c.data_consulta|date:'d/m/Y' }}',
                         hora: '{{ c.horario_consulta|time:'H:i' }}',
-                        obs: '{{ c.observacoes|default:" Nenhuma observação informada."|escapejs }}',
-                    categoria: 'consulta' })"
-                    class="bg-white p-6 rounded-[35px] shadow-sm flex items-center gap-8 border border-transparent hover:border-purple-200 transition-all group relative cursor-pointer">
+                        obs: '{{ c.observacoes|default:'Nenhuma observação informada.'|escapejs }}',
+                        status: '{{ c.status }}',
+                        categoria: 'consulta' })"
+                    class="bg-white p-6 rounded-[35px] shadow-sm flex items-start gap-6 border border-transparent hover:border-purple-200 transition-all group relative cursor-pointer">
 
+                    <!-- Horário -->
                     <div class="text-center border-r border-gray-100 pr-8 min-w-[100px]">
-                        <span class="block text-xs font-black text-gray-400 uppercase tracking-tighter">{{ c.data_consulta|date:"d M" }}</span>
-                        <span class="text-2xl font-black text-gray-800">{{ c.horario_consulta|time:"H:i" }}</span>
+                        <span class="block text-xs font-black text-gray-400 uppercase tracking-tighter">
+                            {{ c.data_consulta|date:"d M" }}
+                        </span>
+                        <span class="text-2xl font-black text-gray-800 block mt-1">
+                            {{ c.horario_consulta|time:"H:i" }}
+                        </span>
                     </div>
+
+                    <!-- Informações principais -->
                     <div class="flex-1">
-                        <h4 class="text-2xl font-black text-gray-800 group-hover:text-purple-600 transition-colors">{{ c.tipo_de_consulta }}</h4>
-                        <div class="flex items-center gap-4 mt-2 text-gray-500 font-bold text-sm">
-                            <span class="text-purple-600">@{{ c.pet.nome }}</span>
-                            <span class="flex items-center gap-1.5"><i data-lucide="user" width="14"></i> Vet: {{ c.veterinario.nome }}</span>
+                        <div class="flex items-center gap-3 mb-2 flex-wrap">
+                            <h4 class="text-2xl font-black text-gray-800 group-hover:text-purple-600 transition-colors">
+                                {{ c.tipo_de_consulta }}
+                            </h4>
+
+                            <!-- Badge de status -->
+                            <span class="text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wide
+                                {% if c.status == 'Confirmado' %} bg-green-100 text-green-700 border border-green-200
+                                {% elif c.status == 'Pendente' %} bg-yellow-100 text-yellow-700 border border-yellow-200
+                                {% elif c.status == 'Cancelado' %} bg-red-100 text-red-700 border border-red-200
+                                {% elif c.status == 'Concluido' %} bg-purple-100 text-purple-700 border border-purple-200
+                                {% else %} bg-gray-100 text-gray-700 border border-gray-200 {% endif %}">
+                                {{ c.status }}
+                            </span>
                         </div>
+
+                        <div class="flex items-center gap-5 text-gray-600 font-medium text-sm">
+                            <span class="text-purple-600 flex items-center gap-1.5">
+                                <i data-lucide="dog" width="16"></i> @{{ c.pet.nome }}
+                            </span>
+                            <span class="flex items-center gap-1.5">
+                                <i data-lucide="user" width="16"></i> Vet: {{ c.veterinario.nome }}
+                            </span>
+                        </div>
+
+                        <!-- Mensagem explicativa para Pendente -->
+                        {% if c.status == 'Pendente' %}
+                        <p class="mt-3 text-sm text-yellow-700 italic bg-yellow-50 p-3 rounded-xl border border-yellow-200">
+                            Aguardando confirmação do veterinário
+                        </p>
+                        {% endif %}
                     </div>
-                    <div
-                        class="bg-blue-50 text-blue-500 p-6 rounded-3xl group-hover:bg-blue-500 group-hover:text-white transition-all">
+
+                    <!-- Ícone visual -->
+                    <div class="bg-purple-50 text-purple-600 p-6 rounded-3xl group-hover:bg-purple-600 group-hover:text-white transition-all">
                         <i data-lucide="calendar" size="32"></i>
                     </div>
 
-                    <!-- Menu de Ações (Excluir) -->
-                    <div class="flex flex-row">
+                    <!-- Menu de ações (3 pontinhos) -->
+                    <div class="absolute top-5 right-5">
                         <button onclick="event.stopPropagation(); toggleMenu('consulta-{{ c.id }}')"
-                            class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur-sm text-gray-500 hover:text-purple-600 shadow-sm transition-all">&#x22EE;</button>
+                            class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur-sm text-gray-500 hover:text-purple-600 shadow-sm transition-all">
+                            &#x22EE;
+                        </button>
                         <div id="menu-consulta-{{ c.id }}"
-                            class="hidden absolute right-0 mt-2 bg-white shadow-2xl border border-gray-50 rounded-2xl py-2 w-40 z-20">
-                            <button
-                                onclick="event.stopPropagation(); openDeleteModal({{ c.id }}, 'Consulta', 'consulta')"
-                                class="w-full text-left px-6 py-3 text-red-500 font-bold hover:bg-red-50 transition-colors text-sm">🗑️
-                                Excluir</button>
+                             class="hidden absolute right-0 mt-2 bg-white shadow-2xl border border-gray-100 rounded-2xl py-2 w-44 z-20">
+                            <button onclick="event.stopPropagation(); openDeleteModal({{ c.id }}, 'Consulta', 'consulta')"
+                                    class="w-full text-left px-5 py-3 text-red-600 font-medium hover:bg-red-50 transition-colors text-sm flex items-center gap-2">
+                                <i data-lucide="trash-2" width="16"></i> Excluir
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -108,32 +145,43 @@
                         data: '{{ v.data_aplicacao|date:'d/m/Y' }}',
                         hora: '--:--',
                         obs: 'Vacina: {{ v.nome }}. Lembre-se de trazer a carteirinha.',
-                        categoria: 'vacina'
-                    })"
-                    class="bg-white p-6 rounded-[35px] shadow-sm flex items-center gap-8 border border-transparent hover:border-purple-200 transition-all group relative cursor-pointer">
-                    
+                        categoria: 'vacina' })"
+                    class="bg-white p-6 rounded-[35px] shadow-sm flex items-start gap-6 border border-transparent hover:border-purple-200 transition-all group relative cursor-pointer">
+
                     <div class="text-center border-r border-gray-100 pr-8 min-w-[100px]">
-                        <span class="block text-xs font-black text-gray-400 uppercase tracking-tighter">{{ v.data_aplicacao|date:"d M" }}</span>
-                        <span class="text-2xl font-black text-gray-800">Vacina</span>
+                        <span class="block text-xs font-black text-gray-400 uppercase tracking-tighter">
+                            {{ v.data_aplicacao|date:"d M" }}
+                        </span>
+                        <span class="text-2xl font-black text-gray-800 block mt-1">Vacina</span>
                     </div>
+
                     <div class="flex-1">
-                        <h4 class="text-2xl font-black text-gray-800 group-hover:text-purple-600 transition-colors">{{ v.nome }}</h4>
-                        <div class="flex items-center gap-4 mt-2 text-gray-500 font-bold text-sm">
-                            <span class="text-purple-600">@{{ v.pet.nome }}</span>
+                        <h4 class="text-2xl font-black text-gray-800 group-hover:text-purple-600 transition-colors">
+                            {{ v.nome }}
+                        </h4>
+                        <div class="flex items-center gap-5 mt-2 text-gray-600 font-medium text-sm">
+                            <span class="text-purple-600 flex items-center gap-1.5">
+                                <i data-lucide="dog" width="16"></i> @{{ v.pet.nome }}
+                            </span>
                         </div>
                     </div>
-                    <div class="flex flex-row gap-8">
-                        <div
-                            class="bg-red-50 text-red-500 p-6 rounded-3xl group-hover:bg-red-500 group-hover:text-white transition-all">
+
+                    <div class="flex flex-row gap-6 items-start">
+                        <div class="bg-red-50 text-red-500 p-6 rounded-3xl group-hover:bg-red-500 group-hover:text-white transition-all">
                             <i data-lucide="syringe" size="32"></i>
                         </div>
+
                         <button onclick="event.stopPropagation(); toggleMenu('vacina-{{ v.id }}')"
-                            class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur-sm text-gray-500 hover:text-purple-600 shadow-sm transition-all">&#x22EE;</button>
+                            class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur-sm text-gray-500 hover:text-purple-600 shadow-sm transition-all">
+                            &#x22EE;
+                        </button>
+
                         <div id="menu-vacina-{{ v.id }}"
-                            class="hidden absolute right-0 mt-2 bg-white shadow-2xl border border-gray-50 rounded-2xl py-2 w-40 z-20">
+                             class="hidden absolute right-0 mt-2 bg-white shadow-2xl border border-gray-100 rounded-2xl py-2 w-44 z-20">
                             <button onclick="event.stopPropagation(); openDeleteModal({{ v.id }}, 'Vacina', 'vacina')"
-                                class="w-full text-left px-6 py-3 text-red-500 font-bold hover:bg-red-50 transition-colors text-sm">🗑️
-                                Excluir</button>
+                                    class="w-full text-left px-5 py-3 text-red-600 font-medium hover:bg-red-50 transition-colors text-sm flex items-center gap-2">
+                                <i data-lucide="trash-2" width="16"></i> Excluir
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -141,8 +189,8 @@
 
                 {% if not vacinas and not consultas %}
                 <div class="text-center py-20 bg-white rounded-[40px] border-2 border-dashed border-gray-200">
-                    <i data-lucide="calendar-x" class="mx-auto text-gray-300 mb-4" size="48"></i>
-                    <p class="text-gray-400 font-bold italic">Nenhum agendamento para esta semana.</p>
+                    <i data-lucide="calendar-x" class="mx-auto text-gray-300 mb-4" size="64"></i>
+                    <p class="text-gray-500 font-bold text-lg">Nenhum agendamento para esta semana.</p>
                 </div>
                 {% endif %}
             </div>
@@ -150,23 +198,15 @@
     </main>
 </div>
 
-<!-- ============================================================== -->
-<!-- MODAIS -->
-<!-- ============================================================== -->
-
-<!-- MODAL DE DETALHES DA CONSULTA -->
-<div id="modalDetalhes"
-    class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div
-        class="bg-white w-full max-w-lg rounded-[40px] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
-        <!-- Header Detalhes -->
+<!-- MODAL DE DETALHES -->
+<div id="modalDetalhes" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-lg rounded-[40px] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
         <div class="p-8 border-b border-gray-100 flex justify-between items-center bg-purple-600 text-white">
             <div>
                 <h3 id="detalhe-tipo" class="text-2xl font-black italic">Detalhes</h3>
                 <p class="opacity-80 font-medium text-sm">Informações do agendamento</p>
             </div>
-            <button onclick="closeDetailModal()"
-                class="bg-white/20 p-2 rounded-full hover:bg-white/40 transition-colors">
+            <button onclick="closeDetailModal()" class="bg-white/20 p-2 rounded-full hover:bg-white/40 transition-colors">
                 <i data-lucide="x" width="24" height="24"></i>
             </button>
         </div>
@@ -174,19 +214,16 @@
         <div class="p-8 space-y-6">
             <div class="grid grid-cols-2 gap-6">
                 <div>
-                    <label
-                        class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Paciente</label>
+                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Paciente</label>
                     <div class="flex items-center gap-2">
-                        <div
-                            class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-600">
+                        <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-600">
                             <i data-lucide="dog" width="16"></i>
                         </div>
                         <span id="detalhe-pet" class="font-bold text-gray-700 text-lg">---</span>
                     </div>
                 </div>
                 <div>
-                    <label
-                        class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Veterinário</label>
+                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Veterinário</label>
                     <div class="flex items-center gap-2">
                         <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
                             <i data-lucide="user" width="16"></i>
@@ -196,29 +233,29 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-6">
+            <div class="grid grid-cols-3 gap-6">
                 <div class="bg-gray-50 p-4 rounded-2xl">
-                    <label
-                        class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Data</label>
+                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Data</label>
                     <span id="detalhe-data" class="font-black text-gray-800 italic">---</span>
                 </div>
                 <div class="bg-gray-50 p-4 rounded-2xl">
-                    <label
-                        class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Horário</label>
+                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Horário</label>
                     <span id="detalhe-hora" class="font-black text-gray-800 italic">---</span>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-2xl">
+                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Status</label>
+                    <span id="detalhe-status" class="font-bold text-gray-800">---</span>
                 </div>
             </div>
 
             <div>
-                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Observações /
-                    Sintomas</label>
+                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Observações / Sintomas</label>
                 <div class="bg-purple-50/50 p-6 rounded-[2rem] border border-purple-100/50">
                     <p id="detalhe-obs" class="text-gray-600 leading-relaxed italic">---</p>
                 </div>
             </div>
 
-            <button onclick="closeDetailModal()"
-                class="w-full py-4 bg-gray-100 text-gray-500 rounded-2xl font-black hover:bg-gray-200 transition-colors">
+            <button onclick="closeDetailModal()" class="w-full py-4 bg-gray-100 text-gray-500 rounded-2xl font-black hover:bg-gray-200 transition-colors">
                 Fechar
             </button>
         </div>
@@ -226,10 +263,8 @@
 </div>
 
 <!-- MODAL DE AGENDAMENTO (CRIAR) -->
-<div id="modalAgendamento"
-    class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div
-        class="bg-white w-full max-w-lg rounded-[40px] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+<div id="modalAgendamento" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-lg rounded-[40px] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
         <div class="p-8 border-b border-gray-100 flex justify-between items-center bg-white">
             <div>
                 <h3 class="text-2xl font-black text-gray-800">Novo Agendamento</h3>
@@ -245,10 +280,8 @@
             {% csrf_token %}
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Qual
-                        Pet?</label>
-                    <select name="pet" required
-                        class="w-full bg-gray-100 border-none rounded-2xl py-4 px-4 font-bold text-gray-700 focus:ring-2 focus:ring-purple-600 outline-none">
+                    <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Qual Pet?</label>
+                    <select name="pet" required class="w-full bg-gray-100 border-none rounded-2xl py-4 px-4 font-bold text-gray-700 focus:ring-2 focus:ring-purple-600 outline-none">
                         <option value="" disabled selected>Selecione...</option>
                         {% for p in pets %}
                         <option value="{{ p.id }}">{{ p.nome }}</option>
@@ -256,10 +289,8 @@
                     </select>
                 </div>
                 <div>
-                    <label
-                        class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Veterinário</label>
-                    <select name="veterinario" required
-                        class="w-full bg-gray-100 border-none rounded-2xl py-4 px-4 font-bold text-gray-700 focus:ring-2 focus:ring-purple-600 outline-none">
+                    <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Veterinário</label>
+                    <select name="veterinario" required class="w-full bg-gray-100 border-none rounded-2xl py-4 px-4 font-bold text-gray-700 focus:ring-2 focus:ring-purple-600 outline-none">
                         <option value="" disabled selected>Escolha...</option>
                         {% for v in veterinarios %}
                         <option value="{{ v.id }}">Dr(a). {{ v.nome }}</option>
@@ -271,21 +302,17 @@
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Data</label>
-                    <input type="date" name="data" required
-                        class="w-full bg-gray-100 border-none rounded-2xl py-4 px-4 font-bold text-gray-700 outline-none">
+                    <input type="date" name="data" required class="w-full bg-gray-100 border-none rounded-2xl py-4 px-4 font-bold text-gray-700 outline-none">
                 </div>
                 <div>
                     <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Horário</label>
-                    <input type="time" name="hora" required
-                        class="w-full bg-gray-100 border-none rounded-2xl py-4 px-4 font-bold text-gray-700 outline-none">
+                    <input type="time" name="hora" required class="w-full bg-gray-100 border-none rounded-2xl py-4 px-4 font-bold text-gray-700 outline-none">
                 </div>
             </div>
 
             <div>
-                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Tipo de
-                    Serviço</label>
-                <select name="tipo" required
-                    class="w-full bg-gray-100 border-none rounded-2xl py-4 px-4 font-bold text-gray-700 focus:ring-2 focus:ring-purple-600 outline-none">
+                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Tipo de Serviço</label>
+                <select name="tipo" required class="w-full bg-gray-100 border-none rounded-2xl py-4 px-4 font-bold text-gray-700 focus:ring-2 focus:ring-purple-600 outline-none">
                     <option value="Consulta Geral">Consulta Geral</option>
                     <option value="Vacinação">Vacinação</option>
                     <option value="Check-up">Check-up</option>
@@ -295,34 +322,33 @@
 
             <div>
                 <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Observações</label>
-                <textarea name="obs" rows="2" placeholder="Descreva brevemente..."
-                    class="w-full bg-gray-100 border-none rounded-2xl py-4 px-4 font-bold text-gray-700 outline-none resize-none"></textarea>
+                <textarea name="obs" rows="2" placeholder="Descreva brevemente..." class="w-full bg-gray-100 border-none rounded-2xl py-4 px-4 font-bold text-gray-700 outline-none resize-none"></textarea>
             </div>
 
             <div class="flex gap-4 pt-2">
-                <button type="button" onclick="toggleModal()"
-                    class="flex-1 py-4 bg-gray-100 text-gray-500 rounded-2xl font-black hover:bg-gray-200 transition-colors">Cancelar</button>
-                <button type="submit"
-                    class="flex-1 py-4 bg-purple-600 text-white rounded-2xl font-black hover:bg-purple-700 shadow-lg shadow-purple-100 transition-all">Agendar
-                    Agora</button>
+                <button type="button" onclick="toggleModal()" class="flex-1 py-4 bg-gray-100 text-gray-500 rounded-2xl font-black hover:bg-gray-200 transition-colors">
+                    Cancelar
+                </button>
+                <button type="submit" class="flex-1 py-4 bg-purple-600 text-white rounded-2xl font-black hover:bg-purple-700 shadow-lg shadow-purple-100 transition-all">
+                    Agendar Agora
+                </button>
             </div>
         </form>
     </div>
 </div>
 
 <!-- MODAL DE EXCLUSÃO -->
-<div id="deleteModal"
-    class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+<div id="deleteModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
     <div class="bg-white rounded-[2.5rem] p-10 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200">
         <h2 class="text-2xl font-black text-gray-800 mb-4 text-center">Confirmar exclusão</h2>
-        <p id="modalMessage" class="text-gray-500 font-medium mb-8 text-center">Tem certeza que deseja excluir este
-            agendamento?</p>
+        <p id="modalMessage" class="text-gray-500 font-medium mb-8 text-center">Tem certeza que deseja excluir este agendamento?</p>
         <div class="flex gap-4">
-            <button onclick="closeDeleteModal()"
-                class="flex-1 px-4 py-4 rounded-2xl bg-gray-100 text-gray-600 font-black hover:bg-gray-200 transition-colors">Cancelar</button>
-            <a id="confirmDeleteBtn" href="#"
-                class="flex-1 px-4 py-4 rounded-2xl bg-red-600 text-white font-black text-center hover:bg-red-700 transition-colors">Sim,
-                excluir</a>
+            <button onclick="closeDeleteModal()" class="flex-1 px-4 py-4 rounded-2xl bg-gray-100 text-gray-600 font-black hover:bg-gray-200 transition-colors">
+                Cancelar
+            </button>
+            <a id="confirmDeleteBtn" href="#" class="flex-1 px-4 py-4 rounded-2xl bg-red-600 text-white font-black text-center hover:bg-red-700 transition-colors">
+                Sim, excluir
+            </a>
         </div>
     </div>
 </div>
@@ -330,15 +356,11 @@
 <script>
     lucide.createIcons();
 
-    // Controle do Modal de Criação
     function toggleModal() {
-        const modal = document.getElementById('modalAgendamento');
-        modal.classList.toggle('hidden');
+        document.getElementById('modalAgendamento').classList.toggle('hidden');
     }
 
-    // Controle do Modal de Detalhes
     function openDetailModal(data) {
-        // Preenche os campos
         document.getElementById('detalhe-tipo').textContent = data.tipo;
         document.getElementById('detalhe-pet').textContent = data.pet;
         document.getElementById('detalhe-vet').textContent = data.vet;
@@ -346,18 +368,19 @@
         document.getElementById('detalhe-hora').textContent = data.hora;
         document.getElementById('detalhe-obs').textContent = data.obs;
 
-        // Pega o header de forma confiável (não depende da cor)
-        const modal = document.getElementById('modalDetalhes');
-        const header = modal.querySelector('.p-8.border-b');   // ou outra combinação única
+        // Mostrar status no modal
+        const statusEl = document.getElementById('detalhe-status');
+        if (statusEl) {
+            statusEl.textContent = data.status || 'Não informado';
+        }
 
-        // Reseta sempre para a cor padrão primeiro
+        const modal = document.getElementById('modalDetalhes');
+        const header = modal.querySelector('.p-8.border-b');
+
         header.className = 'p-8 border-b border-gray-100 flex justify-between items-center bg-purple-600 text-white';
 
-        // Aplica cor especial apenas se for vacina
         if (data.categoria === 'vacina') {
             header.classList.replace('bg-purple-600', 'bg-red-500');
-            // header.classList.add('bg-red-500');  // alternativa se quiser evitar replace
-            // header.classList.remove('bg-purple-600');
         }
 
         modal.classList.remove('hidden');
@@ -368,7 +391,6 @@
         document.getElementById('modalDetalhes').classList.add('hidden');
     }
 
-    // Menu de contexto (Três pontinhos)
     function toggleMenu(menuId) {
         const menu = document.getElementById(`menu-${menuId}`);
         document.querySelectorAll('[id^="menu-"]').forEach(m => {
@@ -377,13 +399,12 @@
         menu.classList.toggle('hidden');
     }
 
-    // Modal de Exclusão
     function openDeleteModal(id, type, category) {
         const modal = document.getElementById('deleteModal');
         const confirmBtn = document.getElementById('confirmDeleteBtn');
         const message = document.getElementById('modalMessage');
 
-        message.textContent = `Tem certeza que deseja excluir este registro de ${type}? Esta ação não pode ser desfeita.`;
+        message.textContent = `Tem certeza que deseja excluir este ${type.toLowerCase()}? Esta ação não pode ser desfeita.`;
 
         if (category === 'consulta') {
             confirmBtn.href = "{% url 'excluir_consulta' 0 %}".replace('0', id);
@@ -398,15 +419,14 @@
         document.getElementById('deleteModal').classList.add('hidden');
     }
 
-    // Fechar menus e modais ao clicar fora
-    window.onclick = function (event) {
+    window.onclick = function(event) {
         const modalAgendamento = document.getElementById('modalAgendamento');
-        const modalDetalhes = document.getElementById('modalDetalhes');
-        const modalExcluir = document.getElementById('deleteModal');
+        const modalDetalhes   = document.getElementById('modalDetalhes');
+        const modalExcluir    = document.getElementById('deleteModal');
 
-        if (event.target == modalAgendamento) toggleModal();
-        if (event.target == modalDetalhes) closeDetailModal();
-        if (event.target == modalExcluir) closeDeleteModal();
+        if (event.target === modalAgendamento) toggleModal();
+        if (event.target === modalDetalhes)   closeDetailModal();
+        if (event.target === modalExcluir)    closeDeleteModal();
 
         if (!event.target.closest('button')) {
             document.querySelectorAll('[id^="menu-"]').forEach(menu => {
