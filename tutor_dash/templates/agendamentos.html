@@ -407,9 +407,9 @@
         message.textContent = `Tem certeza que deseja excluir este ${type.toLowerCase()}? Esta ação não pode ser desfeita.`;
 
         if (category === 'consulta') {
-            confirmBtn.href = "{% url 'excluir_consulta' 0 %}".replace('0', id);
+            confirmBtn.href = "{% url 'excluir_consulta' '00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', id);
         } else {
-            confirmBtn.href = "{% url 'excluir_vacina' 0 %}".replace('0', id);
+            confirmBtn.href = "{% url 'excluir_vacina' '00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', id);
         }
 
         modal.classList.remove('hidden');

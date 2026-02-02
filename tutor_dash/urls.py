@@ -24,5 +24,7 @@ urlpatterns = [
     path('agendamentos/novo/', views.agendar_consulta, name='agendar_consulta'),
     path('agendamentos/excluir-consulta/<uuid:id>/', views.excluir_consulta, name='excluir_consulta'),
     path('agendamentos/excluir-vacina/<uuid:id>/', views.excluir_vacina, name='excluir_vacina'),
+
+    path('notificacoes/historico/', views.historico_notificacoes_tutor, name='historico_notificacoes_tutor'),
 ]
     

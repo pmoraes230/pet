@@ -603,3 +603,32 @@ def excluir_vacina(request, id):
     vacina = get_object_or_404(models.Vacina, id=id)
     vacina.delete()
     return redirect('agendamentos')
+
+def historico_notificacoes_tutor(request):
+    """
+    Exibe o histórico completo de notificações do tutor logado.
+    Marca todas como lidas ao abrir a página (padrão comum em apps).
+    """
+    # Verifica se é tutor logado
+    tutor_data = get_tutor_logado(request)
+    if not tutor_data or not tutor_data['id']:
+        messages.error(request, "Acesso negado. Faça login como tutor.")
+        return redirect('login')
+
+    tutor_id = tutor_data['id']
+
+    # Busca todas as notificações do tutor
+    notificacoes = models.Notificacao.objects.filter(
+        tutor_id=tutor_id
+    ).select_related('tutor').order_by('-data_criacao')
+
+    # Marca todas como lidas (padrão de UX comum)
+    notificacoes.filter(lida=False).update(lida=True)
+
+    context = {
+        'notificacoes': notificacoes,
+        'tutor': get_object_or_404(models.Tutor, id=tutor_id),
+        'user_role': 'tutor',
+    }
+
+    return render(request, 'notificacoes_history_tutor.html', context)

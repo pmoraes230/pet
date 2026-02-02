@@ -53,14 +53,14 @@ def get_veterinario_logado(request):
     try:
         vet = models.Veterinario.objects.get(id=vet_id)
         request.session['veterinario_obj'] = {
-            'id': vet.id,
+            'id': str(vet.id),
             'nome': vet.nome,
             'email': vet.email,
             'crmv': vet.crmv,
             'uf_crmv': vet.uf_crmv,
             'telefone': vet.telefone,
-            'pessoa_fisica': vet.pessoa_fisica.id if vet.pessoa_fisica else None,
-            'pessoa_juridica': vet.pessoa_juridica.id if vet.pessoa_juridica else None,
+            'pessoa_fisica': str(vet.pessoa_fisica.id) if vet.pessoa_fisica else None,
+            'pessoa_juridica': str(vet.pessoa_juridica.id) if vet.pessoa_juridica else None,
         }
         return request.session['veterinario_obj']
     except models.Veterinario.DoesNotExist:

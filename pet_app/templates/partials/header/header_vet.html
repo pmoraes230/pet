@@ -129,48 +129,58 @@
 </header>
 
 <script>
-    // Inicializa os ícones
     lucide.createIcons();
 
-    // Elementos das Notificações
-    const notifBtn = document.getElementById('notif-button');
-    const notifPopup = document.getElementById('notif-popup');
+    // ── Notificações Veterinário ──
+    const notifBtnVet    = document.getElementById('notif-button-vet');
+    const notifPopupVet  = document.getElementById('notif-popup-vet');
+    const notifBadgeVet  = document.getElementById('notif-badge-vet');   // opcional
 
-    // Elementos do Perfil
-    const profileBtn = document.getElementById('profile-button');
+    // ── Perfil (compartilhado, mas IDs iguais nos dois headers) ──
+    const profileBtn     = document.getElementById('profile-button');
     const profileDropdown = document.getElementById('profile-dropdown');
     const profileChevron = document.getElementById('profile-chevron');
 
-    // Lógica Notificações
-    notifBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        notifPopup.classList.toggle('hidden');
-        profileDropdown.classList.add('hidden'); // Fecha o perfil se abrir notificação
-        profileChevron.style.transform = 'rotate(0deg)';
-    });
+    // Clique no sino do vet
+    if (notifBtnVet) {
+        notifBtnVet.addEventListener('click', (e) => {
+            e.stopPropagation();
+            notifPopupVet?.classList.toggle('hidden');
+            profileDropdown?.classList.add('hidden');
+            if (profileChevron) profileChevron.style.transform = 'rotate(0deg)';
+        });
+    }
 
-    // Lógica Perfil
-    profileBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        profileDropdown.classList.toggle('hidden');
-        notifPopup.classList.add('hidden'); // Fecha notificação se abrir perfil
-        
-        // Rotaciona o chevron
-        if (profileDropdown.classList.contains('hidden')) {
-            profileChevron.style.transform = 'rotate(0deg)';
-        } else {
-            profileChevron.style.transform = 'rotate(180deg)';
-        }
-    });
+    // Clique no perfil (igual nos dois)
+    if (profileBtn) {
+        profileBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            profileDropdown?.classList.toggle('hidden');
+            notifPopupVet?.classList.add('hidden');   // fecha notificações vet
+
+            if (profileChevron) {
+                profileChevron.style.transform = profileDropdown?.classList.contains('hidden')
+                    ? 'rotate(0deg)'
+                    : 'rotate(180deg)';
+            }
+        });
+    }
 
     // Fechar ao clicar fora
     document.addEventListener('click', (e) => {
-        if (!notifPopup.contains(e.target) && e.target !== notifBtn) {
-            notifPopup.classList.add('hidden');
+        // Notificações vet
+        if (notifPopupVet && 
+            !notifPopupVet.contains(e.target) && 
+            e.target !== notifBtnVet) {
+            notifPopupVet.classList.add('hidden');
         }
-        if (!profileDropdown.contains(e.target) && !profileBtn.contains(e.target)) {
+
+        // Perfil
+        if (profileDropdown && 
+            !profileDropdown.contains(e.target) && 
+            !profileBtn?.contains(e.target)) {
             profileDropdown.classList.add('hidden');
-            profileChevron.style.transform = 'rotate(0deg)';
+            if (profileChevron) profileChevron.style.transform = 'rotate(0deg)';
         }
     });
 </script>

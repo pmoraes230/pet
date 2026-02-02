@@ -118,7 +118,6 @@ def login_view(request):
 
     except Exception as e:
         messages.error(request, "Erro inesperado ao processar login. Tente novamente mais tarde.")
-        # Opcional: logger.error(f"Erro login: {e}")
 
     if user and user_role:
         # Login via sessão
@@ -239,7 +238,7 @@ def register_view(request):
                 endereco="Endereço não informado",
             )
             # Login automático
-            request.session['user_id'] = tutor.id
+            request.session['user_id'] = str(tutor.id)
             request.session['user_role'] = 'tutor'
             request.session['user_nome'] = tutor.nome_tutor
             request.session['user_email'] = tutor.email
@@ -277,7 +276,7 @@ def register_view(request):
             )
 
             # Login automático
-            request.session['user_id'] = vet.id
+            request.session['user_id'] = str(vet.id)
             request.session['user_role'] = 'vet'
             request.session['user_nome'] = vet.nome
             request.session['user_email'] = vet.email
@@ -509,36 +508,6 @@ def lista_notificacoes(request):
         'veterinario': veterinario,
         'notificacoes': todas_notificacoes
     })
-
-def historico_notificacoes_tutor(request):
-    """
-    Exibe o histórico completo de notificações do tutor logado.
-    Marca todas como lidas ao abrir a página (padrão comum em apps).
-    """
-    # Verifica se é tutor logado
-    tutor_data = get_tutor_logado(request)
-    if not tutor_data or not tutor_data['id']:
-        messages.error(request, "Acesso negado. Faça login como tutor.")
-        return redirect('login')
-
-    tutor_id = tutor_data['id']
-
-    # Busca todas as notificações do tutor
-    notificacoes = models.Notificacao.objects.filter(
-        tutor_id=tutor_id
-    ).select_related('tutor').order_by('-data_criacao')
-
-    # Marca todas como lidas (padrão de UX comum)
-    notificacoes.filter(lida=False).update(lida=True)
-
-    context = {
-        'notificacoes': notificacoes,
-        'tutor': get_object_or_404(models.Tutor, id=tutor_id),  # para usar no header se precisar
-        'user_role': 'tutor',
-        'page_title': 'Histórico de Notificações',
-    }
-
-    return render(request, 'tutor/notificacoes_history_tutor.html', context)
 
 def mensagens_view(request):
     try:
@@ -849,7 +818,6 @@ def historico_notificacao_vet(request):
     # Marca como lidas
     notificacoes.filter(lida=False).update(lida=True)
     
-    # IMPORTANTE: Removi o "notificacoes/" do caminho porque seu arquivo está solto na pasta templates
     return render(request, 'notificacoes_history_vet.html', {
         'notificacoes': notificacoes,
         'veterinario': veterinario,  # Enviando o objeto para o Header

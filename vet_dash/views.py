@@ -780,3 +780,26 @@ def excluir_vacina_vet(request, vacina_id):
         messages.error(request, "Registro não encontrado.")
 
     return redirect('agenda_vet')
+
+def historico_notificacao_vet(request):
+    vet_data = request.session.get('user_id')
+    if not vet_data:
+        messages.error(request, "Acesso negado. Faça login novamente.")
+        return redirect('login')
+
+
+    # Busca notificações ao veterinario logado
+    notificacoes = models.Notificacao.objects.filter(
+        veterinario_id=vet_data
+    ).select_related('veterinario').order_by('-data_criacao')
+
+    # marca como lidas
+    notificacoes.filter(lida=False).update(lida=True)
+
+    context = {
+        'notificacoes': notificacoes,
+        'veterinario': get_object_or_404(models.Veterinario, id=vet_data),
+        'user_role': 'vet',
+    }
+
+    return render(request, 'notificacoes_history_vet.html', context)
