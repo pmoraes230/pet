@@ -153,3 +153,30 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 return None
         except (Tutor.DoesNotExist, Veterinario.DoesNotExist):
             return None
+
+class NotificacaoConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        user_id = self.scope['url_route']['kwargs']['user_id']
+        user_role = self.scope['url_route']['kwargs']['role']  # 'tutor' ou 'vet'
+
+        self.group_name = f"notif_{user_role}_{user_id}"
+
+        await self.channel_layer.group_add(
+            self.group_name,
+            self.channel_name
+        )
+        await self.accept()
+
+    async def disconnect(self, close_code):
+        await self.channel_layer.group_discard(
+            self.group_name,
+            self.channel_name
+        )
+
+    async def nova_notificacao(self, event):
+        await self.send(text_data=json.dumps({
+            'mensagem': event['mensagem'],
+            'tipo': event.get('tipo', 'sistema'),
+            'consulta_id': event.get('consulta_id'),
+            'remetente': event.get('remetente'),
+        }))

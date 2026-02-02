@@ -2,6 +2,7 @@
 
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -10,16 +11,18 @@
     <title>Corações em Patas</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="{% static "style/base.css" %}">
 </head>
+
 <body class="bg-gray-50 text-gray-800 overflow-x-hidden">
     {% block content %}
     {% block aside %}{% endblock %}
@@ -38,17 +41,66 @@
     <script src="{% static 'scripts/modal-feedback.js' %}"></script>
     {% if messages %}
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function () {
             {% for message in messages %}
-                showFeedbackModal(
-                    "{% if message.tags == 'success' %}success{% else %}error{% endif %}",
-                    "{% if message.tags == 'success' %}Sucesso{% else %}Erro{% endif %}",
-                    "{{ message|escapejs }}",
-                    "{% if message.tags == 'success' %}3500{% else %}5000{% endif %}"
-                );
+            showFeedbackModal(
+                "{% if message.tags == 'success' %}success{% else %}error{% endif %}",
+                "{% if message.tags == 'success' %}Sucesso{% else %}Erro{% endif %}",
+                "{{ message|escapejs }}",
+                "{% if message.tags == 'success' %}3500{% else %}5000{% endif %}"
+            );
             {% endfor %}
         });
     </script>
     {% endif %}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const userRole = "{{ request.session.user_role }}";  // 'tutor' ou 'vet'
+            const userId = "{{ request.session.user_id }}";
+
+            if (!userRole || !userId) return;
+
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+            const wsUrl = `${wsProtocol}${window.location.host}/ws/notificacoes/${userRole}/${userId}/`;
+
+            const ws = new WebSocket(wsUrl);
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+
+                // Atualiza badge
+                let badgeId = userRole === 'tutor' ? 'notif-badge-tutor' : 'notif-badge-vet';
+                let badge = document.getElementById(badgeId);
+                let count = badge ? parseInt(badge.textContent) || 0 : 0;
+                count++;
+
+                if (!badge) {
+                    badge = document.createElement('span');
+                    badge.id = badgeId;
+                    badge.className = 'absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center min-w-[18px] h-4.5 px-1.5 rounded-full border-2 border-white shadow-sm';
+                    const btnId = userRole === 'tutor' ? 'notif-button-tutor' : 'notif-button-vet';
+                    document.getElementById(btnId).appendChild(badge);
+                }
+                badge.textContent = count;
+
+                // Adiciona no popup (se estiver aberto)
+                const listId = userRole === 'tutor' ? 'notif-list-tutor' : 'notif-list-vet';
+                const list = document.getElementById(listId);
+                if (list) {
+                    const item = document.createElement('a');
+                    item.href = data.consulta_id ?
+                        (userRole === 'tutor' ? `/consulta/${data.consulta_id}/` : `/vet/consulta/${data.consulta_id}/`)
+                        : '#';
+                    item.className = 'block p-4 hover:bg-gray-50 transition-colors bg-blue-50/60 border-b border-gray-100';
+                    item.innerHTML = `
+                    <p class="text-sm font-semibold text-gray-900">${data.mensagem}</p>
+                    <span class="text-xs text-gray-500 mt-1 block">agora</span>
+                `;
+                    list.prepend(item);
+                }
+            };
+        });
+    </script>
 </body>
+
 </html>

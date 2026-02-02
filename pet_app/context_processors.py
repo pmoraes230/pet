@@ -1,4 +1,5 @@
 from datetime import datetime
+from .models import Notificacao
 
 def saudacao_horario(request):
     hora = datetime.now().hour
@@ -14,22 +15,24 @@ def saudacao_horario(request):
         'saudacao_horario': saudacao
     }
 
-from .models import Notificacao
+def notificacoes(request):
+    if not request.user.is_authenticated:
+        return {}
 
-def notificacoes_context(request):
     user_id = request.session.get('user_id')
-    user_tipo = request.session.get('user_tipo')
+    user_role = request.session.get('user_role')
 
-    if user_id and user_tipo:
-        if user_tipo == 'tutor':
-            # Notificações para o Tutor
-            notifs = Notificacao.objects.filter(tutor_id=user_id)
-        else:
-            # Notificações para o Veterinário
-            notifs = Notificacao.objects.filter(veterinario_id=user_id)
-        
-        return {
-            'notificacoes': notifs.order_by('-data_criacao')[:5], # As 5 últimas pro popup
-            'notificacoes_nao_lidas_count': notifs.filter(lida=False).count() # Pro contador vermelho
-        }
-    return {}
+    if user_role == 'vet':
+        count = Notificacao.objects.filter(veterinario_id=user_id, lida=False).count()
+        notificacoes = Notificacao.objects.filter(veterinario_id=user_id).order_by('-data_criacao')[:5]
+    elif user_role == 'tutor':
+        count = Notificacao.objects.filter(tutor_id=user_id, lida=False).count()
+        notificacoes = Notificacao.objects.filter(tutor_id=user_id).order_by('-data_criacao')[:5]
+    else:
+        count = 0
+        notificacoes = []
+
+    return {
+        'notificacoes_nao_lidas_count': count,
+        'notificacoes': notificacoes,
+    }

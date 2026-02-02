@@ -73,7 +73,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'pet_app.context_processors.saudacao_horario'
+                'pet_app.context_processors.saudacao_horario',
+                'pet_app.context_processors.notificacoes',
             ],
         },
     },

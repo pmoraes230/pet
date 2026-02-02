@@ -6,6 +6,7 @@ from datetime import datetime
 from django.shortcuts import get_object_or_404, redirect
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from model_utils import FieldTracker
 
 class PessoaFisica(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
@@ -164,6 +165,7 @@ class Consulta(models.Model):
 
     pet = models.ForeignKey(Pet, models.DO_NOTHING, db_column='ID_PET', blank=True, null=True)
     veterinario = models.ForeignKey(Veterinario, models.DO_NOTHING, db_column='ID_VETERINARIO', blank=True, null=True)
+    tracker = FieldTracker(fields=['status'])
 
     class Meta:
         managed = True
@@ -247,7 +249,7 @@ class Notificacao(models.Model):
         related_name='notificacoes', 
         null=True, 
         blank=True, 
-        db_column='veterinario_id'  # <--- AJUSTE AQUI
+        db_column='veterinario_id'
     )
     
     # Verifique se o tutor_id também está igual ao banco

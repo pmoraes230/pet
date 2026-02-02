@@ -10,6 +10,7 @@ urlpatterns = [
     path("logout/", views.logout_view, name="logout"),
     path("register/", views.register_view, name="register"),
     path("insert-tutor-ajax/", views.insert_tutor_ajax, name="insert_tutor_ajax"),
+    path('notificacoes/historico/', views.historico_notificacoes_tutor, name='historico_notificacoes_tutor'),
 
     # ==================================================
     # DASHBOARDS
