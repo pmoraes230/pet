@@ -7,9 +7,19 @@ from django.shortcuts import get_object_or_404, redirect
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from model_utils import FieldTracker
+import uuid
 
-class PessoaFisica(models.Model):
-    id = models.AutoField(db_column='ID', primary_key=True)
+class BaseModel(models.Model):
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False
+    )
+
+    class Meta:
+        abstract = True
+
+class PessoaFisica(BaseModel):
     cpf = models.CharField(db_column='CPF', max_length=14, unique=True, blank=True, null=True)
     data_nascimento = models.DateField(db_column='DATA_NASCIMENTO', blank=True, null=True)
     genero = models.CharField(db_column='GENERO', max_length=45, blank=True, null=True)
@@ -22,8 +32,7 @@ class PessoaFisica(models.Model):
         return self.cpf or str(self.id)
 
 
-class PessoaJuridica(models.Model):
-    id = models.AutoField(db_column='ID', primary_key=True)
+class PessoaJuridica(BaseModel):
     cnpj = models.CharField(db_column='CNPJ', max_length=14, unique=True, blank=True, null=True)
     nome_fantasia = models.CharField(db_column='NOME_FANTASIA', max_length=45, blank=True, null=True)
     endereco = models.CharField(db_column='ENDERECO', max_length=100, blank=True, null=True)
@@ -37,8 +46,7 @@ class PessoaJuridica(models.Model):
         return self.nome_fantasia or self.cnpj or str(self.id)
 
 
-class Feedback(models.Model):
-    id = models.AutoField(db_column='ID', primary_key=True)
+class Feedback(BaseModel):
     feedback_app = models.TextField(blank=True, null=True)
 
     class Meta:
@@ -49,8 +57,7 @@ class Feedback(models.Model):
         return f"Feedback App {self.id}"
 
 
-class FeedbackPet(models.Model):
-    id = models.AutoField(db_column='ID', primary_key=True)
+class FeedbackPet(BaseModel):
     feedback_pet = models.TextField(blank=True, null=True)
 
     class Meta:
@@ -61,8 +68,7 @@ class FeedbackPet(models.Model):
         return f"Feedback Pet {self.id}"
 
 
-class Tutor(models.Model):
-    id = models.AutoField(db_column='ID', primary_key=True)
+class Tutor(BaseModel):
     nome_tutor = models.CharField(db_column='nome_tutor', max_length=80, blank=True, null=True)
     cpf = models.CharField(db_column='CPF', max_length=14, unique=True, blank=True, null=True)
     email = models.CharField(db_column='EMAIL', max_length=80, unique=True, blank=True, null=True)
@@ -81,8 +87,7 @@ class Tutor(models.Model):
         return self.nome_tutor or self.email or str(self.id)
 
 
-class Veterinario(models.Model):
-    id = models.AutoField(db_column='ID', primary_key=True)
+class Veterinario(BaseModel):
     nome = models.CharField(db_column='NOME', max_length=45, blank=True, null=True)
     email = models.CharField(db_column='EMAIL', max_length=45, unique=True, blank=True, null=True)
     crmv = models.IntegerField(db_column='CRMV', unique=True, blank=True, null=True)
@@ -101,8 +106,7 @@ class Veterinario(models.Model):
         return self.nome or self.email or str(self.id)
 
 
-class Pet(models.Model):
-    id = models.AutoField(db_column='ID', primary_key=True)
+class Pet(BaseModel):
     nome = models.CharField(db_column='NOME', max_length=45)
     data_nascimento = models.DateField(db_column='DATA_NASCIMENTO')
     especie = models.CharField(db_column='ESPECIE', max_length=45)
@@ -124,8 +128,7 @@ class Pet(models.Model):
         return self.nome
 
 
-class Prontuariopet(models.Model):
-    id = models.AutoField(db_column='ID', primary_key=True)
+class Prontuariopet(BaseModel):
     pet = models.ForeignKey('Pet', models.DO_NOTHING, null=True, blank=True, db_column='ID_PET')
     veterinario = models.ForeignKey('Veterinario', models.DO_NOTHING, null=True, blank=True, db_column='ID_VETERINARIO')
     historico_veterinario = models.CharField(db_column='HISTORICO_VETERINARIO', max_length=255, blank=True, null=True)
@@ -144,7 +147,7 @@ class Prontuariopet(models.Model):
         return f"Prontuário {self.id} - {self.pet.nome if self.pet else 'Sem Pet'}"
 
 
-class Consulta(models.Model):
+class Consulta(BaseModel):
     STATUS_CHOICES = [
         ('Pendente', 'Pendente'),
         ('Agendado', 'Agendado'),
@@ -153,7 +156,6 @@ class Consulta(models.Model):
         ('Cancelado', 'Cancelado'),
     ]
 
-    id = models.AutoField(db_column='ID', primary_key=True)
     tipo_de_consulta = models.CharField(db_column='TIPO_DE_CONSULTA', max_length=45, blank=True, null=True)
     retorno_agendado = models.DateField(db_column='RETORNO_AGENDADO', blank=True, null=True)
     tratamento = models.CharField(db_column='TRATAMENTO', max_length=100, blank=True, null=True)
@@ -175,8 +177,7 @@ class Consulta(models.Model):
         return f"Consulta {self.id} - {self.pet} ({self.data_consulta})"
 
 
-class Vacina(models.Model):
-    id = models.AutoField(db_column='ID', primary_key=True)
+class Vacina(BaseModel):
     nome = models.CharField(db_column='NOME', max_length=100, blank=True, null=True)
     data_aplicacao = models.DateField(db_column='DATA_APLICACAO', blank=True, null=True)
     proxima_dose = models.DateField(db_column='PROXIMA_DOSE', blank=True, null=True)
@@ -190,8 +191,7 @@ class Vacina(models.Model):
         return f"{self.nome} - {self.pet}"
 
 
-class Medicamento(models.Model):
-    id = models.AutoField(db_column='ID', primary_key=True)
+class Medicamento(BaseModel):
     nome = models.CharField(db_column='NOME', max_length=100, blank=True, null=True)
     horario = models.TimeField(db_column='HORARIO', blank=True, null=True)
     data_inicio = models.DateField(db_column='DATA_INICIO', blank=True, null=True)
@@ -207,8 +207,7 @@ class Medicamento(models.Model):
         return f"{self.nome} - {self.pet}"
 
 
-class ContatoVeterinario(models.Model):
-    id = models.AutoField(db_column='ID', primary_key=True)
+class ContatoVeterinario(BaseModel):
     veterinario = models.ForeignKey(Veterinario, models.DO_NOTHING, db_column='ID_VETERINARIO')
     tipo_contato = models.CharField(db_column='TIPO_CONTATO', max_length=16, blank=True, null=True)
     ddd = models.CharField(db_column='DDD', max_length=2, blank=True, null=True)
@@ -223,8 +222,7 @@ class ContatoVeterinario(models.Model):
         return f"{self.tipo_contato} {self.ddd}{self.numero} - {self.veterinario}"
 
 
-class DiarioEmocional(models.Model):
-    id = models.AutoField(db_column='ID', primary_key=True)
+class DiarioEmocional(BaseModel):
     pet = models.ForeignKey(Pet, models.DO_NOTHING, db_column='ID_PET')
     humor = models.IntegerField(db_column='HUMOR', blank=True, null=True)
     relato = models.TextField(db_column='RELATO', blank=True, null=True)
@@ -241,7 +239,7 @@ class DiarioEmocional(models.Model):
 
 # No pet_app/models.py
 
-class Notificacao(models.Model):
+class Notificacao(BaseModel):
     # MUDE db_column='ID_VETERINARIO' para db_column='veterinario_id'
     veterinario = models.ForeignKey(
         'Veterinario', 
@@ -273,7 +271,7 @@ class Notificacao(models.Model):
         ordering = ['-data_criacao']
 
 
-class Mensagem(models.Model):
+class Mensagem(BaseModel):
     # Mudando os nomes das variáveis para MAIÚSCULAS
     TUTOR = models.ForeignKey('Tutor', on_delete=models.CASCADE, db_column='ID_TUTOR')
     VETERINARIO = models.ForeignKey('Veterinario', on_delete=models.CASCADE, db_column='ID_VETERINARIO')
@@ -288,7 +286,7 @@ class Mensagem(models.Model):
         ordering = ['DATA_ENVIO'] # Agora o Django vai achar porque o campo acima é DATA_ENVIO
 
 
-class CodigoRecuperacao(models.Model):
+class CodigoRecuperacao(BaseModel):
     email = models.EmailField()
     codigo = models.CharField(max_length=5)
     criado_em = models.DateTimeField(auto_now_add=True)

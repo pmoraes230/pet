@@ -168,7 +168,9 @@
         const message = document.getElementById('modalMessage');
 
         message.textContent = `Tem certeza que deseja excluir o pet "${petNome}"? Todos os dados vinculados a ele serão perdidos!`;
-        confirmBtn.href = "{% url 'excluir_pet' 0 %}".replace('0', petId);
+        confirmBtn.href = "{% url 'excluir_pet' '00000000-0000-0000-0000-000000000000' %}".replace(
+            '00000000-0000-0000-0000-000000000000', petId
+        );
 
         modal.classList.remove('hidden');
     }

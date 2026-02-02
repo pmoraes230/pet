@@ -15,6 +15,7 @@ import random
 import logging
 from django.contrib import messages
 from datetime import datetime, date, timedelta
+import uuid
 
 
 from django.shortcuts import render, redirect
@@ -121,9 +122,9 @@ def login_view(request):
 
     if user and user_role:
         # Login via sessão
-        request.session['user_id']    = user.id
-        request.session['user_role']  = user_role
-        request.session['user_nome']  = user.nome_tutor if user_role == 'tutor' else user.nome
+        request.session['user_id'] = str(user.id)
+        request.session['user_role'] = user_role
+        request.session['user_nome'] = user.nome_tutor if user_role == 'tutor' else user.nome
         request.session['user_email'] = user.email
         request.session['image_tutor'] = user.imagem_perfil_tutor.url if user_role == 'tutor' and user.imagem_perfil_tutor else None
         request.session.modified = True
@@ -229,6 +230,7 @@ def register_view(request):
     try:
         if role == 'tutor':
             tutor = models.Tutor.objects.create(
+                id=uuid.uuid4(),
                 nome_tutor=nome,
                 email=email,
                 senha_tutor=make_password(senha),

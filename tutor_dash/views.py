@@ -7,7 +7,7 @@ from pet_app.utils import get_tutor_logado
 import json
 from django.utils import timezone
 from datetime import date, timedelta, datetime
-
+import uuid
 
 # Create your views here.
 def tutor_dashboard_view(request):
@@ -201,6 +201,7 @@ def adicionar_pet(request):
 
     if request.method == "POST":
         models.Pet.objects.create(
+            id=uuid.uuid4(),
             nome=request.POST.get('nome'),
             especie=request.POST.get('especie'),
             raca=request.POST.get('raca'),

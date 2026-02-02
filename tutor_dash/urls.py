@@ -16,13 +16,13 @@ urlpatterns = [
     # Gestão de Pets
     path('meus-pets/', views.meus_pets, name='meus_pets'),
     path('adicionar-pet/', views.adicionar_pet, name='adicionar_pet'),
-    path('pet/<int:pet_id>/', views.PetDetailView.as_view(), name='detalhe_pet'),
-    path('excluir-pet/<int:pet_id>/', views.excluir_pet, name='excluir_pet'),
+    path('pet/<uuid:pet_id>/', views.PetDetailView.as_view(), name='detalhe_pet'),
+    path('excluir-pet/<uuid:pet_id>/', views.excluir_pet, name='excluir_pet'),
 
     # Agendamentos (Consultas e Vacinas)
     path('agendamentos/', views.agendamentos_view, name='agendamentos'),
     path('agendamentos/novo/', views.agendar_consulta, name='agendar_consulta'),
-    path('agendamentos/excluir-consulta/<int:id>/', views.excluir_consulta, name='excluir_consulta'),
-    path('agendamentos/excluir-vacina/<int:id>/', views.excluir_vacina, name='excluir_vacina'),
+    path('agendamentos/excluir-consulta/<uuid:id>/', views.excluir_consulta, name='excluir_consulta'),
+    path('agendamentos/excluir-vacina/<uuid:id>/', views.excluir_vacina, name='excluir_vacina'),
 ]
     

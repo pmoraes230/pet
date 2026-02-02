@@ -22,7 +22,7 @@ def get_tutor_logado(request):
     try:
         tutor = models.Tutor.objects.get(id=tutor_id)
         request.session['tutor_obj'] = {
-            'id': tutor.id,
+            'id': str(tutor.id),
             'nome_tutor': tutor.nome_tutor,
             'email': tutor.email,
             'cpf': tutor.cpf,
