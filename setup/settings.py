@@ -218,6 +218,7 @@ CHANNEL_LAYERS = {
             "hosts": [os.getenv("REDIS_URL")],
             "prefix": "chat_",
             "expiry": 360,
+            "serializer": "json",
         },
     },
 }

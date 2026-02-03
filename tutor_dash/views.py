@@ -551,12 +551,6 @@ def excluir_vacina(request, vacina_id):
 
     return redirect('agendamentos')
 
-from datetime import datetime # Certifique-se de que este import está no topo do arquivo
-
-from datetime import datetime
-from django.shortcuts import get_object_or_404, redirect
-
-
 def agendar_consulta(request):
     if request.method == 'POST':
         pet_id = request.POST.get('pet')
@@ -567,8 +561,8 @@ def agendar_consulta(request):
         obs = request.POST.get('obs')
 
         # 1. Busca as instâncias do Pet e Veterinário
-        pet_obj = get_object_or_404(models.Pet, id=pet_id)
-        vet_obj = get_object_or_404(models.Veterinario, id=vet_id)
+        pet_obj = get_object_or_404(models.Pet, id=str(pet_id))
+        vet_obj = get_object_or_404(models.Veterinario, id=str(vet_id))
 
         # 2. Converte a string de data para um objeto date (evita erro no Signal)
         try:

@@ -177,9 +177,13 @@ class NotificacaoConsumer(AsyncWebsocketConsumer):
         )
 
     async def nova_notificacao(self, event):
+        consulta_id = event.get('consulta_id')
+        if consulta_id is not None:
+            consulta_id = str(consulta_id) 
+
         await self.send(text_data=json.dumps({
             'mensagem': event['mensagem'],
             'tipo': event.get('tipo', 'sistema'),
-            'consulta_id': event.get('consulta_id'),
+            'consulta_id': consulta_id,
             'remetente': event.get('remetente'),
         }))

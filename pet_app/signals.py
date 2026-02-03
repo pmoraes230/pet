@@ -28,7 +28,7 @@ def notificar_nova_consulta(sender, instance, created, **kwargs):
                 "type": "nova.notificacao",
                 "mensagem": f"Nova consulta pendente: {instance.pet.nome}",
                 "tipo": "consulta",
-                "consulta_id": instance.id,
+                "consulta_id": str(instance.id),
             }
         )
 
@@ -54,7 +54,7 @@ def notificar_confirmacao_ou_rejeicao(sender, instance, **kwargs):
                     "type": "nova.notificacao",
                     "mensagem": f"Sua consulta foi confirmada!",
                     "tipo": "consulta_confirmada",
-                    "consulta_id": instance.id,
+                    "consulta_id": str(instance.id),
                 }
             )
 
@@ -74,7 +74,7 @@ def notificar_confirmacao_ou_rejeicao(sender, instance, **kwargs):
                     "type": "nova.notificacao",
                     "mensagem": f"Consulta rejeitada :(",
                     "tipo": "consulta_rejeitada",
-                    "consulta_id": instance.id,
+                    "consulta_id": str(instance.id),
                 }
             )
 
