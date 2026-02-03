@@ -172,12 +172,12 @@ def agenda_view(request):
 
 def aceitar_consulta(request, consulta_id):
     vet_login = get_veterinario_logado(request)
-    if not get_veterinario_logado(request):
-        return redirect('login')  # ajuste o nome da sua view de login vet
+    if not vet_login:
+        return redirect('login')
 
     consulta = get_object_or_404(models.Consulta, id=consulta_id)
     
-    if consulta.veterinario.id != vet_login['id']:
+    if str(consulta.veterinario.id) != vet_login['id']:
         messages.error(request, "Esta consulta não pertence à sua conta.")
         return redirect('agenda_vet')
 
@@ -189,16 +189,16 @@ def aceitar_consulta(request, consulta_id):
     consulta.save()
     messages.success(request, f"Consulta de {consulta.pet.nome} confirmada!")
     
-    return redirect('agenda_vet')  # ou com ?data=... para manter o filtro
+    return redirect('agenda_vet')
 
 def rejeitar_consulta(request, consulta_id):
     vet_login = get_veterinario_logado(request)
-    if not get_veterinario_logado(request):
+    if not vet_login:
         return redirect('login')
 
     consulta = get_object_or_404(models.Consulta, id=consulta_id)
     
-    if consulta.veterinario.id != vet_login['id']:
+    if str(consulta.veterinario.id) != vet_login['id']:
         messages.error(request, "Esta consulta não pertence à sua conta.")
         return redirect('agenda_vet')
 
