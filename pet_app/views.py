@@ -48,9 +48,7 @@ except ImportError:
     def get_veterinario_logado(request):
         user_id = request.session.get('user_id')
         user_role = request.session.get('user_role')
-        if user_role == 'vet' and user_id:
-            return {'id': user_id}
-        return None
+        return {'id': user_id} if user_role == 'vet' and user_id else None
 
 # ========================================================
 # PÁGINA INICIAL E AUTENTICAÇÃO
@@ -253,7 +251,7 @@ def register_view(request):
             if len(cpf_cnpj_limpo) == 11:
                 pf = models.PessoaFisica.objects.create(
                     cpf=cpf_cnpj_limpo,
-                    data_nascimento=data_nascimento or datetime.today().date(),
+                    data_nascimento=data_nascimento or datetime.now().date(),
                     genero="N",
                 )
             elif len(cpf_cnpj_limpo) == 14:
@@ -261,7 +259,7 @@ def register_view(request):
                     cnpj=cpf_cnpj_limpo,
                     nome_fantasia=nome,
                     endereco="-",
-                    data_criacao=datetime.today().date(),
+                    data_criacao=datetime.now().date(),
                 )
 
             vet = models.Veterinario.objects.create(
@@ -344,7 +342,7 @@ def perfil_tutor(request):
     return render(request, 'tutor_perfil.html', {'tutor': tutor})
 
 
-def editar_perfil_tutor(request):
+def editar_perfil_tutor(request):  # sourcery skip: extract-method
     if request.session.get('user_role') != 'tutor':
         return redirect('login')
 
@@ -370,7 +368,7 @@ def meus_pets(request):
     return render(request, 'meus_pets.html', {'tutor': tutor, 'pets': pets})
 
 
-def adicionar_pet(request):
+def adicionar_pet(request):  # sourcery skip: extract-method
     if request.session.get('user_role') != 'tutor':
         return redirect('login')
 
@@ -413,9 +411,7 @@ def excluir_pet(request, pet_id):
         return redirect('login')
 
     tutor_id = request.session['user_id']
-    pet = models.Pet.objects.filter(id=pet_id, tutor_id=tutor_id).first()
-
-    if pet:
+    if pet := models.Pet.objects.filter(id=pet_id, tutor_id=tutor_id).first():
         pet.delete()
         messages.success(request, "Pet removido.")
 
@@ -509,7 +505,7 @@ def lista_notificacoes(request):
         'notificacoes': todas_notificacoes
     })
 
-def mensagens_view(request):
+def mensagens_view(request):  # sourcery skip: hoist-if-from-if
     tutor_data = get_tutor_logado(request)
     if not tutor_data:
         return redirect('login')
@@ -522,24 +518,22 @@ def mensagens_view(request):
 
     contatos = models.Veterinario.objects.filter(id__in=vets_confirmados)
 
-    vet_id = request.GET.get('vet_id')   # ← sem str() aqui
+    vet_id = request.GET.get('vet_id')
     mensagens = []
     vet_selecionado = None
 
     if vet_id:
         try:
-            vet_id = uuid.UUID(vet_id)   # se o id for UUID
+            vet_id = uuid.UUID(vet_id)
         except ValueError:
             vet_id = None
 
-        if str(vet_id) in [str(v) for v in vets_confirmados]:
+        if vet_id and str(vet_id) in [str(v) for v in vets_confirmados]:
             vet_selecionado = get_object_or_404(models.Veterinario, id=vet_id)
             mensagens = models.Mensagem.objects.filter(
                 TUTOR=tutor,
                 VETERINARIO=vet_selecionado
             ).order_by('DATA_ENVIO')
-        else:
-            messages.error(request, "Você não pode interagir com este veterinário até que uma consulta seja confirmada.")
 
     context = {
         'tutor': tutor,
@@ -548,93 +542,125 @@ def mensagens_view(request):
         'vet_selecionado': vet_selecionado,
     }
 
-    # Detecta requisição AJAX
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        # Retorna APENAS o partial
-        return render(request, 'partials/chat_box.html', context)
+        return render(request, 'partials/chat_box_tutor.html', context)
 
-    # Carregamento normal → página completa
     return render(request, 'mensagens.html', context)
 
+@login_required 
 def enviar_mensagem(request):
-    if request.method == 'POST':
-        # Fallback para envio via POST (se WS falhar)
-        data_tutor = get_tutor_logado(request)
-        data_vet = get_veterinario_logado(request)
-        texto = request.POST.get('mensagem')
-        
-        if data_tutor:
-            vet_id = request.POST.get('vet_id')
-            has_confirmed = models.Consulta.objects.filter(
-                pet__tutor_id=data_tutor['id'],
-                veterinario_id=vet_id,
-                status='Confirmado'
-            ).exists()
-            if not has_confirmed:
-                messages.error(request, "Você não pode enviar mensagens para este veterinário até que uma consulta seja confirmada.")
-                return redirect(f'/mensagens/?vet_id={vet_id}')
-            
+    if request.method == "POST":
+        tutor_data = get_tutor_logado(request)
+        if not tutor_data:
+            return redirect('login')
+
+        tutor = models.Tutor.objects.get(id=tutor_data['id'])
+        vet_id = request.POST.get('vet_id')
+        conteudo = request.POST.get('mensagem')
+
+        if not vet_id or not conteudo:
+            messages.error(request, "Mensagem ou veterinário inválido.")
+            return redirect(request.META.get('HTTP_REFERER', 'mensagens'))
+
+        try:
+            vet = models.Veterinario.objects.get(id=uuid.UUID(vet_id))
             models.Mensagem.objects.create(
-                TUTOR_id=data_tutor['id'],
-                VETERINARIO_id=vet_id,
-                CONTEUDO=texto,
+                TUTOR=tutor,
+                VETERINARIO=vet,
+                CONTEUDO=conteudo,
                 ENVIADO_POR='TUTOR'
             )
-            return redirect(f'/mensagens/?vet_id={vet_id}')
-        elif data_vet:
-            tutor_id = request.POST.get('tutor_id')
-            models.Mensagem.objects.create(
-                VETERINARIO_id=data_vet['id'],
-                TUTOR_id=tutor_id,
-                CONTEUDO=texto,
-                ENVIADO_POR='VETERINARIO'
-            )
-            return redirect(f'/mensagens_vet/?tutor_id={tutor_id}')
-    return redirect('home')
+            messages.success(request, "Mensagem enviada!")
+        except (models.Veterinario.DoesNotExist, ValueError):
+            messages.error(request, "Veterinário não encontrado.")
+
+        return redirect(f'/mensagens/?vet_id={vet_id}')
+
+    return redirect('mensagens')
+
+def mensagens_view_vet(request):
+    vet_data = get_veterinario_logado(request)
+    if not vet_data:
+        return redirect('login')
+
+    vet = models.Veterinario.objects.get(id=vet_data['id'])
+
+    # Aqui você decide quais tutores aparecem (ex: só quem já consultou)
+    # Exemplo simples: todos (ajuste conforme sua lógica)
+    contatos = models.Tutor.objects.all()  # ← melhore isso depois
+
+    tutor_id = request.GET.get('tutor_id')
+    mensagens = []
+    tutor_selecionado = None
+
+    if tutor_id:
+        try:
+            tutor_id = uuid.UUID(tutor_id)
+        except ValueError:
+            tutor_id = None
+
+    if tutor_id:
+        tutor_selecionado = get_object_or_404(models.Tutor, id=tutor_id)
+        mensagens = models.Mensagem.objects.filter(
+            TUTOR=tutor_selecionado,
+            VETERINARIO=vet
+        ).order_by('DATA_ENVIO')
+
+    context = {
+        'vet': vet,
+        'contatos': contatos,
+        'mensagens': mensagens,
+        'tutor_selecionado': tutor_selecionado,
+    }
+
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return render(request, 'partials/chat_box_vet.html', context)
+
+    return render(request, 'mensagens_vet.html', context)
 
 # --- 1. SOLICITAR (VIA LOGIN/ESQUECI SENHA) ---
 def solicitar_troca_senha(request):
-    if request.method == "POST":
-        email_destino = request.POST.get('email', '').strip().lower()
-        
-        if not email_destino:
-            messages.error(request, "Email é obrigatório.")
-            return render(request, 'autenticacao/solicitar_troca.html')
-        
-        # Verifica se existe um Tutor ou Veterinário com este email
-        tutor_existe = models.Tutor.objects.filter(email__iexact=email_destino).exists()
-        vet_existe = models.Veterinario.objects.filter(email__iexact=email_destino).exists()
-        
-        if not tutor_existe and not vet_existe:
-            messages.error(request, "Email não encontrado no sistema.")
-            return render(request, 'autenticacao/solicitar_troca.html')
-        
-        codigo = str(random.randint(10000, 99999))
-        
-        # Salva no banco
-        models.CodigoRecuperacao.objects.create(email=email_destino, codigo=codigo)
-        
-        logger.info(f"Enviando código de recuperação para {email_destino}")
-        
-        # ENVIA O E-MAIL
-        try:
-            resultado = send_mail(
-                'Código de Segurança - Coração em Patas',
-                f'Seu código de recuperação de senha é: {codigo}\n\nEste código é válido por 24 horas.\n\nNão compartilhe com ninguém!',
-                settings.EMAIL_HOST_USER,
-                [email_destino],
-                fail_silently=False,
-            )
-            logger.info(f"Email enviado com sucesso para {email_destino} (resultado: {resultado})")
-            messages.success(request, f"Código enviado para {email_destino}. Verifique seu email.")
-        except Exception as e:
-            logger.error(f"Erro ao enviar email para {email_destino}: {str(e)}", exc_info=True)
-            messages.error(request, f"Erro ao enviar email: {str(e)}")
-            return render(request, 'autenticacao/solicitar_troca.html')
-        
-        request.session['email_recuperacao'] = email_destino
-        return redirect('inserir_codigo')
-    return render(request, 'autenticacao/solicitar_troca.html')
+    if request.method != "POST":
+        return render(request, 'autenticacao/solicitar_troca.html')
+    email_destino = request.POST.get('email', '').strip().lower()
+
+    if not email_destino:
+        messages.error(request, "Email é obrigatório.")
+        return render(request, 'autenticacao/solicitar_troca.html')
+
+    # Verifica se existe um Tutor ou Veterinário com este email
+    tutor_existe = models.Tutor.objects.filter(email__iexact=email_destino).exists()
+    vet_existe = models.Veterinario.objects.filter(email__iexact=email_destino).exists()
+
+    if not tutor_existe and not vet_existe:
+        messages.error(request, "Email não encontrado no sistema.")
+        return render(request, 'autenticacao/solicitar_troca.html')
+
+    codigo = str(random.randint(10000, 99999))
+
+    # Salva no banco
+    models.CodigoRecuperacao.objects.create(email=email_destino, codigo=codigo)
+
+    logger.info(f"Enviando código de recuperação para {email_destino}")
+
+    # ENVIA O E-MAIL
+    try:
+        resultado = send_mail(
+            'Código de Segurança - Coração em Patas',
+            f'Seu código de recuperação de senha é: {codigo}\n\nEste código é válido por 24 horas.\n\nNão compartilhe com ninguém!',
+            settings.EMAIL_HOST_USER,
+            [email_destino],
+            fail_silently=False,
+        )
+        logger.info(f"Email enviado com sucesso para {email_destino} (resultado: {resultado})")
+        messages.success(request, f"Código enviado para {email_destino}. Verifique seu email.")
+    except Exception as e:
+        logger.error(f"Erro ao enviar email para {email_destino}: {str(e)}", exc_info=True)
+        messages.error(request, f"Erro ao enviar email: {str(e)}")
+        return render(request, 'autenticacao/solicitar_troca.html')
+
+    request.session['email_recuperacao'] = email_destino
+    return redirect('inserir_codigo')
 
 # --- 2. SOLICITAR (VIA PERFIL/LOGADO) ---
 def alterar_senha_logado(request):
@@ -668,7 +694,7 @@ def alterar_senha_logado(request):
     return redirect('inserir_codigo')
 
 # --- 3. TELA DE INSERIR O CÓDIGO (A QUE ESTAVA DANDO ERRO) ---
-def inserir_codigo(request):
+def inserir_codigo(request):  # sourcery skip: use-named-expression
     if request.method == "POST":
         # Pega os 5 dígitos dos inputs
         codigo_enviado = ""
@@ -689,7 +715,7 @@ def inserir_codigo(request):
             
     return render(request, 'autenticacao/inserir_codigo.html')
 
-def nova_senha(request):
+def nova_senha(request):  # sourcery skip: extract-method, use-named-expression
     if request.method == "POST":
         senha = request.POST.get('senha')
         confirmacao = request.POST.get('confirmacao')
@@ -700,7 +726,6 @@ def nova_senha(request):
             return redirect('solicitar_troca_senha')
 
         if senha and senha == confirmacao:
-            # Tenta localizar um Tutor primeiro
             tutor = models.Tutor.objects.filter(email__iexact=email).first()
             if tutor:
                 tutor.senha_tutor = make_password(senha)

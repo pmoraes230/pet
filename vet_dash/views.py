@@ -115,8 +115,6 @@ def agenda_view(request):
 
         return redirect(f'/vet_dash/agenda/?data={data_sel}')
 
-        return redirect(f'/vet_dash/agenda/?data={data_sel}')
-
     # Lógica do calendário
     str_data = request.GET.get('data')
     if str_data:
