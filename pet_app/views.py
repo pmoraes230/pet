@@ -510,52 +510,51 @@ def lista_notificacoes(request):
     })
 
 def mensagens_view(request):
-    try:
-        tutor_data = get_tutor_logado(request)
-        if not tutor_data:
-            return redirect('login')
+    tutor_data = get_tutor_logado(request)
+    if not tutor_data:
+        return redirect('login')
 
-        tutor = models.Tutor.objects.get(id=tutor_data['id'])
-        vets_confirmados = models.Consulta.objects.filter(
-            pet__tutor=tutor,
-            status='Confirmado'
-        ).values_list('veterinario_id', flat=True).distinct()
+    tutor = models.Tutor.objects.get(id=tutor_data['id'])
+    vets_confirmados = models.Consulta.objects.filter(
+        pet__tutor=tutor,
+        status='Confirmado'
+    ).values_list('veterinario_id', flat=True).distinct()
 
-        contatos = models.Veterinario.objects.filter(id__in=vets_confirmados)
+    contatos = models.Veterinario.objects.filter(id__in=vets_confirmados)
 
-        vet_id = request.GET.get('vet_id')
-        mensagens = []
-        vet_selecionado = None
+    vet_id = request.GET.get('vet_id')   # ← sem str() aqui
+    mensagens = []
+    vet_selecionado = None
 
-        if vet_id and int(vet_id) in vets_confirmados:  # Verifique se o vet é permitido
+    if vet_id:
+        try:
+            vet_id = uuid.UUID(vet_id)   # se o id for UUID
+        except ValueError:
+            vet_id = None
+
+        if str(vet_id) in [str(v) for v in vets_confirmados]:
             vet_selecionado = get_object_or_404(models.Veterinario, id=vet_id)
             mensagens = models.Mensagem.objects.filter(
                 TUTOR=tutor,
                 VETERINARIO=vet_selecionado
             ).order_by('DATA_ENVIO')
         else:
-            if vet_id:
-                messages.error(request, "Você não pode interagir com este veterinário até que uma consulta seja confirmada.")
+            messages.error(request, "Você não pode interagir com este veterinário até que uma consulta seja confirmada.")
 
-        # Suporte a AJAX: Retorne HTML parcial se for requisição AJAX
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            html = render_to_string('partials/chat_box.html', {
-                'mensagens': mensagens,
-                'vet_selecionado': vet_selecionado,
-                'tutor': tutor
-            })
-            return JsonResponse({'html': html})
+    context = {
+        'tutor': tutor,
+        'contatos': contatos,
+        'mensagens': mensagens,
+        'vet_selecionado': vet_selecionado,
+    }
 
-        # Render normal para carregamento inicial
-        return render(request, 'mensagens.html', {
-            'tutor': tutor,
-            'contatos': contatos,
-            'mensagens': mensagens,
-            'vet_selecionado': vet_selecionado,
-        })
-    except Exception as e:
-        logger.exception("Erro em mensagens_view")
-        return render(request, 'erro.html', {'msg': str(e)})
+    # Detecta requisição AJAX
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        # Retorna APENAS o partial
+        return render(request, 'partials/chat_box.html', context)
+
+    # Carregamento normal → página completa
+    return render(request, 'mensagens.html', context)
 
 def enviar_mensagem(request):
     if request.method == 'POST':

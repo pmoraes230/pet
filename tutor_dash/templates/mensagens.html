@@ -33,9 +33,12 @@
                         <div
                             class="w-14 h-14 rounded-full overflow-hidden border-2 border-white shadow-sm flex-shrink-0">
                             {% if contato.imagem_perfil_veterinario %}
-                            <img src="{{ contato.imagem_perfil_veterinario.url }}" class="w-full h-full object-cover">
+                            <img
+                                src="{{ contato.imagem_perfil_veterinario.url }}"
+                                class="w-full h-full object-cover">
                             {% else %}
-                            <div class="w-full h-full bg-purple-100 flex items-center justify-center text-purple-400">
+                            <div
+                                class="w-full h-full bg-purple-100 flex items-center justify-center text-purple-400">
                                 <i data-lucide="user" width="24"></i>
                             </div>
                             {% endif %}
@@ -60,10 +63,13 @@
 
                 {% if vet_selecionado %}
                 <!-- Cabeçalho do Chat -->
-                <div class="p-6 border-b border-gray-100 bg-white/50 flex items-center justify-between">
+                <div
+                    class="p-6 border-b border-gray-100 bg-white/50 flex items-center justify-between">
                     <div class="flex items-center gap-3">
-                        <h2 class="font-black text-gray-800">Conversando com Dr(a). {{ vet_selecionado.nome }}</h2>
-                        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                        <h2 class="font-black text-gray-800">Conversando com
+                            Dr(a). {{ vet_selecionado.nome }}</h2>
+                        <span
+                            class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                     </div>
                 </div>
 
@@ -71,15 +77,18 @@
                 <div id="chat-box"
                     class="flex-1 overflow-y-auto p-8 space-y-6 bg-gradient-to-b from-transparent to-white/30">
                     {% for msg in mensagens %}
-                    {# Usa campos conforme definido em pet_app.models.Mensagem #}
+                    {# Usa campos conforme definido em pet_app.models.Mensagem
+                    #}
                     {% if msg.ENVIADO_POR == 'TUTOR' %}
                     <!-- Mensagem do Tutor (Direita - Roxo) -->
-                    <div class="flex flex-col items-end ml-auto max-w-[70%] group">
+                    <div
+                        class="flex flex-col items-end ml-auto max-w-[70%] group">
                         <div
                             class="bg-purple-600 text-white p-5 rounded-t-[2rem] rounded-bl-[2rem] shadow-lg shadow-purple-200/50 text-sm font-medium leading-relaxed">
                             {{ msg.CONTEUDO }}
                         </div>
-                        <span class="text-[10px] font-black text-gray-400 mt-2 mr-2 uppercase tracking-widest">{{ msg.DATA_ENVIO|date:"H:i" }}</span>
+                        <span
+                            class="text-[10px] font-black text-gray-400 mt-2 mr-2 uppercase tracking-widest">{{ msg.DATA_ENVIO|date:"H:i" }}</span>
                     </div>
                     {% else %}
                     <!-- Mensagem do Vet (Esquerda - Branco/Cinza) -->
@@ -88,12 +97,14 @@
                             class="bg-white text-gray-700 p-5 rounded-t-[2rem] rounded-br-[2rem] shadow-sm border border-gray-100 text-sm font-medium leading-relaxed">
                             {{ msg.CONTEUDO }}
                         </div>
-                        <span class="text-[10px] font-black text-gray-400 mt-2 ml-2 uppercase tracking-widest">{{ msg.DATA_ENVIO|date:"H:i" }}</span>
+                        <span class="text-[10px] font-black text-gray-400 mt-2 ml-2 uppercase tracking-widest"> {{  msg.DATA_ENVIO|date:"H:i" }}</span>
                     </div>
                     {% endif %}
                     {% empty %}
-                    <div class="h-full flex flex-col items-center justify-center text-gray-400">
-                        <i data-lucide="messages-square" width="48" height="48" class="mb-2 opacity-20"></i>
+                    <div
+                        class="h-full flex flex-col items-center justify-center text-gray-400">
+                        <i data-lucide="messages-square" width="48" height="48"
+                            class="mb-2 opacity-20"></i>
                         <p class="font-medium italic">Inicie uma conversa...</p>
                     </div>
                     {% endfor %}
@@ -101,26 +112,34 @@
 
                 <!-- Input de Texto -->
                 <div class="p-6 bg-white/80 border-t border-gray-50">
-                    <form method="POST" action="{% url 'enviar_mensagem' %}" class="relative flex items-center">
+                    <form method="POST" action="{% url 'enviar_mensagem' %}"
+                        class="relative flex items-center">
                         {% csrf_token %}
-                        <input type="hidden" name="vet_id" value="{{ vet_selecionado.id }}">
-                        <input type="text" name="mensagem" placeholder="conversar" required
+                        <input type="hidden" name="vet_id"
+                            value="{{ vet_selecionado.id }}">
+                        <input type="text" name="mensagem"
+                            placeholder="conversar" required
                             class="w-full bg-gray-50 border border-gray-100 rounded-full py-5 px-8 text-sm font-bold text-gray-700 focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all shadow-inner">
                         <button type="submit"
                             class="absolute right-3 p-4 bg-transparent text-gray-800 hover:text-purple-600 transition-transform hover:scale-110 active:scale-90">
-                            <i data-lucide="send-horizontal" width="28" height="28"></i>
+                            <i data-lucide="send-horizontal" width="28"
+                                height="28"></i>
                         </button>
                     </form>
                 </div>
 
                 {% else %}
                 <!-- Estado Vazio -->
-                <div class="flex-1 flex flex-col items-center justify-center p-10 text-center">
+                <div
+                    class="flex-1 flex flex-col items-center justify-center p-10 text-center">
                     <div class="bg-purple-50 p-10 rounded-full mb-6">
-                        <i data-lucide="message-circle" class="text-purple-300" width="64" height="64"></i>
+                        <i data-lucide="message-circle" class="text-purple-300"
+                            width="64" height="64"></i>
                     </div>
-                    <h3 class="text-2xl font-black text-gray-800 mb-2">Suas Mensagens</h3>
-                    <p class="text-gray-500 max-w-xs font-medium">Selecione um veterinário ao lado para tirar dúvidas ou
+                    <h3 class="text-2xl font-black text-gray-800 mb-2">Suas
+                        Mensagens</h3>
+                    <p class="text-gray-500 max-w-xs font-medium">Selecione um
+                        veterinário ao lado para tirar dúvidas ou
                         acompanhar o tratamento do seu pet.</p>
                 </div>
                 {% endif %}
@@ -131,7 +150,9 @@
         <!-- Footer Decorativo -->
         <div
             class="absolute bottom-0 left-0 w-full overflow-hidden leading-none rotate-180 text-brand-teal pointer-events-none z-0 opacity-40">
-            <svg class="relative block w-[calc(100%+1.3px)] h-[60px] text-purple-100" xmlns="http://www.w3.org/2000/svg"
+            <svg
+                class="relative block w-[calc(100%+1.3px)] h-[60px] text-purple-100"
+                xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 1200 120" preserveAspectRatio="none">
                 <path
                     d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"
@@ -142,35 +163,43 @@
 </div>
 
 <script>
-    const loggedUserId = {% if request.session.user_id %}{{ request.session.user_id }}{% else %}null{% endif %};
+    const loggedUserId = {% if request.session.user_id %}"{{ request.session.user_id|escapejs }}"{% else %}null{% endif %};
     lucide.createIcons();
-    const chatBox = document.getElementById('chat-box');
-    if (chatBox) {
-        chatBox.scrollTop = chatBox.scrollHeight;
+
+    let currentVetId = "{{ vet_selecionado.id|default:'' }}";  // string vazia se não selecionado
+    let socket = null;
+
+    // Função auxiliar para obter o chat-box atual (sempre fresco)
+    function getCurrentChatBox() {
+        return document.getElementById('chat-box');
     }
 
-    let currentVetId = "{{ vet_selecionado.id }}";  // ID atual (inicial, pode ser vazio)
-    let socket = null;  // WebSocket global para reutilizar
-    const form = document.querySelector('form');
+    // Função auxiliar para scrollar para baixo
+    function scrollToBottom() {
+        const box = getCurrentChatBox();
+        if (box) {
+            box.scrollTop = box.scrollHeight;
+        }
+    }
 
     // Função para conectar/reutilizar WebSocket
     function connectWebSocket(vetId) {
         if (socket && socket.readyState === WebSocket.OPEN) {
-            // Já conectado, não faz nada (reutiliza)
-            return;
+            return;  // já conectado
         }
+
         const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
         const wsUrl = `${protocol}://${window.location.host}/ws/chat/${vetId}/`;
         socket = new WebSocket(wsUrl);
 
         socket.onmessage = function (e) {
             const data = JSON.parse(e.data);
-            const isMe = data.sender_id === loggedUserId;
+            const isMe = String(data.sender_id) === loggedUserId;  // garanta comparação como string
 
             const msgDiv = document.createElement('div');
             msgDiv.className = isMe
-                ? 'flex flex-col items-end ml-auto max-w-[70%]'
-                : 'flex flex-col items-start max-w-[70%]';
+                ? 'flex flex-col items-end ml-auto max-w-[70%] group'
+                : 'flex flex-col items-start max-w-[70%] group';
 
             msgDiv.innerHTML = `
                 <div class="${isMe
@@ -184,87 +213,99 @@
                 </span>
             `;
 
-            chatBox.appendChild(msgDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
+            const currentBox = getCurrentChatBox();
+            if (currentBox) {
+                currentBox.appendChild(msgDiv);
+                scrollToBottom();
+            } else {
+                console.warn("chat-box não encontrado para adicionar nova mensagem");
+            }
         };
 
-        socket.onclose = function () {
-            console.error('❌ WebSocket fechado inesperadamente');
-        };
-
-        socket.onerror = function (e) {
-            console.error('❌ Erro no WebSocket:', e);
-        };
+        socket.onclose = () => console.error('❌ WebSocket fechado inesperadamente');
+        socket.onerror = (e) => console.error('❌ Erro no WebSocket:', e);
     }
 
-    // Função para carregar mensagens via AJAX (sem reload)
+    // Carrega o conteúdo do chat via AJAX
     async function loadMessages(vetId) {
         try {
             const response = await fetch(`?vet_id=${vetId}`, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });  // Requisição AJAX para a mesma URL com novo vet_id
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
             const html = await response.text();
-            
-            // Parseie o HTML retornado e extraia apenas a seção de mensagens
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            
-            // Atualize o chat-box
-            const newChatBox = doc.getElementById('chat-box');
-            if (newChatBox) {
-                chatBox.innerHTML = newChatBox.innerHTML;
-                chatBox.scrollTop = chatBox.scrollHeight;
+
+            const chatArea = document.querySelector('.hidden.md\\:flex.flex-1.bg-white\\/40');
+            if (!chatArea) {
+                console.error("Área de chat principal não encontrada");
+                return;
             }
-            
-            // Atualize o cabeçalho (opcional)
-            const newHeader = doc.querySelector('.p-6.border-b');  // Selecione o cabeçalho
-            if (newHeader) {
-                document.querySelector('.p-6.border-b').innerHTML = newHeader.innerHTML;
-            }
-            
-            // Atualize o form (para o action correto)
-            const newForm = doc.querySelector('form');
+
+            chatArea.innerHTML = html;
+
+            // Após substituição: scroll + recriar ícones + re-anexar eventos
+            scrollToBottom();
+            lucide.createIcons();
+
+            const newForm = document.querySelector('form');
             if (newForm) {
-                form.action = newForm.action;
+                newForm.removeEventListener('submit', handleFormSubmit);
+                newForm.addEventListener('submit', handleFormSubmit);
             }
+
         } catch (error) {
             console.error('Erro ao carregar mensagens:', error);
         }
     }
 
-    // Event listener para cliques nos contatos (sem reload)
-    document.querySelectorAll('.contato-item').forEach(item => {
-        item.addEventListener('click', function() {
-            const vetId = this.dataset.vetId;
+    // Handler de envio de mensagem (reutilizável)
+    function handleFormSubmit(e) {
+        e.preventDefault();
+        const input = e.currentTarget.querySelector('input[name="mensagem"]');
+        if (!input) return;
+
+        const mensagem = input.value.trim();
+        if (!mensagem) return;
+
+        if (socket?.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({ mensagem }));
+            input.value = '';
+        } else {
+            console.warn("WebSocket não está conectado");
+        }
+    }
+
+    // Event listeners nos contatos
+    document.querySelectorAll('.w-full.md\\:w-80 a').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            const vetId = this.getAttribute('href').match(/vet_id=([^&]+)/)?.[1];
+            if (!vetId) return;
+
             currentVetId = vetId;
-            loadMessages(vetId);  // Carrega mensagens dinamicamente
-            connectWebSocket(vetId);  // Conecta WS se necessário (reutiliza se já aberto)
-            
-            // Destaque o contato selecionado (opcional)
-            document.querySelectorAll('.contato-item').forEach(el => el.classList.remove('bg-purple-50', 'border-purple-100'));
+            loadMessages(vetId);
+            connectWebSocket(vetId);
+
+            // Destaque visual
+            document.querySelectorAll('.w-full.md\\:w-80 a').forEach(el => 
+                el.classList.remove('bg-purple-50', 'border-purple-100')
+            );
             this.classList.add('bg-purple-50', 'border-purple-100');
         });
     });
 
-    // Inicializa se já houver um vet selecionado
+    // Inicialização
     if (currentVetId) {
         connectWebSocket(currentVetId);
+        scrollToBottom();  // caso já tenha mensagens na carga inicial
     }
 
-    // Envio da mensagem (reutiliza o socket atual)
-    form.addEventListener('submit', function (e) {
-        e.preventDefault();
-        const input = form.querySelector('input[name="mensagem"]');
-        const mensagem = input.value.trim();
-
-        if (mensagem && socket && socket.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify({
-                mensagem: mensagem
-            }));
-            input.value = '';
-        }
-    });
+    // Listener inicial no form (se existir na página inicial)
+    const initialForm = document.querySelector('form');
+    if (initialForm) {
+        initialForm.addEventListener('submit', handleFormSubmit);
+    }
 </script>
 {% endblock %}

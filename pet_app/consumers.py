@@ -1,5 +1,6 @@
 import json
 import logging
+import uuid
 
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
@@ -14,9 +15,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
         try:
-            self.contact_id = int(self.scope['url_route']['kwargs']['contact_id'])
+            contact_id_raw = self.scope['url_route']['kwargs']['contact_id']
             
-            # 🔴 Busque o user via sessão (Tutor ou Veterinario)
+            # Busque o user via sessão (Tutor ou Veterinario)
             session = self.scope.get('session', {})
             user_id = session.get('user_id')
             user_role = session.get('user_role')  # 'tutor' ou 'vet'
@@ -34,6 +35,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.user_id = self.user.id  # ID do Tutor ou Vet
             self.user_role = user_role  # Armazene o role para uso posterior
             logger.info(f"WebSocket connect: user={self.user} | user_id={self.user_id} | role={self.user_role}")
+            
+            try:
+                self.contact_id = uuid.UUID(contact_id_raw)
+            except ValueError:
+                logger.error(f"contact_id inválido: {contact_id_raw}. Fechando WS.")
+                await self.close()
+                return
 
             # Nome único da sala (independente da ordem)
             user_ids = sorted([self.user_id, self.contact_id])
@@ -84,7 +92,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 {
                     "type": "chat_message",
                     "mensagem": mensagem.CONTEUDO,
-                    "sender_id": self.user.id,
+                    "sender_id": str(self.user.id),
                     "enviado_por": mensagem.ENVIADO_POR,
                     "data_envio": mensagem.DATA_ENVIO.strftime("%H:%M"),
                 }

@@ -1,0 +1,66 @@
+{% if vet_selecionado %}
+<!-- Cabeçalho do Chat -->
+<div class="p-6 border-b border-gray-100 bg-white/50 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+        <h2 class="font-black text-gray-800">Conversando com Dr(a). {{ vet_selecionado.nome }}</h2>
+        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+    </div>
+</div>
+
+<!-- Mensagens -->
+<div id="chat-box"
+    class="flex-1 overflow-y-auto p-8 space-y-6 bg-gradient-to-b from-transparent to-white/30">
+    {% for msg in mensagens %}
+    {# Usa campos conforme definido em pet_app.models.Mensagem #}
+    {% if msg.ENVIADO_POR == 'TUTOR' %}
+    <!-- Mensagem do Tutor (Direita - Roxo) -->
+    <div class="flex flex-col items-end ml-auto max-w-[70%] group">
+        <div
+            class="bg-purple-600 text-white p-5 rounded-t-[2rem] rounded-bl-[2rem] shadow-lg shadow-purple-200/50 text-sm font-medium leading-relaxed">
+            {{ msg.CONTEUDO }}
+        </div>
+        <span class="text-[10px] font-black text-gray-400 mt-2 mr-2 uppercase tracking-widest">{{ msg.DATA_ENVIO|date:"H:i" }}</span>
+    </div>
+    {% else %}
+    <!-- Mensagem do Vet (Esquerda - Branco/Cinza) -->
+    <div class="flex flex-col items-start max-w-[70%] group">
+        <div
+            class="bg-white text-gray-700 p-5 rounded-t-[2rem] rounded-br-[2rem] shadow-sm border border-gray-100 text-sm font-medium leading-relaxed">
+            {{ msg.CONTEUDO }}
+        </div>
+        <span class="text-[10px] font-black text-gray-400 mt-2 ml-2 uppercase tracking-widest">{{ msg.DATA_ENVIO|date:"H:i" }}</span>
+    </div>
+    {% endif %}
+    {% empty %}
+    <div class="h-full flex flex-col items-center justify-center text-gray-400">
+        <i data-lucide="messages-square" width="48" height="48" class="mb-2 opacity-20"></i>
+        <p class="font-medium italic">Inicie uma conversa...</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Input de Texto -->
+<div class="p-6 bg-white/80 border-t border-gray-50">
+    <form method="POST" action="{% url 'enviar_mensagem' %}" class="relative flex items-center">
+        {% csrf_token %}
+        <input type="hidden" name="vet_id" value="{{ vet_selecionado.id }}">
+        <input type="text" name="mensagem" placeholder="conversar" required
+            class="w-full bg-gray-50 border border-gray-100 rounded-full py-5 px-8 text-sm font-bold text-gray-700 focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all shadow-inner">
+        <button type="submit"
+            class="absolute right-3 p-4 bg-transparent text-gray-800 hover:text-purple-600 transition-transform hover:scale-110 active:scale-90">
+            <i data-lucide="send-horizontal" width="28" height="28"></i>
+        </button>
+    </form>
+</div>
+
+{% else %}
+<!-- Estado Vazio -->
+<div class="flex-1 flex flex-col items-center justify-center p-10 text-center">
+    <div class="bg-purple-50 p-10 rounded-full mb-6">
+        <i data-lucide="message-circle" class="text-purple-300" width="64" height="64"></i>
+    </div>
+    <h3 class="text-2xl font-black text-gray-800 mb-2">Suas Mensagens</h3>
+    <p class="text-gray-500 max-w-xs font-medium">Selecione um veterinário ao lado para tirar dúvidas ou
+        acompanhar o tratamento do seu pet.</p>
+</div>
+{% endif %}
