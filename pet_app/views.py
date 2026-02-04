@@ -600,11 +600,15 @@ def mensagens_view_vet(request):
             tutor_id = None
 
     if tutor_id:
-        tutor_selecionado = get_object_or_404(models.Tutor, id=tutor_id)
-        mensagens = models.Mensagem.objects.filter(
-            TUTOR=tutor_selecionado,
-            VETERINARIO=vet
-        ).order_by('DATA_ENVIO')
+        try:
+            tutor_id_uuid = uuid.UUID(tutor_id)
+            tutor_selecionado = get_object_or_404(models.Tutor, id=tutor_id_uuid)
+            mensagens = models.Mensagem.objects.filter(
+                TUTOR=tutor_selecionado,
+                VETERINARIO=vet
+            ).order_by('DATA_ENVIO')
+        except (ValueError, models.Tutor.DoesNotExist):
+            tutor_selecionado = None  # ou logar erro
 
     context = {
         'vet': vet,
